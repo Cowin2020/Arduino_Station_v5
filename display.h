@@ -49,7 +49,12 @@ namespace COM {
 		}
 
 		template <typename TYPE>
-		inline void println(TYPE x) {
+		inline void print(TYPE const x, int option) {
+			Serial.print(x, option);
+		}
+
+		template <typename TYPE>
+		inline void println(TYPE const x) {
 			Serial.println(x);
 		}
 
@@ -96,12 +101,17 @@ namespace OLED {
 		}
 
 		template <typename TYPE>
-		inline void print(TYPE x) {
+		inline void print(TYPE const x) {
 			SSD1306.print(x);
 		}
 
 		template <typename TYPE>
-		inline void println(TYPE x) {
+		inline void print(TYPE const x, int const option) {
+			SSD1306.print(x, option);
+		}
+
+		template <typename TYPE>
+		inline void println(TYPE const x) {
 			SSD1306.println(x);
 		}
 
@@ -111,8 +121,8 @@ namespace OLED {
 		}
 
 		inline static void draw_received(void) {
-			OLED::SSD1306.drawRect(125, 61, 3, 3, SSD1306_WHITE);
-			OLED::SSD1306.display();
+			SSD1306.drawRect(125, 61, 3, 3, SSD1306_WHITE);
+			SSD1306.display();
 		}
 
 		inline static void display(void) {
@@ -137,19 +147,25 @@ namespace OLED {
 
 namespace Display {
 	template <typename TYPE>
-	inline void print(TYPE x) {
+	inline void print(TYPE const x) {
 		COM::print(x);
 		OLED::print(x);
 	}
 
 	template <typename TYPE>
-	inline void println(TYPE x) {
+	inline void print(TYPE const x, int const option) {
+		COM::print(x, option);
+		OLED::print(x, option);
+	}
+
+	template <typename TYPE>
+	inline void println(TYPE const x) {
 		COM::println(x);
 		OLED::println(x);
 	}
 
 	template <typename TYPE>
-	inline void println(TYPE x, int option) {
+	inline void println(TYPE const x, int const option) {
 		COM::println(x, option);
 		OLED::println(x, option);
 	}
@@ -158,7 +174,7 @@ namespace Display {
 namespace Debug {
 	template <typename TYPE>
 	[[maybe_unused]]
-	inline void print([[maybe_unused]] TYPE x) {
+	inline void print([[maybe_unused]] TYPE const x) {
 		#if !defined(NDEBUG)
 			COM::print(x);
 		#endif
@@ -166,7 +182,7 @@ namespace Debug {
 
 	template <typename TYPE>
 	[[maybe_unused]]
-	inline void println([[maybe_unused]] TYPE x) {
+	inline void println([[maybe_unused]] TYPE const x) {
 		#if !defined(NDEBUG)
 			COM::println(x);
 		#endif
