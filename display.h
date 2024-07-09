@@ -49,17 +49,17 @@ namespace COM {
 		}
 
 		template <typename TYPE>
-		inline void print(TYPE const x, int option) {
-			Serial.print(x, option);
-		}
-
-		template <typename TYPE>
 		inline void println(TYPE const x) {
 			Serial.println(x);
 		}
 
 		template <typename TYPE>
-		inline void println(TYPE const x, int option) {
+		inline void print(TYPE const x, int const option) {
+			Serial.print(x, option);
+		}
+
+		template <typename TYPE>
+		inline void println(TYPE const x, int const option) {
 			Serial.println(x, option);
 		}
 
@@ -73,10 +73,10 @@ namespace COM {
 			Serial.end();
 		}
 
-		template <typename TYPE> inline void print([[maybe_unused]] TYPE x) {}
-		template <typename TYPE> inline void println([[maybe_unused]] TYPE x) {}
-		template <typename TYPE> inline void print([[maybe_unused]] TYPE x, [[maybe_unused]] int option) {}
-		template <typename TYPE> inline void println([[maybe_unused]] TYPE x, [[maybe_unused]] int option) {}
+		template <typename TYPE> inline void print([[maybe_unused]] TYPE const x) {}
+		template <typename TYPE> inline void println([[maybe_unused]] TYPE const x) {}
+		template <typename TYPE> inline void print([[maybe_unused]] TYPE const x, [[maybe_unused]] int const option) {}
+		template <typename TYPE> inline void println([[maybe_unused]] TYPE const x, [[maybe_unused]] int const option) {}
 		inline static void dump(
 			[[maybe_unused]] char const *const label,
 			[[maybe_unused]] void const *const memory,
@@ -94,10 +94,11 @@ namespace OLED {
 
 	#if defined(ENABLE_OLED_OUTPUT)
 		extern void initialize(void);
+		extern void large_font(void);
 
-		inline static void home(void) {
+		inline static void home(int16_t const x = 0, int16_t const y = 0) {
 			SSD1306.clearDisplay();
-			SSD1306.setCursor(0, 0);
+			SSD1306.setCursor(x, y);
 		}
 
 		template <typename TYPE>
@@ -106,13 +107,13 @@ namespace OLED {
 		}
 
 		template <typename TYPE>
-		inline void print(TYPE const x, int const option) {
-			SSD1306.print(x, option);
+		inline void println(TYPE const x) {
+			SSD1306.println(x);
 		}
 
 		template <typename TYPE>
-		inline void println(TYPE const x) {
-			SSD1306.println(x);
+		inline void print(TYPE const x, int const option) {
+			SSD1306.print(x, option);
 		}
 
 		template <typename TYPE>
@@ -134,10 +135,11 @@ namespace OLED {
 			SSD1306.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR);
 			turn_off();
 		}
-		inline static void home(void) {}
-		template <typename TYPE> inline void print([[maybe_unused]] TYPE x) {}
-		template <typename TYPE> inline void println([[maybe_unused]] TYPE x) {}
-		template <typename TYPE> inline void println([[maybe_unused]] TYPE x, [[maybe_unused]] int option) {}
+		inline static void large_font(void) {}
+		inline static void home([[maybe_unused]] int16_t const x = 0, [[maybe_unused]] int16_t const y = 0) {}
+		template <typename TYPE> inline void print([[maybe_unused]] TYPE const x) {}
+		template <typename TYPE> inline void println([[maybe_unused]] TYPE const x) {}
+		template <typename TYPE> inline void println([[maybe_unused]] TYPE const x, [[maybe_unused]] int const option) {}
 		inline static void set_message([[maybe_unused]] class String const &string) {}
 		inline static void print_message(void) {}
 		inline static void draw_received(void) {}
@@ -153,15 +155,15 @@ namespace Display {
 	}
 
 	template <typename TYPE>
-	inline void print(TYPE const x, int const option) {
-		COM::print(x, option);
-		OLED::print(x, option);
-	}
-
-	template <typename TYPE>
 	inline void println(TYPE const x) {
 		COM::println(x);
 		OLED::println(x);
+	}
+
+	template <typename TYPE>
+	inline void print(TYPE const x, int const option) {
+		COM::print(x, option);
+		OLED::print(x, option);
 	}
 
 	template <typename TYPE>

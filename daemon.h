@@ -36,6 +36,9 @@ namespace DAEMON {
 		extern void data(struct Data const *data);
 		extern void ack(SerialNumber serial);
 	}
+	namespace Dashboard {
+		[[noreturn]] extern void loop(void);
+	}
 	namespace Measure {
 		void set_interval(Millisecond ms);
 		[[noreturn]] extern void loop(void);
