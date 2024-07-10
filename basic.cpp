@@ -1,3 +1,4 @@
+#include <ctime>
 #include <cstdio>
 
 #include "config_device.h"
@@ -28,6 +29,30 @@ FullTime::operator String(void) const {
 		this->hour, this->minute, this->second
 	);
 	return String(buffer);
+}
+
+struct FullTime &FullTime::operator +=(signed int const timezone_hours) {
+	struct tm time = {
+		.tm_sec = this->second,
+		.tm_min = this->minute,
+		.tm_hour = this->hour,
+		.tm_mday = this->day,
+		.tm_mon = this->month,
+		.tm_year = this->year - 1900,
+		.tm_isdst = false
+	};
+	time_t epoch = mktime(&time);
+	Debug::print("DEBUG: epoch=");
+	Debug::println(epoch);
+	epoch += timezone_hours * 3600;
+	time = *localtime(&epoch);
+	this->year = time.tm_year + 1900;
+	this->month = time.tm_mon;
+	this->day = time.tm_mday;
+	this->hour = time.tm_hour;
+	this->minute = time.tm_min;
+	this->second = time.tm_sec;
+	return *this;
 }
 
 Configuration::Configuration(void) : measure_interval(0) {}

@@ -26,6 +26,7 @@ struct [[gnu::packed]] FullTime {
 	unsigned char second;
 
 	explicit operator String(void) const;
+	struct FullTime &operator +=(signed int timezone_hours);
 };
 
 class Configuration {

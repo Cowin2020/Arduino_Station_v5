@@ -347,18 +347,20 @@ namespace DAEMON {
 			OLED::home(0, 10);
 			OLED::print("Dev");
 			OLED::println(int(my_device_id));
-			OLED::println(data.time.year);
-			OLED::print(data.time.day);
+			struct FullTime time = data.time;
+			#if defined(DASHBOARD_TIMEZONE)
+				time += DASHBOARD_TIMEZONE;
+			#endif
+			OLED::println(time.year);
+			OLED::print(time.day);
 			OLED::print('/');
-			OLED::println(data.time.month);
-			if (data.time.hour < 10) OLED::print('0');
-			OLED::print(data.time.hour);
+			OLED::println(time.month);
+			if (time.hour < 10) OLED::print('0');
+			OLED::print(time.hour);
 			OLED::print(':');
-			if (data.time.minute < 10) OLED::print('0');
-			OLED::print(data.time.minute);
+			if (time.minute < 10) OLED::print('0');
+			OLED::print(time.minute);
 			OLED::println('Z');
-			//	OLED::SSD1306.drawLine(10, 73, 54, 73, SSD1306_WHITE);
-			//	OLED::SSD1306.setCursor(0, 92);
 
 			do {
 				if (false) {
