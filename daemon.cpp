@@ -269,14 +269,18 @@ namespace DAEMON {
 				/* TODO: add routing */
 				for (unsigned int t=0;;) {
 					LORA::Send::SEND(my_device_id, ++current_serial, &data);
-					thread_delay(ACK_TIMEOUT);
+					//	thread_delay(ACK_TIMEOUT);
+					Schedule::sleep(&alarm, ACK_TIMEOUT);
 					if (acked_serial.load() == current_serial.load()) {
 						send_success.store(true);
 						SDCard::next_data();
 						break;
 					}
+					Debug::print("DEBUG: DAEMON::Push::send_data t=");
+					Debug::println(t);
 					if (t >= RESEND_TIMES) break;
-					thread_delay(SEND_INTERVAL);
+					//	thread_delay(SEND_INTERVAL);
+					Schedule::sleep(&alarm, SEND_INTERVAL);
 					++t;
 				}
 			}
@@ -333,6 +337,122 @@ namespace DAEMON {
 		}
 	}
 
+	namespace Dashboard {
+		static struct Alarm alarm;
+		static struct Data data;
+		static unsigned int state = 0;
+
+		static void show(void) {
+			OLED_LOCK(lock);
+			OLED::home(0, 10);
+			OLED::print("Dev");
+			OLED::println(int(my_device_id));
+			OLED::println(data.time.year);
+			OLED::print(data.time.day);
+			OLED::print('/');
+			OLED::println(data.time.month);
+			if (data.time.hour < 10) OLED::print('0');
+			OLED::print(data.time.hour);
+			OLED::print(':');
+			if (data.time.minute < 10) OLED::print('0');
+			OLED::print(data.time.minute);
+			OLED::println('Z');
+			//	OLED::SSD1306.drawLine(10, 73, 54, 73, SSD1306_WHITE);
+			//	OLED::SSD1306.setCursor(0, 92);
+
+			do {
+				if (false) {
+					/* NOTHING: unreachable */
+				#if defined(ENABLE_BATTERY_GAUGE)
+					}
+					else if (state < __LINE__) {
+						state = __LINE__;
+						OLED::println("Power");
+						OLED::println(data.battery_voltage, 1);
+						OLED::print("V");
+						break;
+					}
+					else if (state < __LINE__) {
+						state = __LINE__;
+						OLED::println("Power");
+						OLED::println(data.battery_percentage, 0);
+						OLED::print("%");
+				#endif
+				#if defined(ENABLE_DALLAS)
+					}
+					else if (state < __LINE__) {
+						state = __LINE__;
+						OLED::println("Dallas");
+						OLED::println(data.dallas_temperature);
+						OLED::print("deg C");
+				#endif
+				#if defined(ENABLE_SHT40)
+					}
+					else if (state < __LINE__) {
+						state = __LINE__;
+						OLED::println("SHT40");
+						OLED::println(data.sht40_temperature);
+						OLED::print("deg C");
+					}
+					else if (state < __LINE__) {
+						state = __LINE__;
+						OLED::println("SHT40");
+						OLED::println(data.sht40_humidity);
+						OLED::print("%RH");
+				#endif
+				#if defined(ENABLE_BME280)
+					}
+					else if (state < __LINE__) {
+						state = __LINE__;
+						OLED::println("BME280");
+						OLED::println(data.bme280_temperature, 1);
+						OLED::print("deg C");
+					}
+					else if (state < __LINE__) {
+						state = __LINE__;
+						OLED::println("BME280");
+						OLED::println(data.bme280_pressure, 0);
+						OLED::print("Pa");
+					}
+					else if (state < __LINE__) {
+						state = __LINE__;
+						OLED::println("BME280");
+						OLED::println(data.bme280_humidity, 0);
+						OLED::print("%RH");
+				#endif
+				#if defined(ENABLE_LTR390)
+					}
+					else if (state < __LINE__) {
+						state = __LINE__;
+						OLED::println("LTR");
+						OLED::println(data.ltr390_ultraviolet);
+						OLED::print("UV");
+				#endif
+				}
+				else if (!state)
+					break;
+				else
+					state = 0;
+			}
+			while (!state);
+			OLED::display();
+		}
+
+		void loop(void) {
+			Schedule::add_timer(&alarm, "DAEMON::Dashboard");
+			Schedule::sleep(&alarm, MEASURE_INTERVAL + DASHBOARD_INTERVAL + START_DELAY);
+			OLED::large_font();
+			for (;;)
+				try {
+					show();
+					Schedule::sleep(&alarm, DASHBOARD_INTERVAL);
+				}
+				catch (...) {
+					COM::println("ERROR: DAEMON::Dashboard::loop exception thrown");
+				}
+		}
+	}
+
 	namespace Measure {
 		static Millisecond interval = MEASURE_INTERVAL;
 		static struct Alarm alarm;
@@ -358,7 +478,10 @@ namespace DAEMON {
 				try {
 					struct Data data;
 					if (Sensor::measure(&data)) {
-						print_data(&data);
+						Dashboard::data = data;
+						#if !defined(DASHBOARD_INTERVAL) || !(DASHBOARD_INTERVAL > 0)
+							print_data(&data);
+						#endif
 						Push::data(&data);
 					}
 					else
@@ -392,6 +515,10 @@ namespace DAEMON {
 			esp_pthread_set_cfg(&esp_pthread_cfg);
 			std::thread(Push::loop).detach();
 			esp_pthread_set_cfg(&esp_pthread_cfg);
+			#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
+				std::thread(Dashboard::loop).detach();
+				esp_pthread_set_cfg(&esp_pthread_cfg);
+			#endif
 			std::thread(Measure::loop).detach();
 			esp_pthread_set_cfg(&esp_pthread_cfg);
 			#if defined(ENABLE_SDCARD)

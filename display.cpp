@@ -1,3 +1,5 @@
+#include <Fonts/FreeMono9pt7b.h>
+
 #include "display.h"
 #include "device.h"
 
@@ -60,13 +62,18 @@ namespace OLED {
 		void initialize(void) {
 			DEVICE_LOCK(device_lock);
 			SSD1306.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR);
-			SSD1306.invertDisplay(false);
 			SSD1306.setRotation(OLED_ROTATION);
-			SSD1306.setTextSize(1);
+			SSD1306.invertDisplay(false);
 			SSD1306.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
+			SSD1306.setTextSize(1);
 			SSD1306.clearDisplay();
 			SSD1306.display();
 			SSD1306.setCursor(0, 0);
+		}
+
+		void large_font(void) {
+			DEVICE_LOCK(device_lock);
+			SSD1306.setFont(&FreeMono9pt7b);
 		}
 	#endif
 }

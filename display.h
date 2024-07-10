@@ -94,10 +94,11 @@ namespace OLED {
 
 	#if defined(ENABLE_OLED_OUTPUT)
 		extern void initialize(void);
+		extern void large_font(void);
 
-		inline static void home(void) {
+		inline static void home(int16_t const x = 0, int16_t const y = 0) {
 			SSD1306.clearDisplay();
-			SSD1306.setCursor(0, 0);
+			SSD1306.setCursor(x, y);
 		}
 
 		template <typename TYPE>
@@ -121,8 +122,8 @@ namespace OLED {
 		}
 
 		inline static void draw_received(void) {
-			OLED::SSD1306.drawRect(125, 61, 3, 3, SSD1306_WHITE);
-			OLED::SSD1306.display();
+			SSD1306.drawRect(125, 61, 3, 3, SSD1306_WHITE);
+			SSD1306.display();
 		}
 
 		inline static void display(void) {
@@ -134,10 +135,11 @@ namespace OLED {
 			SSD1306.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR);
 			turn_off();
 		}
-		inline static void home(void) {}
-		template <typename TYPE> inline void print([[maybe_unused]] TYPE x) {}
-		template <typename TYPE> inline void println([[maybe_unused]] TYPE x) {}
-		template <typename TYPE> inline void println([[maybe_unused]] TYPE x, [[maybe_unused]] int option) {}
+		inline static void large_font(void) {}
+		inline static void home([[maybe_unused]] int16_t const x = 0, [[maybe_unused]] int16_t const y = 0) {}
+		template <typename TYPE> inline void print([[maybe_unused]] TYPE const x) {}
+		template <typename TYPE> inline void println([[maybe_unused]] TYPE const x) {}
+		template <typename TYPE> inline void println([[maybe_unused]] TYPE const x, [[maybe_unused]] int const option) {}
 		inline static void set_message([[maybe_unused]] class String const &string) {}
 		inline static void print_message(void) {}
 		inline static void draw_received(void) {}
@@ -160,12 +162,12 @@ namespace Display {
 
 	template <typename TYPE>
 	inline void print(TYPE const x, int const option) {
-		COM::print(x);
-		OLED::print(x);
+		COM::print(x, option);
+		OLED::print(x, option);
 	}
 
 	template <typename TYPE>
-	inline void println(TYPE x, int option) {
+	inline void println(TYPE const x, int const option) {
 		COM::println(x, option);
 		OLED::println(x, option);
 	}

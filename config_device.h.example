@@ -47,6 +47,7 @@
 #define SYNCHONIZE_MARGIN 1234UL /* milliseconds */
 #define CLEANLOG_INTERVAL 21600000UL /* milliseconds */
 #define SLEEP_MARGIN 1000UL /* milliseconds */
+#define DASHBOARD_INTERVAL 5000UL /* milliseconds */
 //	#define REBOOT_TIMEOUT 3600000UL /* milliseconds */
 
 /* Display */
@@ -54,7 +55,7 @@
 #define ENABLE_COM_OUTPUT
 #define ENABLE_OLED_OUTPUT
 #define ENABLE_OLED_SWITCH 34
-#define OLED_ROTATION 2
+#define OLED_ROTATION 3
 
 /* Power saving */
 #define ENABLE_SLEEP

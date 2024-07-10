@@ -359,10 +359,10 @@ void Data::println(void) const {
 	Display::println(String(this->time));
 
 	#if defined(ENABLE_BATTERY_GAUGE)
-		Display::print("Cell: ");
-		Display::print(this->battery_voltage);
+		Display::println("Battery: ");
+		Display::print(this->battery_voltage, 1);
 		Display::print("V ");
-		Display::print(this->battery_percentage);
+		Display::print(this->battery_percentage, 0);
 		Display::println("%");
 	#endif
 
@@ -373,18 +373,18 @@ void Data::println(void) const {
 
 	#if defined(ENABLE_SHT40)
 		Display::print("SHT temp.: ");
-		Display::println(this->sht40_temperature);
+		Display::println(this->sht40_temperature, 1);
 		Display::print("SHT humidity: ");
-		Display::println(this->sht40_humidity);
+		Display::println(this->sht40_humidity, 0);
 	#endif
 
 	#if defined(ENABLE_BME280)
 		Display::print("BME temp.: ");
-		Display::println(this->bme280_temperature);
+		Display::println(this->bme280_temperature, 1);
 		Display::print("BME pressure: ");
 		Display::println(this->bme280_pressure, 0);
 		Display::print("BME humidity: ");
-		Display::println(this->bme280_humidity);
+		Display::println(this->bme280_humidity, 0);
 	#endif
 
 	#if defined(ENABLE_LTR390)
