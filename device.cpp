@@ -357,49 +357,39 @@ bool Data::readln(class Stream *const stream) {
 void Data::println(void) const {
 	COM::print("Time: ");
 	Display::println(String(this->time));
-	Display::println("");
 
 	#if defined(ENABLE_BATTERY_GAUGE)
-		Display::println("Battery");
+		Display::println("Battery: ");
 		Display::print(this->battery_voltage, 1);
 		Display::print("V ");
 		Display::print(this->battery_percentage, 0);
 		Display::println("%");
-		Display::println("");
 	#endif
 
 	#if defined(ENABLE_DALLAS)
-		Display::println("Dallas");
-		Display::print("T: ");
+		Display::print("Dallas temp.: ");
 		Display::println(this->dallas_temperature);
-		Display::println("");
 	#endif
 
 	#if defined(ENABLE_SHT40)
-		Display::println("SHT40");
-		Display::print("T: ");
-		Display::println(this->sht40_temperature);
-		Display::print("H: ");
-		Display::println(this->sht40_humidity);
-		Display::println("");
+		Display::print("SHT temp.: ");
+		Display::println(this->sht40_temperature, 1);
+		Display::print("SHT humidity: ");
+		Display::println(this->sht40_humidity, 0);
 	#endif
 
 	#if defined(ENABLE_BME280)
-		Display::println("BME280");
-		Display::print("T: ");
-		Display::println(this->bme280_temperature);
-		Display::print("P: ");
+		Display::print("BME temp.: ");
+		Display::println(this->bme280_temperature, 1);
+		Display::print("BME pressure: ");
 		Display::println(this->bme280_pressure, 0);
-		Display::print("H: ");
+		Display::print("BME humidity: ");
 		Display::println(this->bme280_humidity, 0);
-		Display::println("");
 	#endif
 
 	#if defined(ENABLE_LTR390)
-		Display::println("LTR");
-		Display::print("UV: ");
+		Display::print("LTR UV: ");
 		Display::println(this->ltr390_ultraviolet);
-		Display::println("");
 	#endif
 }
 
