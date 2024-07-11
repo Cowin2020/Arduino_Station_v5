@@ -359,8 +359,7 @@ namespace DAEMON {
 			OLED::print(time.hour);
 			OLED::print(':');
 			if (time.minute < 10) OLED::print('0');
-			OLED::print(time.minute);
-			OLED::println('Z');
+			OLED::println(time.minute);
 
 			do {
 				if (false) {
