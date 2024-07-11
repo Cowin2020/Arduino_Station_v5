@@ -366,10 +366,12 @@ namespace LORA {
 						Debug::println(serial);
 					}
 					DAEMON::Push::ack(serial);
-					{
-						OLED_LOCK(olec_lock);
-						OLED::draw_received();
-					}
+					#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
+						{
+							OLED_LOCK(olec_lock);
+							OLED::draw_received();
+						}
+					#endif
 
 					if (content_size >= minimal_content_size + sizeof (class Configuration)) {
 						class Configuration const configuration =

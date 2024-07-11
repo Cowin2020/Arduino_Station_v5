@@ -253,10 +253,12 @@ namespace DAEMON {
 					WIFI::upload(my_device_id, ++current_serial, &data);
 				if (upload_result.upload_success) {
 					send_success.store(true);
-					{
-						OLED_LOCK(oled_lock);
-						OLED::draw_received();
-					}
+					#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
+						{
+							OLED_LOCK(oled_lock);
+							OLED::draw_received();
+						}
+					#endif
 					if (upload_result.update_configuration)
 						upload_result.configuration.apply();
 				}
@@ -269,7 +271,6 @@ namespace DAEMON {
 				/* TODO: add routing */
 				for (unsigned int t=0;;) {
 					LORA::Send::SEND(my_device_id, ++current_serial, &data);
-					//	thread_delay(ACK_TIMEOUT);
 					Schedule::sleep(&alarm, ACK_TIMEOUT);
 					if (acked_serial.load() == current_serial.load()) {
 						send_success.store(true);
@@ -279,7 +280,6 @@ namespace DAEMON {
 					Debug::print("DEBUG: DAEMON::Push::send_data t=");
 					Debug::println(t);
 					if (t >= RESEND_TIMES) break;
-					//	thread_delay(SEND_INTERVAL);
 					Schedule::sleep(&alarm, SEND_INTERVAL);
 					++t;
 				}
@@ -436,6 +436,8 @@ namespace DAEMON {
 					state = 0;
 			}
 			while (!state);
+			if (Push::send_success.load())
+				OLED::draw_received();
 			OLED::display();
 		}
 

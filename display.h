@@ -122,7 +122,10 @@ namespace OLED {
 		}
 
 		inline static void draw_received(void) {
-			SSD1306.drawRect(125, 61, 3, 3, SSD1306_WHITE);
+			if (OLED_ROTATION & 1)
+				SSD1306.drawRect(61, 125, 3, 3, SSD1306_WHITE);
+			else
+				SSD1306.drawRect(125, 61, 3, 3, SSD1306_WHITE);
 			SSD1306.display();
 		}
 

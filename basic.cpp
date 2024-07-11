@@ -42,8 +42,6 @@ struct FullTime &FullTime::operator +=(signed int const timezone_hours) {
 		.tm_isdst = false
 	};
 	time_t epoch = mktime(&time);
-	Debug::print("DEBUG: epoch=");
-	Debug::println(epoch);
 	epoch += timezone_hours * 3600;
 	time = *localtime(&epoch);
 	this->year = time.tm_year + 1900;
