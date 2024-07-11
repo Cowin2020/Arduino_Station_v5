@@ -61,11 +61,12 @@ void loop(void) {
 			}
 		#endif
 		#if defined(REBOOT_TIMEOUT)
-			if (millis() - LORA::last_time > REBOOT_TIMEOUT)
+			if (millis() > REBOOT_TIMEOUT)
 				esp_restart();
 		#endif
 		RNG.loop();
-		vTaskDelay(pdMS_TO_TICKS(IDLE_INTERVAL));  //	delay(IDLE_INTERVAL);
+		vTaskDelay(pdMS_TO_TICKS(IDLE_INTERVAL));
+		//	delay(IDLE_INTERVAL);
 	}
 	catch (...) {
 		COM::println("ERROR: loop exception thrown");

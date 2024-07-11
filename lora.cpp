@@ -48,8 +48,6 @@ static inline TO const *pointer_offset(FROM const *const from, size_t const offs
 namespace LORA {
 	static Device last_receiver = 0;
 
-	Millisecond last_time = 0;
-
 	bool initialize(void) {
 		SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
 		LoRa.setPins(LORA_CS, LORA_RST, LORA_IRQ);
@@ -77,7 +75,6 @@ namespace LORA {
 		}
 
 		LoRa.enableCrc();
-		last_time = millis();
 		OLED_LOCK(oled_lock);
 		Display::println("LoRa initialized");
 
