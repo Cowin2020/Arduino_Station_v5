@@ -4,6 +4,17 @@
 
 /* ************************************************************************** */
 
+#if defined(ENABLE_SHT40)
+	inline static float correct_SHT_temperature(float measured_value) {
+		float slope = 1.000;
+		float intercept = 0.000;
+		float corrected_value = slope * measured_value + intercept;
+		return corrected_value;
+	}
+#endif
+
+/* ************************************************************************** */
+
 unsigned long const CPU_frequency =
 	#if defined(CPU_FREQUENCY)
 		enable_gateway
@@ -475,7 +486,7 @@ namespace Sensor {
 		#if defined(ENABLE_SHT40)
 			sensors_event_t temperature_event, humidity_event;
 			SHT.getEvent(&humidity_event, &temperature_event);
-			data->sht40_temperature = temperature_event.temperature;
+			data->sht40_temperature = correct_SHT_temperature(temperature_event.temperature);
 			data->sht40_humidity = humidity_event.relative_humidity;
 		#endif
 		#if defined(ENABLE_BME280)
