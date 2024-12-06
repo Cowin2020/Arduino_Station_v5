@@ -1,4 +1,4 @@
-Computer for development
+Software for development
 ========================
 
 Arduino IDE
