@@ -24,10 +24,11 @@
 namespace COM {
 	#ifdef ENABLE_COM_OUTPUT
 		void initialize(void) {
-			if (CPU_frequency && CPU_frequency < 80)
-				Serial.begin(COM_BAUD * 80 / CPU_frequency);
-			else
-				Serial.begin(COM_BAUD);
+			//	if (CPU_frequency && CPU_frequency < 80)
+			//		Serial.begin(COM_BAUD * 80 / CPU_frequency);
+			//	else
+			//		Serial.begin(COM_BAUD);
+			Serial.begin(COM_BAUD);
 		}
 
 		void dump(char const *const label, void const *const memory, size_t const size) {

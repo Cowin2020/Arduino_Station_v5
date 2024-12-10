@@ -33,7 +33,7 @@
 #define NTP_SERVER "stdtime.gov.hk"
 #define NTP_INTERVAL 1234567UL /* milliseconds */
 
-/* Timimg */
+/* Timing */
 #define START_DELAY 10000UL /* milliseconds */
 #define IDLE_INTERVAL 123UL /* milliseconds */
 #define ACK_TIMEOUT 1000UL /* milliseconds */
@@ -60,6 +60,6 @@
 
 /* Power saving */
 #define ENABLE_SLEEP
-#define CPU_FREQUENCY 20 /* MHz */ /* MUST: >= 20MHz for LoRa, and >= 80MHz for WiFi */
+#define CPU_FREQUENCY 24 /* MHz */ /* MUST: >= 20MHz for LoRa, >= 24MHz for OLED, and >= 80MHz for WiFi */
 
 #endif // INCLUDE_CONFIG_DEVICE_H

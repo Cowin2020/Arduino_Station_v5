@@ -167,7 +167,7 @@ std::mutex device_mutex;
 #endif
 
 namespace NTP {
-	static class WiFiUDP WiFiUDP;
+	static WiFiUDP WiFiUDP;
 	static class NTPClient NTPClient(WiFiUDP, NTP_SERVER, 0, NTP_INTERVAL);
 
 	void initialize(void) {
@@ -420,10 +420,10 @@ namespace Sensor {
 			dallas.begin();
 			DeviceAddress thermometer_address;
 			if (dallas.getAddress(thermometer_address, 0)) {
-				Display::println("Thermometer 0 found");
+				Display::println("Dallas thermometer found");
 			}
 			else {
-				Display::println("Thermometer 0 not found");
+				Display::println("Dallas thermometer not found");
 				return false;
 			}
 		#endif

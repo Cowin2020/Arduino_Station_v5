@@ -11,7 +11,7 @@
 #include "id.h"
 #include "display.h"
 #include "device.h"
-#include "lora.h"
+#include "comm.h"
 #include "sdcard.h"
 #include "inet.h"
 #include "daemon.h"
@@ -343,7 +343,7 @@ namespace DAEMON {
 		static unsigned int state = 0;
 
 		static void show(void) {
-			OLED_LOCK(lock);
+			OLED_LOCK(oled_lock);
 			OLED::home(0, 10);
 			OLED::print("Dev");
 			OLED::println(int(my_device_id));
@@ -441,6 +441,7 @@ namespace DAEMON {
 			OLED::display();
 		}
 
+		[[noreturn]]
 		void loop(void) {
 			Schedule::add_timer(&alarm, "DAEMON::Dashboard");
 			Schedule::sleep(&alarm, MEASURE_INTERVAL + DASHBOARD_INTERVAL + START_DELAY);
@@ -461,7 +462,7 @@ namespace DAEMON {
 		static struct Alarm alarm;
 
 		static void print_data(struct Data const *const data) {
-			OLED_LOCK(lock);
+			OLED_LOCK(oled_lock);
 			OLED::home();
 			Display::print("Device ");
 			Display::println(my_device_id);
@@ -517,14 +518,14 @@ namespace DAEMON {
 		if (enable_measure) {
 			esp_pthread_set_cfg(&esp_pthread_cfg);
 			std::thread(Push::loop).detach();
-			esp_pthread_set_cfg(&esp_pthread_cfg);
 			#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
-				std::thread(Dashboard::loop).detach();
 				esp_pthread_set_cfg(&esp_pthread_cfg);
+				std::thread(Dashboard::loop).detach();
 			#endif
-			std::thread(Measure::loop).detach();
 			esp_pthread_set_cfg(&esp_pthread_cfg);
+			std::thread(Measure::loop).detach();
 			#if defined(ENABLE_SDCARD)
+				esp_pthread_set_cfg(&esp_pthread_cfg);
 				std::thread(CleanLog::loop).detach();
 			#endif
 		}

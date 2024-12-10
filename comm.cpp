@@ -14,7 +14,7 @@
 #include "device.h"
 #include "inet.h"
 #include "daemon.h"
-#include "lora.h"
+#include "comm.h"
 
 /* ************************************************************************** */
 

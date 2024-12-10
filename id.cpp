@@ -11,6 +11,10 @@
 	#error "ERROR: undefined NUMBER_OF_DEVICES"
 #endif
 
+#if !(DEVICE_ID < NUMBER_OF_DEVICES)
+	#error "ERROR: DEVICE_ID out of the range"
+#endif
+
 #if defined(ENABLE_GATEWAY) && DEVICE_ID
 	#error "ERROR: the DEVICE_ID of gateway device is not zero"
 #endif

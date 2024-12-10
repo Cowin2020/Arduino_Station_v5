@@ -21,6 +21,8 @@ Libraries used
 Additional Board Manager URLs:
 https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json
 
+Boards: esp32 (tested versions 2.0.17 - 3.0.5)
+
 Crypto
 ------
 

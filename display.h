@@ -82,8 +82,12 @@ namespace COM {
 			[[maybe_unused]] void const *const memory,
 			[[maybe_unused]] size_t const size
 		) {}
-		inline void flush(void) {}
+		inline static void flush(void) {}
 	#endif
+
+	inline static void update_baud_rate(void) {
+		Serial.updateBaudRate(COM_BAUD);
+	}
 }
 
 namespace OLED {

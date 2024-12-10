@@ -4,7 +4,7 @@
 #include "display.h"
 #include "device.h"
 #include "inet.h"
-#include "lora.h"
+#include "comm.h"
 #include "sdcard.h"
 #include "daemon.h"
 
@@ -22,10 +22,11 @@ void setup(void) {
 		delay(START_DELAY);
 	#endif
 	setup_success = false;
+	if (CPU_frequency)
+		setCpuFrequencyMhz(CPU_frequency);
 	LED::initialize();
 	COM::initialize();
 	OLED::initialize();
-	setCpuFrequencyMhz(CPU_frequency);
 	if (!SDCard::initialize()) goto end;
 	if (!RTC::initialize()) goto end;
 	if (!Sensor::initialize()) goto end;
