@@ -37,15 +37,15 @@ struct FullTime &FullTime::operator +=(signed int const timezone_hours) {
 		.tm_min = this->minute,
 		.tm_hour = this->hour,
 		.tm_mday = this->day,
-		.tm_mon = this->month,
+		.tm_mon = this->month - 1,
 		.tm_year = this->year - 1900,
 		.tm_isdst = false
 	};
 	time_t epoch = mktime(&time);
 	epoch += timezone_hours * 3600;
-	time = *localtime(&epoch);
+	gmtime_r(&epoch, &time);
 	this->year = time.tm_year + 1900;
-	this->month = time.tm_mon;
+	this->month = time.tm_mon + 1;
 	this->day = time.tm_mday;
 	this->hour = time.tm_hour;
 	this->minute = time.tm_min;

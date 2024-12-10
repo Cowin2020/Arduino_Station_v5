@@ -352,83 +352,83 @@ namespace DAEMON {
 				time += DASHBOARD_TIMEZONE;
 			#endif
 			OLED::println(time.year);
-			OLED::print(time.day);
+			OLED::print(static_cast<unsigned int>(time.day));
 			OLED::print('/');
-			OLED::println(time.month);
+			OLED::println(static_cast<unsigned int>(time.month));
 			if (time.hour < 10) OLED::print('0');
-			OLED::print(time.hour);
+			OLED::print(static_cast<unsigned int>(time.hour));
 			OLED::print(':');
 			if (time.minute < 10) OLED::print('0');
-			OLED::println(time.minute);
+			OLED::println(static_cast<unsigned int>(time.minute));
 
 			do {
 				if (false) {
 					/* NOTHING: unreachable */
-				#if defined(ENABLE_BATTERY_GAUGE)
-					}
-					else if (state < __LINE__) {
-						state = __LINE__;
-						OLED::println("Power");
-						OLED::println(data.battery_voltage, 1);
-						OLED::print("V");
-						break;
-					}
-					else if (state < __LINE__) {
-						state = __LINE__;
-						OLED::println("Power");
-						OLED::println(data.battery_percentage, 0);
-						OLED::print("%");
-				#endif
-				#if defined(ENABLE_DALLAS)
-					}
-					else if (state < __LINE__) {
-						state = __LINE__;
-						OLED::println("Dallas");
-						OLED::println(data.dallas_temperature);
-						OLED::print("deg C");
-				#endif
-				#if defined(ENABLE_SHT40)
-					}
-					else if (state < __LINE__) {
-						state = __LINE__;
-						OLED::println("SHT40");
-						OLED::println(data.sht40_temperature);
-						OLED::print("deg C");
-					}
-					else if (state < __LINE__) {
-						state = __LINE__;
-						OLED::println("SHT40");
-						OLED::println(data.sht40_humidity);
-						OLED::print("%RH");
-				#endif
-				#if defined(ENABLE_BME280)
-					}
-					else if (state < __LINE__) {
-						state = __LINE__;
-						OLED::println("BME280");
-						OLED::println(data.bme280_temperature, 1);
-						OLED::print("deg C");
-					}
-					else if (state < __LINE__) {
-						state = __LINE__;
-						OLED::println("BME280");
-						OLED::println(data.bme280_pressure, 0);
-						OLED::print("Pa");
-					}
-					else if (state < __LINE__) {
-						state = __LINE__;
-						OLED::println("BME280");
-						OLED::println(data.bme280_humidity, 0);
-						OLED::print("%RH");
-				#endif
-				#if defined(ENABLE_LTR390)
-					}
-					else if (state < __LINE__) {
-						state = __LINE__;
-						OLED::println("LTR");
-						OLED::println(data.ltr390_ultraviolet);
-						OLED::print("UV");
-				#endif
+			#if defined(ENABLE_BATTERY_GAUGE)
+				}
+				else if (state < __LINE__) {
+					state = __LINE__;
+					OLED::println("Power");
+					OLED::println(data.battery_voltage, 1);
+					OLED::print("V");
+					break;
+				}
+				else if (state < __LINE__) {
+					state = __LINE__;
+					OLED::println("Power");
+					OLED::println(data.battery_percentage, 0);
+					OLED::print("%");
+			#endif
+			#if defined(ENABLE_DALLAS)
+				}
+				else if (state < __LINE__) {
+					state = __LINE__;
+					OLED::println("Dallas");
+					OLED::println(data.dallas_temperature);
+					OLED::print("deg C");
+			#endif
+			#if defined(ENABLE_SHT40)
+				}
+				else if (state < __LINE__) {
+					state = __LINE__;
+					OLED::println("SHT40");
+					OLED::println(data.sht40_temperature);
+					OLED::print("deg C");
+				}
+				else if (state < __LINE__) {
+					state = __LINE__;
+					OLED::println("SHT40");
+					OLED::println(data.sht40_humidity);
+					OLED::print("%RH");
+			#endif
+			#if defined(ENABLE_BME280)
+				}
+				else if (state < __LINE__) {
+					state = __LINE__;
+					OLED::println("BME280");
+					OLED::println(data.bme280_temperature, 1);
+					OLED::print("deg C");
+				}
+				else if (state < __LINE__) {
+					state = __LINE__;
+					OLED::println("BME280");
+					OLED::println(data.bme280_pressure, 0);
+					OLED::print("Pa");
+				}
+				else if (state < __LINE__) {
+					state = __LINE__;
+					OLED::println("BME280");
+					OLED::println(data.bme280_humidity, 0);
+					OLED::print("%RH");
+			#endif
+			#if defined(ENABLE_LTR390)
+				}
+				else if (state < __LINE__) {
+					state = __LINE__;
+					OLED::println("LTR");
+					OLED::println(data.ltr390_ultraviolet);
+					OLED::print("UV");
+			#endif
 				}
 				else if (!state)
 					break;
