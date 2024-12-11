@@ -105,6 +105,10 @@ namespace OLED {
 			SSD1306.setCursor(x, y);
 		}
 
+		inline static void println(void) {
+			SSD1306.println();
+		}
+
 		template <typename TYPE>
 		inline void print(TYPE const x) {
 			SSD1306.print(x);
@@ -144,6 +148,7 @@ namespace OLED {
 		}
 		inline static void large_font(void) {}
 		inline static void home([[maybe_unused]] int16_t const x = 0, [[maybe_unused]] int16_t const y = 0) {}
+		inline static void println(void) {}
 		template <typename TYPE> inline void print([[maybe_unused]] TYPE const x) {}
 		template <typename TYPE> inline void println([[maybe_unused]] TYPE const x) {}
 		template <typename TYPE> inline void println([[maybe_unused]] TYPE const x, [[maybe_unused]] int const option) {}
