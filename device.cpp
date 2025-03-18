@@ -15,15 +15,23 @@
 
 /* ************************************************************************** */
 
-unsigned long const CPU_frequency =
+#define MINIMUM_CPU_FREQUENCY 20
+
+#if defined(ENABLE_OLED_OUTPUT)
+	#undef MINIMUM_CPU_FREQUENCY
+	#define MINIMUM_CPU_FREQUENCY 24
+#endif
+
+#if defined(ENABLE_GATEWAY)
+	#undef MINIMUM_CPU_FREQUENCY
+	#define MINIMUM_CPU_FREQUENCY 80
+#endif
+
+unsigned long int const CPU_frequency =
 	#if defined(CPU_FREQUENCY)
-		enable_gateway
-			? CPU_FREQUENCY >= 80
-				? CPU_FREQUENCY
-				: 80
-			: CPU_FREQUENCY >= 20
-				? CPU_FREQUENCY
-				: 20
+		CPU_FREQUENCY < MINIMUM_CPU_FREQUENCY
+			? MINIMUM_CPU_FREQUENCY
+			: CPU_FREQUENCY
 	#else
 		0
 	#endif

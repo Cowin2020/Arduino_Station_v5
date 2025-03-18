@@ -11,7 +11,7 @@
 
 /* ************************************************************************** */
 
-extern unsigned long const CPU_frequency;
+extern unsigned long int const CPU_frequency;
 
 extern std::mutex device_mutex;
 
