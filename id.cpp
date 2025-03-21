@@ -22,7 +22,7 @@
 /* ************************************************************************** */
 
 Device const my_device_id = DEVICE_ID;
-unsigned int const number_of_device = NUMBER_OF_DEVICES;
+unsigned int const number_of_devices = NUMBER_OF_DEVICES;
 
 bool const enable_gateway =
 	#if defined(ENABLE_GATEWAY)

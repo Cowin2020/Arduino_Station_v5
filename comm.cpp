@@ -206,7 +206,7 @@ namespace LORA {
 				}
 				if (device != my_device_id) return;
 				Device const sender = *reinterpret_cast<Device const *>(content.data());
-				if (!(sender > 0 && sender < number_of_device)) {
+				if (!(sender > 0 && sender < number_of_devices)) {
 					COM::print("WARN: LoRa ASKTIME: incorrect device: ");
 					COM::println(device);
 					return;
@@ -234,7 +234,7 @@ namespace LORA {
 				}
 
 				Device const device = *reinterpret_cast<Device const *>(content.data());
-				if (!(device > 0 && device < number_of_device)) {
+				if (!(device > 0 && device < number_of_devices)) {
 					COM::print("WARN: LoRa SEND: incorrect device: ");
 					COM::println(device);
 					return;
@@ -440,7 +440,7 @@ namespace LORA {
 					return;
 			}
 
-			if (!(*device >= 0 && *device < number_of_device)) {
+			if (!(*device >= 0 && *device < number_of_devices)) {
 				DEBUG_LOCK(debug_lock);
 				Debug::print("DEBUG: LORA::Receive::decode unknown device ");
 				Debug::println(*device);
