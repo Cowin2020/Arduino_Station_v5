@@ -5,10 +5,7 @@
 #define DEVICE_ID 0
 #define NUMBER_OF_DEVICES 100
 
-#if DEVICE_ID == 0
-	#define ENABLE_GATEWAY
-#else
-	#define ENABLE_MEASURE
-#endif
+#define ENABLE_GATEWAY
+//	#define ENABLE_MEASURE
 
 #endif // INCLUDE_CONFIG_ID_H
