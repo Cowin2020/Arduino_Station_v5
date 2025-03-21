@@ -33,6 +33,9 @@ void setup(void) {
 	WIFI::initialize();
 	if (!LORA::initialize()) goto end;
 	DAEMON::run();
+	#if defined(ENABLE_OLED_SWITCH)
+		pinMode(ENABLE_OLED_SWITCH, INPUT_PULLDOWN);
+	#endif
 	setup_success = true;
 end:
 	OLED::display();
@@ -47,15 +50,16 @@ void loop(void) {
 		WIFI::loop();
 		#if defined(ENABLE_OLED_SWITCH)
 			static bool switched_off = false;
-			pinMode(ENABLE_OLED_SWITCH, INPUT_PULLDOWN);
 			if (digitalRead(ENABLE_OLED_SWITCH) == LOW) {
 				if (!switched_off) {
+					Debug::println("DEBUG: OLED switch off");
 					OLED::turn_off();
 					switched_off = true;
 				}
 			}
 			else {
 				if (switched_off) {
+					Debug::println("DEBUG: OLED switch on");
 					OLED::turn_on();
 					switched_off = false;
 				}

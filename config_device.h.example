@@ -60,7 +60,7 @@
 #define ENABLE_LED
 #define ENABLE_COM_OUTPUT
 #define ENABLE_OLED_OUTPUT
-#define ENABLE_OLED_SWITCH 34
+#define ENABLE_OLED_SWITCH 35
 #if defined(ENABLE_MEASURE)
 	#define OLED_ROTATION 3 /* vertical */
 #else
