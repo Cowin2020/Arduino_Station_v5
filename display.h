@@ -35,7 +35,10 @@ namespace LED {
 		extern void flash(void);
 	#else
 		inline static void initialize(void) {}
-		inline static void flash(void) {}
+
+		inline static void flash(void) {
+			delay(200);
+		}
 	#endif
 }
 
