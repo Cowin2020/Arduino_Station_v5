@@ -48,23 +48,6 @@ void loop(void) {
 	}
 	try {
 		WIFI::loop();
-		#if defined(ENABLE_OLED_SWITCH)
-			static bool switched_off = false;
-			if (digitalRead(ENABLE_OLED_SWITCH) == LOW) {
-				if (!switched_off) {
-					Debug::println("DEBUG: OLED switch off");
-					OLED::turn_off();
-					switched_off = true;
-				}
-			}
-			else {
-				if (switched_off) {
-					Debug::println("DEBUG: OLED switch on");
-					OLED::turn_on();
-					switched_off = false;
-				}
-			}
-		#endif
 		#if defined(REBOOT_TIMEOUT)
 			if (millis() > REBOOT_TIMEOUT)
 				esp_restart();

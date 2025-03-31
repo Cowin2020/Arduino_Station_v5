@@ -120,7 +120,7 @@ namespace DAEMON {
 		}
 
 		void loop(void) {
-			thread_delay(12345);
+			thread_delay(START_DELAY + IDLE_INTERVAL);
 			for (;;)
 				try {
 					alarm.awake.store(false);
@@ -342,19 +342,17 @@ namespace DAEMON {
 		static struct Data data;
 		static unsigned int state = 0;
 
-		#if defined(OLED_ROTATION) && (OLED_ROTATION == 0 || OLED_ROTATION == 2)
+		#if defined(OLED_ROTATION) && !(OLED_ROTATION & 1)
 			#define OLED_HORIZONAL
 		#endif
 
-		#if defined(OLED_HORIZONAL)
-			inline static void OLED_space_or_newline(void) {
+		inline static void OLED_space_or_newline(void) {
+			#if defined(OLED_HORIZONAL)
 				OLED::print(' ');
-			}
-		#else
-			inline static void OLED_space_or_newline(void) {
+			#else
 				OLED::println();
-			}
-		#endif
+			#endif
+		}
 
 		static void show(void) {
 			OLED_LOCK(oled_lock);
@@ -368,7 +366,7 @@ namespace DAEMON {
 				OLED::print(' ');
 			#endif
 
-			OLED::println(int(my_device_id));
+			OLED::println((unsigned int)my_device_id);
 			struct FullTime time = data.time;
 			#if defined(DASHBOARD_TIMEZONE)
 				time += DASHBOARD_TIMEZONE;
@@ -487,6 +485,32 @@ namespace DAEMON {
 			OLED::display();
 		}
 
+		static bool check_switch(void) {
+			#if !defined(ENABLE_OLED_OUTPUT)
+				return false;
+			#elif defined(ENABLE_OLED_SWITCH)
+				static bool switched_off = true;
+				if (digitalRead(ENABLE_OLED_SWITCH) == LOW) {
+					if (!switched_off) {
+						Debug::println("DEBUG: OLED switch off");
+						OLED::turn_off();
+						switched_off = true;
+					}
+					return false;
+				}
+				else {
+					if (switched_off) {
+						Debug::println("DEBUG: OLED switch on");
+						OLED::turn_on();
+						switched_off = false;
+					}
+					return true;
+				}
+			#else
+				return true;
+			#endif
+		}
+
 		[[noreturn]]
 		void loop(void) {
 			Schedule::add_timer(&alarm, "DAEMON::Dashboard");
@@ -496,8 +520,13 @@ namespace DAEMON {
 			#endif
 			for (;;)
 				try {
-					show();
-					Schedule::sleep(&alarm, DASHBOARD_INTERVAL);
+					if (check_switch()) {
+						show();
+						Schedule::sleep(&alarm, DASHBOARD_INTERVAL);
+					}
+					else {
+						Schedule::sleep(&alarm, DASHBOARD_SLEEP_INTERVAL);
+					}
 				}
 				catch (...) {
 					COM::println("ERROR: DAEMON::Dashboard::loop exception thrown");
