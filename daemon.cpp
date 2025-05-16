@@ -489,7 +489,7 @@ namespace DAEMON {
 			#if !defined(ENABLE_OLED_OUTPUT)
 				return false;
 			#elif defined(ENABLE_OLED_SWITCH)
-				static bool switched_off = true;
+				static bool switched_off = false;
 				if (digitalRead(ENABLE_OLED_SWITCH) == LOW) {
 					if (!switched_off) {
 						Debug::println("DEBUG: OLED switch off");
