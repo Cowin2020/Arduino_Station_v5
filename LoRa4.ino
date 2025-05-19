@@ -30,6 +30,7 @@ void setup(void) {
 	if (!SDCard::initialize()) goto end;
 	if (!RTC::initialize()) goto end;
 	if (!Sensor::initialize()) goto end;
+	SDCard::read_config();
 	WIFI::initialize();
 	if (!LORA::initialize()) goto end;
 	DAEMON::run();

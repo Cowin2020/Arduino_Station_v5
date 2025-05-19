@@ -10,6 +10,7 @@
 #include <GCM.h>
 
 #include "id.h"
+#include "variable.h"
 #include "display.h"
 #include "device.h"
 #include "inet.h"
@@ -33,7 +34,6 @@ typedef uint8_t PacketType;
 typedef GCM<AES128> AuthCipher;
 
 static Device const router_topology[][2] = ROUTER_TOPOLOGY;
-static PROGMEM char const secret_key[16] = SECRET_KEY;
 
 template<typename TO, typename FROM>
 static inline TO *pointer_offset(FROM *const from, size_t const offset) {
@@ -81,8 +81,8 @@ namespace LORA {
 		#if defined(ENABLE_COM_OUTPUT)
 			char buffer[16];
 			COM::print("SECRET_KEY =");
-			for (unsigned int i = 0; i < sizeof secret_key; ++i) {
-				sprintf(buffer, " %02X", secret_key[i]);
+			for (unsigned int i = 0; i < sizeof Variable::secret_key; ++i) {
+				sprintf(buffer, " %02X", Variable::secret_key[i]);
 				COM::print(buffer);
 			}
 			COM::println('.');
@@ -115,7 +115,7 @@ namespace LORA {
 			}
 
 			AuthCipher cipher;
-			if (!cipher.setKey(reinterpret_cast<uint8_t const *>(secret_key), sizeof secret_key)) {
+			if (!cipher.setKey(reinterpret_cast<uint8_t const *>(Variable::secret_key), sizeof Variable::secret_key)) {
 				COM::print("LoRa ");
 				COM::print(message);
 				COM::println(": unable to set key");
@@ -449,7 +449,7 @@ namespace LORA {
 
 			AuthCipher cipher;
 			std::vector<uint8_t> cleantext(content_size);
-			if (!cipher.setKey((uint8_t const *)secret_key, sizeof secret_key)) {
+			if (!cipher.setKey(reinterpret_cast<uint8_t const *>(Variable::secret_key), sizeof Variable::secret_key)) {
 				COM::print("ERROR: LORA::Receive::decode ");
 				COM::print(*packet_type);
 				COM::println(" fail to set cipher key");

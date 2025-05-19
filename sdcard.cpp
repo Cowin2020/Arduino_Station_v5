@@ -4,9 +4,11 @@
 #include <SD.h>
 
 #include "id.h"
+#include "variable.h"
 #include "display.h"
 #include "sdcard.h"
 
+#define CONFIG_FILE_PATH "/CONFIG.INI"
 #define DATA_FILE_PATH "/DATA.CSV"
 #define CLEANUP_FILE_PATH "/CLEANUP.CSV"
 #define LOG_FILE_PATH "/LOG.CSV"
@@ -18,6 +20,7 @@
 
 namespace SDCard {
 	#if defined(ENABLE_SDCARD)
+		static char const config_file_path[] = CONFIG_FILE_PATH;
 		static char const data_file_path[] = DATA_FILE_PATH;
 		static char const cleanup_file_path[] = CLEANUP_FILE_PATH;
 		#if defined(ENABLE_LOG_FILE)
@@ -27,7 +30,56 @@ namespace SDCard {
 		static off_t current_position = 0;
 		static off_t next_position = 0;
 
-		unsigned int count_files(void) {
+		void read_config(void) {
+			class File file = SD.open(config_file_path, "r");
+			if (!file) {
+				Display::println("Cannot open config file");
+				return;
+			}
+			try {
+				for (;;) {
+					class String s = file.readStringUntil('\n');
+					if (!s.length()) break;
+					if (s[s.length()-1] == '\r') s.remove(s.length()-1);
+					if (!s.length()) break;
+					if (s[s.length()-1] == '\n') s.remove(s.length()-1);
+					if (!s.length()) break;
+					int const e = s.indexOf('=');
+					if (e <= 0 || s.length()-1 <= e) continue;
+					class String const k = s.substring(0, e);
+					class String const v = s.substring(e+1, s.length());
+					if (k == "SECRET_KEY") {
+						memset(Variable::secret_key, 0, sizeof Variable::secret_key);
+						for (unsigned int i = 0; i < v.length(); ++i) {
+							unsigned int const j = i % sizeof Variable::secret_key;
+							Variable::secret_key[j] =
+								Variable::secret_key[j]
+									^ (Variable::secret_key[j] << 1)
+									^ v[i];
+						}
+					}
+					else if (k == "WIFI_SSID")
+						Variable::wifi_ssid = v;
+					else if (k == "WIFI_PASS")
+						Variable::wifi_pass = v;
+					else if (k == "SITE_NAME")
+						Variable::site_name = v;
+					else {
+						COM::print("Unknown config key ");
+						COM::print(k);
+						COM::print('=');
+						COM::println(v);
+					}
+				}
+				Display::println("Config file is read");
+			}
+			catch (...) {
+				Display::println("Cannot read config file");
+			}
+			file.close();
+		}
+
+		static unsigned int count_files(void) {
 			File root = SD.open("/");
 			if (!root || !root.isDirectory()) return 0;
 			unsigned int count = 0;
@@ -220,7 +272,8 @@ namespace SDCard {
 					OLED::display();
 				}
 				return true;
-			} else {
+			}
+			else {
 				OLED_LOCK(oled_lock);
 				Display::println("SD card uninitialized");
 				OLED::display();
@@ -231,6 +284,8 @@ namespace SDCard {
 		static std::mutex mutex;
 		static bool filled = false;
 		static struct Data last_data;
+
+		void read_config(void) {}
 
 		void clean_up(void) {}
 

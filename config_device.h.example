@@ -29,9 +29,10 @@
 #define WIFI_SSID "my Wifi ID"
 #define WIFI_PASS "my WiFi password"
 #define HTTP_UPLOAD_LENGTH 512
+#define SITE_NAME "UNKNOWN"
 #define HTTP_UPLOAD_FORMAT \
 	"http://www.example.com/REST/upload" \
-	"?device=%1$u&serial=%2$u&time=%3$s"
+	"?site=%1s&device=%2$u&serial=%3$u&time=%4$s"
 #define HTTP_AUTHORIZATION_TYPE "Basic"
 #define HTTP_AUTHORIZATION_CODE "passcode for webserver"
 #define HTTP_RESPONE_SIZE 256

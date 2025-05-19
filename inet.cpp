@@ -1,6 +1,7 @@
 #include <HTTPClient.h>
 
 #include "id.h"
+#include "variable.h"
 #include "display.h"
 #include "device.h"
 #include "daemon.h"
@@ -12,7 +13,7 @@ namespace WIFI {
 	void initialize(void) {
 		if (enable_gateway) {
 			WiFi.mode(WIFI_STA);
-			WiFi.begin(WIFI_SSID, WIFI_PASS);
+			WiFi.begin(Variable::wifi_ssid, Variable::wifi_pass);
 		}
 		else {
 			WiFi.mode(WIFI_OFF);
@@ -60,6 +61,7 @@ namespace WIFI {
 		snprintf(
 			URL, sizeof URL,
 			HTTP_UPLOAD_FORMAT,
+			Variable::site_name.c_str(),
 			device, serial, time.c_str()
 			#ifdef ENABLE_BATTERY_GAUGE
 				, data->battery_voltage

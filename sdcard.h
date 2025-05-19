@@ -6,6 +6,7 @@
 /* ************************************************************************** */
 
 namespace SDCard {
+	extern void read_config(void);
 	extern void clean_up(void);
 	extern void add_data(struct Data const *data);
 	extern bool read_data(struct Data *const data);
