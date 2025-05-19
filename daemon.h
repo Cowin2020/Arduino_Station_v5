@@ -13,7 +13,8 @@ namespace DAEMON {
 	struct Alarm {
 		std::mutex mutex;
 		std::condition_variable condition_variable;
-		std::atomic<bool> awake;
+		std::atomic<bool> wake;
+		std::atomic<bool> sleepless;
 		void notify(void);
 	};
 	namespace Schedule {

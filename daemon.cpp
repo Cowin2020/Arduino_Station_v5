@@ -57,7 +57,7 @@ namespace DAEMON {
 	}
 
 	void Alarm::notify(void) {
-		awake.store(true);
+		wake.store(true);
 		condition_variable.notify_all();
 	}
 
@@ -76,6 +76,7 @@ namespace DAEMON {
 
 		void add_timer(struct Alarm *const timer_alarm, char const *const name) {
 			std::lock_guard<std::mutex> lock(timer_mutex);
+			timer_alarm->sleepless.store(false);
 			struct Timer const timer {
 				.alarm = timer_alarm,
 				.start = 0,
@@ -113,30 +114,39 @@ namespace DAEMON {
 				return;
 			}
 		bed:
-			timer_alarm->awake.store(false);
+			timer_alarm->wake.store(false);
 			alarm.notify();
 			std::unique_lock<std::mutex> lock(timer_alarm->mutex);
-			timer_alarm->condition_variable.wait(lock, [timer_alarm] {return timer_alarm->awake.load();});
+			timer_alarm->condition_variable.wait(lock, [timer_alarm] {return timer_alarm->wake.load();});
+		}
+
+		static void idle(struct Alarm *const timer_alarm, Millisecond const duration) {
+			timer_alarm->sleepless.store(true);
+			sleep(timer_alarm, duration);
+			timer_alarm->sleepless.store(false);
 		}
 
 		void loop(void) {
 			thread_delay(START_DELAY + IDLE_INTERVAL);
 			for (;;)
 				try {
-					alarm.awake.store(false);
-					bool wake = false;
+					alarm.wake.store(false);
+					bool awake = false;
 					struct Timer const *soonest = nullptr;
+					bool sleepless = false;
 					Millisecond const now = millis();
 					{
 						std::lock_guard<std::mutex> lock(timer_mutex);
 						for (struct Timer &timer: timer_list) {
+							if (timer.alarm->sleepless.load())
+								sleepless = true;
 							if (!timer.duration)
-								wake = true;
+								awake = true;
 							else if (timer.duration <= now - timer.start) {
 								timer.duration = 0;
-								timer.alarm->awake.store(true);
+								timer.alarm->wake.store(true);
 								timer.alarm->condition_variable.notify_all();
-								wake = true;
+								awake = true;
 							}
 							else if (
 								(soonest == nullptr && timer.duration > 0) ||
@@ -145,9 +155,9 @@ namespace DAEMON {
 								soonest = &timer;
 						}
 					}
-					if (!wake && soonest != nullptr) {
+					if (!awake && soonest != nullptr) {
 						Millisecond duration = soonest->start + soonest->duration - now;
-						if (enable_sleep && duration > SLEEP_MARGIN) {
+						if (enable_sleep && !sleepless && duration > SLEEP_MARGIN) {
 							DEVICE_LOCK(device_lock);
 							Debug::flush();
 							LORA::sleep();
@@ -161,7 +171,7 @@ namespace DAEMON {
 						continue;
 					}
 					std::unique_lock<std::mutex> lock(alarm.mutex);
-					alarm.condition_variable.wait(lock, [] {return alarm.awake.load();});
+					alarm.condition_variable.wait(lock, [] {return alarm.wake.load();});
 				}
 				catch (...) {
 					COM::println("ERROR: DAEMON::Schedule::loop exception thrown");
@@ -271,7 +281,7 @@ namespace DAEMON {
 				/* TODO: add routing */
 				for (unsigned int t=0;;) {
 					LORA::Send::SEND(my_device_id, ++current_serial, &data);
-					Schedule::sleep(&alarm, ACK_TIMEOUT);
+					Schedule::idle(&alarm, ACK_TIMEOUT);
 					if (acked_serial.load() == current_serial.load()) {
 						send_success.store(true);
 						SDCard::next_data();
