@@ -237,8 +237,6 @@ namespace DAEMON {
 		void loop(void) {
 			Schedule::add_timer(&alarm, "DAEMON::AskTime");
 			thread_delay(SYNCHONIZE_TIMEOUT);
-			LORA::Send::ASKTIME();
-			thread_delay(SYNCHONIZE_TIMEOUT);
 			for (;;)
 				try {
 					LORA::Send::ASKTIME();
