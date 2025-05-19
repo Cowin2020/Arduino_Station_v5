@@ -5,6 +5,8 @@
 
 #include "device.h"
 
+/* ************************************************************************** */
+
 namespace WIFI {
 	extern void initialize(void);
 	extern bool ready(void);

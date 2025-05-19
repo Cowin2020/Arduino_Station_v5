@@ -159,6 +159,9 @@ namespace DAEMON {
 						Millisecond duration = soonest->start + soonest->duration - now;
 						if (enable_sleep && !sleepless && duration > SLEEP_MARGIN) {
 							DEVICE_LOCK(device_lock);
+							Debug::print("DEBUG: sleep ");
+							Debug::print(duration);
+							Debug::println("ms");
 							Debug::flush();
 							LORA::sleep();
 							esp_sleep_enable_timer_wakeup(1000 * (duration - SLEEP_MARGIN));
@@ -311,17 +314,23 @@ namespace DAEMON {
 					struct Data data;
 					if (SDCard::read_data(&data)) {
 						send_success.store(false);
-						esp_pthread_set_cfg(&esp_pthread_cfg);
 						send_data(data);
+						Debug::print("DEBUG: DAEMON::Push::loop send_success=");
+						Debug::println((int)send_success.load());
+						#if defined(ENABLE_SDCARD) && SEND_IDLE_INTERVAL > SEND_INTERVAL
+							if (!send_success.load())
+								Schedule::sleep(&alarm, SEND_IDLE_INTERVAL);
+							else
+						#endif
+								Schedule::sleep(&alarm, SEND_INTERVAL);
 					}
-					else
-						send_success.store(true);
-					#if SEND_IDLE_INTERVAL > SEND_INTERVAL
-						if (!send_success.load())
-							Schedule::sleep(&alarm, SEND_IDLE_INTERVAL);
-						else
-					#endif
+					else {
+						#if defined(ENABLE_SDCARD)
+							Schedule::sleep(&alarm, MEASURE_INTERVAL);
+						#else
 							Schedule::sleep(&alarm, SEND_INTERVAL);
+						#endif
+					}
 				}
 				catch (...) {
 					COM::println("ERROR: DAEMON::Push::loop exception thrown");

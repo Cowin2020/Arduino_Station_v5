@@ -1,10 +1,14 @@
 #ifndef INCLUDE_DAEMON_H
 #define INCLUDE_DAEMON_H
 
+/* ************************************************************************** */
+
 #include <atomic>
 #include <condition_variable>
 
 #include <esp_pthread.h>
+
+#include "basic.h"
 
 /* ************************************************************************** */
 
