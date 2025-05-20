@@ -52,15 +52,15 @@ namespace Variable {
 			wifi_pass = value;
 		else if (key == "SITE_NAME")
 			site_name = value;
-		else if (key == "MEASURE_INTERVAL") {
+		else if (key == "MEASURE_INTERVAL/minute") {
 			char const *p = value.c_str();
 			unsigned int const n = parse_uint(&p);
-			if (*p || n < 60 || n > 3600) {
+			if (*p || n <= SEND_INTERVAL || n >= 60*24) {
 				COM::print("WARN: Incorrect measure interval ");
 				COM::println(value);
 				return false;
 			}
-			measure_interval = n;
+			measure_interval = n * (1000*60);
 		}
 		else {
 			COM::print("WARN: Unknown config key ");
