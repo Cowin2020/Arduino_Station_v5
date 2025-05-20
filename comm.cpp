@@ -368,7 +368,7 @@ namespace LORA {
 					DAEMON::Push::ack(serial);
 					#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
 						{
-							OLED_LOCK(olec_lock);
+							OLED_LOCK(oled_lock);
 							OLED::draw_received();
 						}
 					#endif
