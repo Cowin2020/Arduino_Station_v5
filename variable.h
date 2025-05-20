@@ -10,6 +10,8 @@ namespace Variable {
 	extern class String wifi_ssid;
 	extern class String wifi_pass;
 	extern class String site_name;
+
+	extern bool set_from_strings(String key, String value);
 }
 
 /* ************************************************************************** */

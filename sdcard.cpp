@@ -52,28 +52,7 @@ namespace SDCard {
 					Debug::print(k);
 					Debug::print('=');
 					Debug::println(v);
-					if (k == "SECRET_KEY") {
-						memset(Variable::secret_key, 0, sizeof Variable::secret_key);
-						for (unsigned int i = 0; i < v.length(); ++i) {
-							unsigned int const j = i % sizeof Variable::secret_key;
-							Variable::secret_key[j] =
-								Variable::secret_key[j]
-									^ (Variable::secret_key[j] << 1)
-									^ v[i];
-						}
-					}
-					else if (k == "WIFI_SSID")
-						Variable::wifi_ssid = v;
-					else if (k == "WIFI_PASS")
-						Variable::wifi_pass = v;
-					else if (k == "SITE_NAME")
-						Variable::site_name = v;
-					else {
-						COM::print("Unknown config key ");
-						COM::print(k);
-						COM::print('=');
-						COM::println(v);
-					}
+					Variable::set_from_strings(k, v);
 				}
 				Display::println("Config file is read");
 			}
