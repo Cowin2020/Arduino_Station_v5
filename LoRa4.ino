@@ -1,6 +1,7 @@
 #include <RNG.h>
 #include <WiFi.h>
 
+#include "id.h"
 #include "display.h"
 #include "device.h"
 #include "inet.h"
@@ -27,7 +28,7 @@ void setup(void) {
 	LED::initialize();
 	COM::initialize();
 	OLED::initialize();
-	if (!SDCard::initialize()) goto end;
+	if (!SDCard::initialize() && enable_measure) goto end;
 	if (!RTC::initialize()) goto end;
 	if (!Sensor::initialize()) goto end;
 	SDCard::read_config();

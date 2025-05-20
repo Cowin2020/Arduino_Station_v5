@@ -2,8 +2,12 @@
 #define INCLUDE_CONFIG_ID_H
 
 /* Device identity */
-#define DEVICE_ID 0
 #define NUMBER_OF_DEVICES 100
+#if defined(ENABLE_GATEWAY)
+	#define DEVICE_ID 0
+#else
+	#define DEVICE_ID 1
+#endif
 
 #if DEVICE_ID == 0
 	#define ENABLE_GATEWAY

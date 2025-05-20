@@ -33,7 +33,7 @@ namespace SDCard {
 		void read_config(void) {
 			class File file = SD.open(config_file_path, "r");
 			if (!file) {
-				Display::println("Cannot open config file");
+				Display::println("No config file");
 				return;
 			}
 			try {
@@ -48,6 +48,10 @@ namespace SDCard {
 					if (e <= 0 || s.length()-1 <= e) continue;
 					class String const k = s.substring(0, e);
 					class String const v = s.substring(e+1, s.length());
+					Debug::print("DEBUG: read config ");
+					Debug::print(k);
+					Debug::print('=');
+					Debug::println(v);
 					if (k == "SECRET_KEY") {
 						memset(Variable::secret_key, 0, sizeof Variable::secret_key);
 						for (unsigned int i = 0; i < v.length(); ++i) {
@@ -256,7 +260,6 @@ namespace SDCard {
 		}
 
 		bool initialize(void) {
-			if (!enable_measure) return true;
 			pinMode(SD_MISO, INPUT_PULLUP);
 			SPI_1.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
 			if (SD.begin(SD_CS, SPI_1)) {
