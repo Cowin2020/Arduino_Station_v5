@@ -9,7 +9,6 @@
 #include <AES.h>
 #include <GCM.h>
 
-#include "id.h"
 #include "variable.h"
 #include "display.h"
 #include "device.h"
@@ -52,7 +51,7 @@ namespace LORA {
 		SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
 		LoRa.setPins(LORA_CS, LORA_RST, LORA_IRQ);
 
-		if (!enable_gateway) {
+		if (!Variable::enable_gateway) {
 			size_t const N = sizeof router_topology / sizeof *router_topology;
 			size_t i = 0;
 			for (size_t i = 0;; ++i) {
@@ -60,7 +59,7 @@ namespace LORA {
 					last_receiver = 0;
 					break;
 				}
-				if (router_topology[i][1] == my_device_id) {
+				if (router_topology[i][1] == Variable::device_id) {
 					last_receiver = router_topology[i][0];
 					break;
 				}
@@ -152,11 +151,11 @@ namespace LORA {
 		}
 
 		void TIME(struct FullTime const *const fulltime) {
-			packet("TIME", PACKET_TIME, my_device_id, fulltime, sizeof *fulltime);
+			packet("TIME", PACKET_TIME, Variable::device_id, fulltime, sizeof *fulltime);
 		}
 
 		void ASKTIME(void) {
-			packet("ASKTIME", PACKET_ASKTIME, last_receiver, &my_device_id, sizeof my_device_id);
+			packet("ASKTIME", PACKET_ASKTIME, last_receiver, &Variable::device_id, sizeof Variable::device_id);
 		}
 
 		void SEND(Device const receiver, SerialNumber const serial, Data const *const data) {
@@ -167,18 +166,18 @@ namespace LORA {
 					data->writeln(&Serial);
 				#endif
 			}
-			char content[static_cast<size_t>(2 * sizeof my_device_id + sizeof serial + sizeof *data)];
-			std::memcpy(content, &my_device_id, sizeof my_device_id);
-			std::memcpy(content + sizeof my_device_id, &my_device_id, sizeof my_device_id);
-			std::memcpy(content + 2 * sizeof my_device_id, &serial, sizeof serial);
-			std::memcpy(content + 2 * sizeof my_device_id + sizeof serial, data, sizeof *data);
+			char content[static_cast<size_t>(2 * sizeof Variable::device_id + sizeof serial + sizeof *data)];
+			std::memcpy(content, &Variable::device_id, sizeof Variable::device_id);
+			std::memcpy(content + sizeof Variable::device_id, &Variable::device_id, sizeof Variable::device_id);
+			std::memcpy(content + 2 * sizeof Variable::device_id, &serial, sizeof serial);
+			std::memcpy(content + 2 * sizeof Variable::device_id + sizeof serial, data, sizeof *data);
 			packet("SEND", PACKET_SEND, receiver, content, sizeof content);
 		}
 	}
 
 	namespace Receive {
 		static void TIME(Device const device, std::vector<uint8_t> const &content) {
-			if (!enable_gateway) {
+			if (!Variable::enable_gateway) {
 				if (content.size() != sizeof (struct FullTime)) return;
 				struct FullTime const *const time = reinterpret_cast<struct FullTime const *>(content.data());
 
@@ -186,31 +185,26 @@ namespace LORA {
 					size_t i = 0;
 					for (;;) {
 						if (i >= sizeof router_topology / sizeof *router_topology) return;
-						if (router_topology[i][0] == my_device_id && router_topology[i][1] == device) break;
+						if (router_topology[i][0] == Variable::device_id && router_topology[i][1] == device) break;
 						++i;
 					}
 				}
 
 				RTC::set(time);
 				DAEMON::AskTime::synchronized();
-				Send::packet("TIME+", PACKET_TIME, my_device_id, time, sizeof *time);
+				Send::packet("TIME+", PACKET_TIME, Variable::device_id, time, sizeof *time);
 			}
 		}
 
 		static void ASKTIME(Device const device, std::vector<uint8_t> const &content) {
-			if (enable_gateway) {
+			if (Variable::enable_gateway) {
 				if (content.size() != sizeof (Device)) {
 					COM::print("WARN: LoRa ASKTIME: incorrect packet size: ");
 					COM::println(content.size());
 					return;
 				}
-				if (device != my_device_id) return;
+				if (device != Variable::device_id) return;
 				Device const sender = *reinterpret_cast<Device const *>(content.data());
-				if (!(sender > 0 && sender < number_of_devices)) {
-					COM::print("WARN: LoRa ASKTIME: incorrect device: ");
-					COM::println(device);
-					return;
-				}
 				{
 					DEBUG_LOCK(debug_lock);
 					Debug::print("DEBUG: LORA::Receive::ASKTIME ");
@@ -226,20 +220,13 @@ namespace LORA {
 				+ sizeof (Device)       /* router list length >= 1 */
 				+ sizeof (SerialNumber) /* serial code */
 				+ sizeof (struct Data); /* data */
-			if (enable_gateway) {
+			if (Variable::enable_gateway) {
 				if (!(content.size() >= minimal_content_size)) {
 					COM::print("WARN: LoRa SEND: incorrect packet size: ");
 					COM::println(content.size());
 					return;
 				}
-
 				Device const device = *reinterpret_cast<Device const *>(content.data());
-				if (!(device > 0 && device < number_of_devices)) {
-					COM::print("WARN: LoRa SEND: incorrect device: ");
-					COM::println(device);
-					return;
-				}
-
 				size_t routers_length = sizeof (Device);
 				for (;;) {
 					if (routers_length >= content.size()) {
@@ -322,7 +309,7 @@ namespace LORA {
 				}
 
 				Device const receiver = *reinterpret_cast<Device const *>(content.data());
-				if (receiver != my_device_id) return;
+				if (receiver != Variable::device_id) return;
 
 				std::vector<uint8_t> bounce(content.size() + sizeof (Device));
 				std::memcpy(bounce.data() + sizeof (Device), content.data(), content.size());
@@ -333,7 +320,7 @@ namespace LORA {
 		}
 
 		static void ACK(Device const receiver, std::vector<uint8_t> const &content) {
-			if (!enable_gateway) {
+			if (!Variable::enable_gateway) {
 				size_t const minimal_content_size =
 					sizeof (Device)          /* terminal */
 					+ sizeof (Device)        /* router list length >= 1 */
@@ -345,12 +332,12 @@ namespace LORA {
 					return;
 				}
 
-				if (my_device_id != receiver) return;
+				if (Variable::device_id != receiver) return;
 
 				Device const terminal = *reinterpret_cast<Device const *>(content.data());
 				Device const router0 = *reinterpret_cast<Device const *>(content.data() + sizeof (Device));
-				if (my_device_id == terminal) {
-					if (my_device_id != router0) {
+				if (Variable::device_id == terminal) {
+					if (Variable::device_id != router0) {
 						COM::print("WARN: LoRa ACK: dirty router list");
 						return;
 					}
@@ -438,13 +425,6 @@ namespace LORA {
 					Debug::print("DEBUG: LORA::Receive::decode unknown packet type ");
 					Debug::println(*packet_type);
 					return;
-			}
-
-			if (!(*device >= 0 && *device < number_of_devices)) {
-				DEBUG_LOCK(debug_lock);
-				Debug::print("DEBUG: LORA::Receive::decode unknown device ");
-				Debug::println(*device);
-				return;
 			}
 
 			AuthCipher cipher;

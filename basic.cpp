@@ -2,9 +2,9 @@
 #include <cstdio>
 
 #include "config_device.h"
+#include "variable.h"
 #include "display.h"
 #include "basic.h"
-#include "daemon.h"
 
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@ bool Configuration::decode(class String const &string) {
 
 void Configuration::apply(void) const {
 	if (measure_interval > SEND_INTERVAL || measure_interval <= 1000*60*60*24)
-		DAEMON::Measure::set_interval(measure_interval);
+		Variable::measure_interval = measure_interval;
 }
 
 /* ************************************************************************** */

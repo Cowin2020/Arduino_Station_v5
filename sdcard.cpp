@@ -3,7 +3,6 @@
 
 #include <SD.h>
 
-#include "id.h"
 #include "variable.h"
 #include "display.h"
 #include "sdcard.h"
@@ -84,8 +83,8 @@ namespace SDCard {
 			next_position = 0;
 		}
 
-		void clean_up(void) {
-			if (!enable_measure) return;
+		bool clean_up(void) {
+			if (!Variable::enable_measure) return false;
 			DEVICE_LOCK(device_lock);
 			OLED::home();
 			Display::println("Cleaning up data file");
@@ -94,19 +93,19 @@ namespace SDCard {
 			if (SD.exists(cleanup_file_path))
 				SD.remove(data_file_path);
 			else if (!SD.rename(data_file_path, cleanup_file_path))
-				return;
+				return false;
 			class File cleanup_file = SD.open(cleanup_file_path, "r");
 			if (!cleanup_file) {
 				COM::println("Fail to open clean-up file");
 				clean_up_failed();
-				return;
+				return false;
 			}
 			class File data_file = SD.open(data_file_path, "w");
 			if (!data_file) {
 				COM::println("Fail to create data file");
 				cleanup_file.close();
 				clean_up_failed();
-				return;
+				return false;
 			}
 
 			#if !defined(DEBUG_CLEAN_DATA)
@@ -120,7 +119,7 @@ namespace SDCard {
 						cleanup_file.close();
 						data_file.close();
 						clean_up_failed();
-						return;
+						return false;
 					}
 
 					if (s == "0") {
@@ -135,10 +134,11 @@ namespace SDCard {
 			current_position = 0;
 			next_position = 0;
 			SD.remove(cleanup_file_path);
+			return true;
 		}
 
 		void add_data(struct Data const *const data) {
-			if (!enable_measure) return;
+			if (!Variable::enable_measure) return;
 			DEVICE_LOCK(device_lock);
 			class File data_file = SD.open(data_file_path, "a");
 			if (!data_file)
@@ -173,7 +173,7 @@ namespace SDCard {
 		}
 
 		bool read_data(struct Data *const data) {
-			if (!enable_measure) return false;
+			if (!Variable::enable_measure) return false;
 			DEVICE_LOCK(device_lock);
 			class File file = SD.open(DATA_FILE_PATH, "r+", true);
 			if (!file) {
@@ -221,7 +221,7 @@ namespace SDCard {
 				Debug::println(next_position);
 				Debug::flush();
 			}
-			if (!enable_measure) return;
+			if (!Variable::enable_measure) return;
 			if (current_position == next_position) return;
 			DEVICE_LOCK(device_lock);
 			class File file = SD.open(DATA_FILE_PATH, "r+", true);
@@ -247,8 +247,7 @@ namespace SDCard {
 					Display::println("SD card initialized");
 					COM::println(String("SD Card type: ") + String(SD.cardType()));
 				}
-				clean_up();
-				{
+				if (clean_up()) {
 					OLED_LOCK(oled_lock);
 					Display::println("Data file cleaned");
 					OLED::display();

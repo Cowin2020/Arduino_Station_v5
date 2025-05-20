@@ -8,7 +8,7 @@
 
 #include <RNG.h>
 
-#include "id.h"
+#include "variable.h"
 #include "display.h"
 #include "device.h"
 #include "comm.h"
@@ -23,8 +23,8 @@
 #endif
 
 static bool const enable_sleep =
-	#if defined(ENABLE_SLEEP)
-		!enable_gateway
+	#if defined(ENABLE_SLEEP) && !defined(ENABLE_GATEWAY)
+		true
 	#else
 		false
 	#endif
@@ -259,9 +259,9 @@ namespace DAEMON {
 		static std::atomic<bool> send_success;
 
 		static void send_data(struct Data const data) {
-			if (enable_gateway) {
+			if (Variable::enable_gateway) {
 				struct WIFI::upload__result const upload_result =
-					WIFI::upload(my_device_id, ++current_serial, &data);
+					WIFI::upload(Variable::device_id, ++current_serial, &data);
 				if (upload_result.upload_success) {
 					send_success.store(true);
 					#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
@@ -281,7 +281,7 @@ namespace DAEMON {
 			else {
 				/* TODO: add routing */
 				for (unsigned int t=0;;) {
-					LORA::Send::SEND(my_device_id, ++current_serial, &data);
+					LORA::Send::SEND(Variable::device_id, ++current_serial, &data);
 					Schedule::idle(&alarm, ACK_TIMEOUT);
 					if (acked_serial.load() == current_serial.load()) {
 						send_success.store(true);
@@ -383,7 +383,7 @@ namespace DAEMON {
 				OLED::print(' ');
 			#endif
 
-			OLED::println((unsigned int)my_device_id);
+			OLED::println(static_cast<unsigned int>(Variable::device_id));
 			struct FullTime time = data.time;
 			#if defined(DASHBOARD_TIMEZONE)
 				time += DASHBOARD_TIMEZONE;
@@ -552,20 +552,19 @@ namespace DAEMON {
 	}
 
 	namespace Measure {
-		static Millisecond interval = MEASURE_INTERVAL;
 		static struct Alarm alarm;
 
 		static void print_data(struct Data const *const data) {
 			OLED_LOCK(oled_lock);
 			OLED::home();
 			Display::print("Device ");
-			Display::println(my_device_id);
+			Display::println(Variable::device_id);
 			data->println();
 			OLED::display();
 		}
 
 		void set_interval(Millisecond const ms) {
-			interval = max((2 + RESEND_TIMES) * SEND_INTERVAL, ms);
+			Variable::measure_interval = max((2 + RESEND_TIMES) * SEND_INTERVAL, ms);
 		}
 
 		[[noreturn]]
@@ -584,7 +583,7 @@ namespace DAEMON {
 					}
 					else
 						COM::println("Failed to measure");
-					Schedule::sleep(&alarm, interval);
+					Schedule::sleep(&alarm, Variable::measure_interval);
 				}
 				catch (...) {
 					COM::println("ERROR: DAEMON::Measure::loop exception thrown");
@@ -600,7 +599,7 @@ namespace DAEMON {
 		esp_pthread_set_cfg(&esp_pthread_cfg);
 		std::thread(LoRa::loop).detach();
 
-		if (enable_gateway) {
+		if (Variable::enable_gateway) {
 			esp_pthread_set_cfg(&esp_pthread_cfg);
 			std::thread(Time::loop).detach();
 		}
@@ -609,7 +608,7 @@ namespace DAEMON {
 			std::thread(AskTime::loop).detach();
 		}
 
-		if (enable_measure) {
+		if (Variable::enable_measure) {
 			esp_pthread_set_cfg(&esp_pthread_cfg);
 			std::thread(Push::loop).detach();
 			#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0

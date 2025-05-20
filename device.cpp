@@ -1,4 +1,4 @@
-#include "id.h"
+#include "variable.h"
 #include "display.h"
 #include "device.h"
 
@@ -378,7 +378,7 @@ void Data::println(void) const {
 	Display::println(String(this->time));
 
 	#if defined(ENABLE_BATTERY_GAUGE)
-		Display::println("Battery: ");
+		Display::print("Battery: ");
 		Display::print(this->battery_voltage, 1);
 		Display::print("V ");
 		Display::print(this->battery_percentage, 0);
@@ -415,7 +415,7 @@ void Data::println(void) const {
 namespace Sensor {
 	bool initialize(void) {
 		if (!RTC::initialize()) return false;
-		if (!enable_measure) return true;
+		if (!Variable::enable_measure) return true;
 		DEVICE_LOCK(device_lock);
 
 		/* Initial battery gauge */

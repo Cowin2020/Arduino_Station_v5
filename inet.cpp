@@ -1,6 +1,5 @@
 #include <HTTPClient.h>
 
-#include "id.h"
 #include "variable.h"
 #include "display.h"
 #include "device.h"
@@ -11,7 +10,7 @@
 
 namespace WIFI {
 	void initialize(void) {
-		if (enable_gateway) {
+		if (Variable::enable_gateway) {
 			WiFi.mode(WIFI_STA);
 			WiFi.begin(Variable::wifi_ssid, Variable::wifi_pass);
 		}
@@ -116,7 +115,7 @@ namespace WIFI {
 	void loop(void) {
 		static bool first_WiFi = false;
 		static wl_status_t last_WiFi = WL_IDLE_STATUS;
-		if (enable_gateway) {
+		if (Variable::enable_gateway) {
 			wl_status_t this_WiFi = WiFi.status();
 			if (this_WiFi != last_WiFi) {
 				COM::print("WiFi status: ");

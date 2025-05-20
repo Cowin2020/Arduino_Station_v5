@@ -1,7 +1,7 @@
 #include <RNG.h>
 #include <WiFi.h>
 
-#include "id.h"
+#include "variable.h"
 #include "display.h"
 #include "device.h"
 #include "inet.h"
@@ -23,15 +23,14 @@ void setup(void) {
 		delay(START_DELAY);
 	#endif
 	setup_success = false;
-	if (CPU_frequency)
-		setCpuFrequencyMhz(CPU_frequency);
+	if (CPU_frequency) setCpuFrequencyMhz(CPU_frequency);
 	LED::initialize();
 	COM::initialize();
 	OLED::initialize();
-	if (!SDCard::initialize() && enable_measure) goto end;
+	if (!SDCard::initialize()) goto end;
+	SDCard::read_config();
 	if (!RTC::initialize()) goto end;
 	if (!Sensor::initialize()) goto end;
-	SDCard::read_config();
 	WIFI::initialize();
 	if (!LORA::initialize()) goto end;
 	DAEMON::run();
