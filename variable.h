@@ -19,6 +19,8 @@ namespace Variable {
 	extern unsigned char secret_key[16];
 	extern class String wifi_ssid;
 	extern class String wifi_pass;
+	extern class String http_authorization_type;
+	extern class String http_authorization_code;
 	extern class String site_name;
 	extern Millisecond measure_interval;
 

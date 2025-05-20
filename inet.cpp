@@ -85,11 +85,9 @@ namespace WIFI {
 		COM::print("Upload to ");
 		COM::println(URL);
 		HTTP_client.begin(URL);
-		static char const authorization_type[] = HTTP_AUTHORIZATION_TYPE;
-		static char const authorization_code[] = HTTP_AUTHORIZATION_CODE;
-		if (authorization_type[0] && authorization_code[0]) {
-			HTTP_client.setAuthorizationType(authorization_type);
-			HTTP_client.setAuthorization(authorization_code);
+		if (Variable::http_authorization_type.length() && Variable::http_authorization_code.length()) {
+			HTTP_client.setAuthorizationType(Variable::http_authorization_type.c_str());
+			HTTP_client.setAuthorization(Variable::http_authorization_code.c_str());
 		}
 		signed int HTTP_status = HTTP_client.GET();
 		{

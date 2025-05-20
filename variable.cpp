@@ -25,6 +25,8 @@ namespace Variable {
 	unsigned char secret_key[16] = SECRET_KEY;
 	class String wifi_ssid = WIFI_SSID;
 	class String wifi_pass = WIFI_PASS;
+	class String http_authorization_type = HTTP_AUTHORIZATION_TYPE;
+	class String http_authorization_code = HTTP_AUTHORIZATION_CODE;
 	class String site_name = SITE_NAME;
 	extern Millisecond measure_interval = MEASURE_INTERVAL;
 
@@ -50,6 +52,10 @@ namespace Variable {
 			wifi_ssid = value;
 		else if (key == "WIFI_PASS")
 			wifi_pass = value;
+		else if (key == "HTTP_AUTHORIZATION_TYPE")
+			http_authorization_type = value;
+		else if (key == "HTTP_AUTHORIZATION_CODE")
+			http_authorization_code = value;
 		else if (key == "SITE_NAME")
 			site_name = value;
 		else if (key == "MEASURE_INTERVAL/minute") {
