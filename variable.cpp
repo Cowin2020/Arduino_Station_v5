@@ -6,6 +6,18 @@
 
 /* ************************************************************************** */
 
+#if defined(ENABLE_GATEWAY)
+	#if DEVICE_ID != 0
+		#error "DEVICE_ID should be 0 for gateway"
+	#endif
+#else
+	#if DEVICE_ID == 0
+		#error "DEVICE_ID should not be 0 other than gateway"
+	#endif
+#endif
+
+/* ************************************************************************** */
+
 namespace Variable {
 	Device device_id = DEVICE_ID;
 	bool const enable_gateway =
