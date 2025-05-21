@@ -326,7 +326,7 @@ namespace DAEMON {
 					}
 					else {
 						#if defined(ENABLE_SDCARD)
-							Schedule::sleep(&alarm, MEASURE_INTERVAL);
+							Schedule::sleep(&alarm, Variable::measure_interval);
 						#else
 							Schedule::sleep(&alarm, SEND_INTERVAL);
 						#endif
