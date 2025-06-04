@@ -29,6 +29,20 @@ namespace SDCard {
 		static off_t current_position = 0;
 		static off_t next_position = 0;
 
+		void write_config(void) {
+			class File file = SD.open(config_file_path, "w");
+			if (!file) {
+				COM::println("Cannot open config file to save");
+				return;
+			}
+			try {
+				Variable::dump_to_stream(&file);
+			}
+			catch (...) {
+				OLED::println("Cannot write config file");
+			}
+		}
+
 		void read_config(void) {
 			class File file = SD.open(config_file_path, "r");
 			if (!file) {
@@ -266,8 +280,8 @@ namespace SDCard {
 		static bool filled = false;
 		static struct Data last_data;
 
+		void write_config(void) {}
 		void read_config(void) {}
-
 		void clean_up(void) {}
 
 		void add_data(struct Data const *const data) {

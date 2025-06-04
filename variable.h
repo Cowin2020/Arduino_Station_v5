@@ -6,6 +6,7 @@
 #include <stdbool.h>
 
 #include <WString.h>
+#include <Print.h>
 
 #include "basic.h"
 
@@ -25,6 +26,7 @@ namespace Variable {
 	extern Millisecond measure_interval;
 	extern bool enable_sleep;
 
+	extern void dump_to_stream(class Print *print);
 	extern bool set_from_strings(String key, String value);
 }
 

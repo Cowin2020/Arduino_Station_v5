@@ -556,10 +556,6 @@ namespace DAEMON {
 			OLED::display();
 		}
 
-		void set_interval(Millisecond const ms) {
-			Variable::measure_interval = max((2 + RESEND_TIMES) * SEND_INTERVAL, ms);
-		}
-
 		[[noreturn]]
 		void loop(void) {
 			Schedule::add_timer(&alarm, "DAEMON::Measure");

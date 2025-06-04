@@ -49,6 +49,33 @@ namespace Variable {
 		#endif
 		;
 
+	void dump_to_stream(class Print *const stream) {
+		stream->print("DEVICE_ID=");
+		stream->println(device_id);
+		{
+			char ascii_key[sizeof secret_key << 1];
+			for (size_t i = 0; i < sizeof secret_key; ++i) {
+				ascii_key[i] = (secret_key[i] >> 4) | 0x40;
+				ascii_key[i + sizeof secret_key] = ((secret_key[i] >> 4) ^ (secret_key[i] & 0x0F)) | 0x40;
+			}
+			stream->print("SECRET_KEY=");
+			for (size_t i = 0; i < sizeof ascii_key; ++i)
+				stream->print(ascii_key[i]);
+			stream->println();
+		}
+		stream->print("WIFI_SSID=");
+		stream->println(wifi_ssid);
+		stream->print("WIFI_PASS=");
+		stream->println(wifi_pass);
+		stream->print("HTTP_AUTHORIZATION_TYPE=");
+		stream->println(http_authorization_type);
+		stream->print("HTTP_AUTHORIZATION_CODE=");
+		stream->println(http_authorization_code);
+		stream->print("SITE_NAME=");
+		stream->println(site_name);
+		stream->print("MEASURE_INTERVAL/minute=");
+		stream->println(measure_interval / (1000*60));
+	}
 
 	bool set_from_strings(String const key, String const value) {
 		if (key == "DEVICE_ID" && !enable_gateway) {

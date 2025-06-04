@@ -4,6 +4,8 @@
 #include "config_device.h"
 #include "variable.h"
 #include "display.h"
+#include "SDCard.h"
+
 #include "basic.h"
 
 /* ************************************************************************** */
@@ -80,8 +82,14 @@ bool Configuration::decode(class String const &string) {
 }
 
 void Configuration::apply(void) const {
-	if (measure_interval > SEND_INTERVAL || measure_interval <= 1000*60*60*24)
+	if (
+		measure_interval != Variable::measure_interval
+			&& measure_interval > (2 + RESEND_TIMES) * SEND_INTERVAL
+			&& measure_interval <= 1000*60*60*24
+	) {
 		Variable::measure_interval = measure_interval;
+		SDCard::write_config();
+	}
 }
 
 /* ************************************************************************** */

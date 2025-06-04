@@ -45,7 +45,6 @@ namespace DAEMON {
 		[[noreturn]] extern void loop(void);
 	}
 	namespace Measure {
-		void set_interval(Millisecond ms);
 		[[noreturn]] extern void loop(void);
 	}
 	extern void run(void);
