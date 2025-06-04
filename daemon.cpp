@@ -22,14 +22,6 @@
 	#define SEND_INTERVAL (ACK_TIMEOUT * (RESEND_TIMES + 2))
 #endif
 
-static bool const enable_sleep =
-	#if defined(ENABLE_SLEEP) && !defined(ENABLE_GATEWAY)
-		true
-	#else
-		false
-	#endif
-	;
-
 template <typename TYPE>
 static TYPE rand_int(void) {
 	TYPE x;
@@ -157,7 +149,7 @@ namespace DAEMON {
 					}
 					if (!awake && soonest != nullptr) {
 						Millisecond duration = soonest->start + soonest->duration - now;
-						if (enable_sleep && !sleepless && duration > SLEEP_MARGIN) {
+						if (Variable::enable_sleep && !sleepless && duration > SLEEP_MARGIN) {
 							DEVICE_LOCK(device_lock);
 							Debug::print("DEBUG: sleep ");
 							Debug::print(duration);

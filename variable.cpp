@@ -40,7 +40,15 @@ namespace Variable {
 	class String http_authorization_type = HTTP_AUTHORIZATION_TYPE;
 	class String http_authorization_code = HTTP_AUTHORIZATION_CODE;
 	class String site_name = SITE_NAME;
-	extern Millisecond measure_interval = MEASURE_INTERVAL;
+	Millisecond measure_interval = MEASURE_INTERVAL;
+	bool enable_sleep =
+		#if defined(ENABLE_SLEEP) && !defined(ENABLE_GATEWAY)
+			true
+		#else
+			false
+		#endif
+		;
+
 
 	bool set_from_strings(String const key, String const value) {
 		if (key == "DEVICE_ID" && !enable_gateway) {

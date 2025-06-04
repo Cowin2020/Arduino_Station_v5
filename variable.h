@@ -23,6 +23,7 @@ namespace Variable {
 	extern class String http_authorization_code;
 	extern class String site_name;
 	extern Millisecond measure_interval;
+	extern bool enable_sleep;
 
 	extern bool set_from_strings(String key, String value);
 }
