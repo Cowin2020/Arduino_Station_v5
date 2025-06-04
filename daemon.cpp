@@ -402,19 +402,20 @@ namespace DAEMON {
 			#endif
 
 			do {
-				if (false) {
-					/* NOTHING: unreachable */
-			#if defined(ENABLE_BATTERY_GAUGE)
+				if (state < __LINE__) {
+					state = __LINE__;
+					OLED::println("Measure");
+					OLED::print(Variable::measure_interval / 60000);
+					OLED_space_or_newline();
+					OLED::println("minutes");
+					break;
 				}
+			#if defined(ENABLE_BATTERY_GAUGE)
 				else if (state < __LINE__) {
 					state = __LINE__;
 					OLED::println("Power");
 					OLED::print(data.battery_voltage, 1);
-					#if defined(OLED_HORIZONAL)
-						OLED::print(' ');
-					#else
-						OLED::println();
-					#endif
+					OLED_space_or_newline();
 					OLED::print("V");
 					break;
 				}
@@ -424,18 +425,18 @@ namespace DAEMON {
 					OLED::print(data.battery_percentage, 0);
 					OLED_space_or_newline();
 					OLED::print("%");
+				}
 			#endif
 			#if defined(ENABLE_DALLAS)
-				}
 				else if (state < __LINE__) {
 					state = __LINE__;
 					OLED::println("Dallas");
 					OLED::print(data.dallas_temperature);
 					OLED_space_or_newline();
 					OLED::print("deg C");
+				}
 			#endif
 			#if defined(ENABLE_SHT40)
-				}
 				else if (state < __LINE__) {
 					state = __LINE__;
 					OLED::println("SHT40");
@@ -449,9 +450,9 @@ namespace DAEMON {
 					OLED::print(data.sht40_humidity);
 					OLED_space_or_newline();
 					OLED::print("%RH");
+				}
 			#endif
 			#if defined(ENABLE_BME280)
-				}
 				else if (state < __LINE__) {
 					state = __LINE__;
 					OLED::println("BME280");
@@ -472,17 +473,17 @@ namespace DAEMON {
 					OLED::print(data.bme280_humidity, 0);
 					OLED_space_or_newline();
 					OLED::print("%RH");
+				}
 			#endif
 			#if defined(ENABLE_LTR390)
-				}
 				else if (state < __LINE__) {
 					state = __LINE__;
 					OLED::println("LTR");
 					OLED::print(data.ltr390_ultraviolet);
 					OLED_space_or_newline();
 					OLED::print("UV");
-			#endif
 				}
+			#endif
 				else if (!state)
 					break;
 				else
