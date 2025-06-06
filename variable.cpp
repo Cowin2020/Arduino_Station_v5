@@ -107,13 +107,13 @@ namespace Variable {
 			site_name = value;
 		else if (key == "MEASURE_INTERVAL/minute") {
 			char const *p = value.c_str();
-			unsigned int const n = parse_uint(&p);
-			if (*p || n <= SEND_INTERVAL || n >= 60*24) {
+			unsigned int const n = parse_uint(&p) * (1000*60);
+			if (*p || n <= SEND_INTERVAL || n >= 1000*60*60*24) {
 				COM::print("WARN: Incorrect measure interval ");
 				COM::println(value);
 				return false;
 			}
-			measure_interval = n * (1000*60);
+			measure_interval = n;
 		}
 		else {
 			COM::print("WARN: Unknown config key ");
