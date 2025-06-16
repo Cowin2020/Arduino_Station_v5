@@ -60,7 +60,7 @@ namespace WIFI {
 		snprintf(
 			URL, sizeof URL,
 			HTTP_UPLOAD_FORMAT,
-			Variable::site_name.c_str(),
+			Variable::site_code.c_str(),
 			device, serial, time.c_str()
 			#ifdef ENABLE_BATTERY_GAUGE
 				, data->battery_voltage

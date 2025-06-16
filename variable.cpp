@@ -39,7 +39,7 @@ namespace Variable {
 	class String wifi_pass = WIFI_PASS;
 	class String http_authorization_type = HTTP_AUTHORIZATION_TYPE;
 	class String http_authorization_code = HTTP_AUTHORIZATION_CODE;
-	class String site_name = SITE_NAME;
+	class String site_code = SITE_CODE;
 	Millisecond measure_interval = MEASURE_INTERVAL;
 	bool enable_sleep =
 		#if defined(ENABLE_SLEEP) && !defined(ENABLE_GATEWAY)
@@ -71,8 +71,8 @@ namespace Variable {
 		stream->println(http_authorization_type);
 		stream->print("HTTP_AUTHORIZATION_CODE=");
 		stream->println(http_authorization_code);
-		stream->print("SITE_NAME=");
-		stream->println(site_name);
+		stream->print("SITE_CODE=");
+		stream->println(site_code);
 		stream->print("MEASURE_INTERVAL/minute=");
 		stream->println(measure_interval / (1000*60));
 	}
@@ -103,8 +103,8 @@ namespace Variable {
 			http_authorization_type = value;
 		else if (key == "HTTP_AUTHORIZATION_CODE")
 			http_authorization_code = value;
-		else if (key == "SITE_NAME")
-			site_name = value;
+		else if (key == "SITE_CODE")
+			site_code = value;
 		else if (key == "MEASURE_INTERVAL/minute") {
 			char const *p = value.c_str();
 			unsigned int const n = parse_uint(&p) * (1000*60);

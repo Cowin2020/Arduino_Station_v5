@@ -22,7 +22,7 @@ namespace Variable {
 	extern class String wifi_pass;
 	extern class String http_authorization_type;
 	extern class String http_authorization_code;
-	extern class String site_name;
+	extern class String site_code;
 	extern Millisecond measure_interval;
 	extern bool enable_sleep;
 
