@@ -8,7 +8,7 @@
 #define NDEBUG
 //	#define DEBUG_CLEAN_DATA
 
-/* Hareware */
+/* Hardware */
 #define ENABLE_SDCARD
 //	#define ENABLE_LOG_FILE
 #define ENABLE_BATTERY_GAUGE BATTERY_GAUGE_DFROBOT
