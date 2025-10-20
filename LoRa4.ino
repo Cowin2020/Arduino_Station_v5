@@ -19,7 +19,7 @@
 static bool setup_success;
 
 void setup(void) {
-	#if !defined(NDEBUG)
+	#if !defined(NDEBUG) && defined(START_DELAY)
 		delay(START_DELAY);
 	#endif
 	setup_success = false;
