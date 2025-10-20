@@ -88,7 +88,7 @@ namespace SDCard {
 			return count;
 		}
 
-		void clean_up_failed(void) {
+		static void clean_up_failed(void) {
 			unsigned int const num_of_files = count_files();
 			char filename[ERROR_FILE_PATH_LENGTH];
 			snprintf(filename, sizeof filename, ERROR_FILE_PATH_PATTERN, num_of_files);
@@ -282,7 +282,7 @@ namespace SDCard {
 
 		void write_config(void) {}
 		void read_config(void) {}
-		void clean_up(void) {}
+		bool clean_up(void) {return false;}
 
 		void add_data(struct Data const *const data) {
 			std::lock_guard<std::mutex> lock(mutex);
