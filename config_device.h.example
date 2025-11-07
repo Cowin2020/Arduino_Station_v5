@@ -9,7 +9,9 @@
 //	#define DEBUG_CLEAN_DATA
 
 /* Hardware */
-#define ENABLE_SDCARD
+#if defined(ENABLE_MEASURE)
+	#define ENABLE_SDCARD
+#endif
 //	#define ENABLE_LOG_FILE
 #define ENABLE_BATTERY_GAUGE BATTERY_GAUGE_DFROBOT
 #define ENABLE_DALLAS 3
@@ -29,7 +31,7 @@
 #define WIFI_SSID "my Wifi ID"
 #define WIFI_PASS "my WiFi password"
 #define HTTP_UPLOAD_LENGTH 512
-#define SITE_NAME "UNKNOWN"
+#define SITE_CODE "my_site"
 #define HTTP_UPLOAD_FORMAT \
 	"http://www.example.com/REST/upload" \
 	"?site=%1s&device=%2$u&serial=%3$u&time=%4$s"
