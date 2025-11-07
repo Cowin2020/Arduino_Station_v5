@@ -127,7 +127,7 @@ namespace WIFI {
 					case WL_CONNECT_FAILED:
 					case WL_CONNECTION_LOST:
 					case WL_DISCONNECTED:
-						WiFi.begin();
+						WiFi.begin(Variable::wifi_ssid, Variable::wifi_pass);
 				}
 				last_WiFi = this_WiFi;
 			}
