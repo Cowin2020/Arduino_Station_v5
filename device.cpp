@@ -458,6 +458,9 @@ void Data::dashboard(void) const {
 		}
 	#if defined(ENABLE_BATTERY_GAUGE)
 		else if (state < __LINE__) {
+		Debug::println("DEBUG: upload");
+		Debug::flush();
+		delay(10);
 			state = __LINE__;
 			OLED::println("Power");
 			OLED::print(this->battery_voltage, 1);
@@ -612,6 +615,8 @@ namespace Sensor {
 			#endif
 		#endif
 		#if defined(ENABLE_DALLAS)
+			dallas.requestTemperatures();
+			delay(750);
 			data->dallas_temperature = dallas.getTempCByIndex(0);
 		#endif
 		#if defined(ENABLE_SHT40)
