@@ -65,7 +65,8 @@ struct [[gnu::packed]] Data {
 
 	void writeln(class Print *print) const;
 	bool readln(class Stream *stream);
-	void println() const;
+	void println(void) const;
+	void dashboard(void) const;
 };
 
 namespace Sensor {

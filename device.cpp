@@ -412,6 +412,129 @@ void Data::println(void) const {
 	#endif
 }
 
+inline static void OLED_space_or_newline(void) {
+	#if defined(OLED_HORIZONAL)
+		OLED::print(' ');
+	#else
+		OLED::println();
+	#endif
+}
+
+void Data::dashboard(void) const {
+	OLED::println(static_cast<unsigned int>(Variable::device_id));
+	struct FullTime time = this->time;
+	#if defined(DASHBOARD_TIMEZONE)
+		time += DASHBOARD_TIMEZONE;
+	#endif
+	#if defined(OLED_HORIZONAL)
+		OLED::print(static_cast<unsigned int>(time.day));
+		OLED::print('/');
+		OLED::print(static_cast<unsigned int>(time.month));
+		OLED::print('/');
+		OLED::println(time.year);
+	#else
+		OLED::println(time.year);
+		OLED::print(static_cast<unsigned int>(time.day));
+		OLED::print('/');
+		OLED::println(static_cast<unsigned int>(time.month));
+	#endif
+	if (time.hour < 10) OLED::print('0');
+	OLED::print(static_cast<unsigned int>(time.hour));
+	OLED::print(':');
+	if (time.minute < 10) OLED::print('0');
+	OLED::println(static_cast<unsigned int>(time.minute));
+	#if defined(OLED_HORIZONAL)
+		OLED::println();
+	#endif
+
+	static unsigned int state = 0;
+	do {
+		if (state < __LINE__) {
+			state = __LINE__;
+			OLED::println("Measure");
+			OLED::print(Variable::measure_interval / 60000);
+			OLED_space_or_newline();
+			OLED::println("minutes");
+		}
+	#if defined(ENABLE_BATTERY_GAUGE)
+		else if (state < __LINE__) {
+			state = __LINE__;
+			OLED::println("Power");
+			OLED::print(this->battery_voltage, 1);
+			OLED_space_or_newline();
+			OLED::print("V");
+		}
+		else if (state < __LINE__) {
+			state = __LINE__;
+			OLED::println("Power");
+			OLED::print(this->battery_percentage, 0);
+			OLED_space_or_newline();
+			OLED::print("%");
+		}
+	#endif
+	#if defined(ENABLE_DALLAS)
+		else if (state < __LINE__) {
+			state = __LINE__;
+			OLED::println("Dallas");
+			OLED::print(this->dallas_temperature);
+			OLED_space_or_newline();
+			OLED::print("deg C");
+		}
+	#endif
+	#if defined(ENABLE_SHT40)
+		else if (state < __LINE__) {
+			state = __LINE__;
+			OLED::println("SHT40");
+			OLED::print(this->sht40_temperature);
+			OLED_space_or_newline();
+			OLED::print("deg C");
+		}
+		else if (state < __LINE__) {
+			state = __LINE__;
+			OLED::println("SHT40");
+			OLED::print(this->sht40_humidity);
+			OLED_space_or_newline();
+			OLED::print("%RH");
+		}
+	#endif
+	#if defined(ENABLE_BME280)
+		else if (state < __LINE__) {
+			state = __LINE__;
+			OLED::println("BME280");
+			OLED::print(this->bme280_temperature, 1);
+			OLED_space_or_newline();
+			OLED::print("deg C");
+		}
+		else if (state < __LINE__) {
+			state = __LINE__;
+			OLED::println("BME280");
+			OLED::print(this->bme280_pressure, 0);
+			OLED_space_or_newline();
+			OLED::print("Pa");
+		}
+		else if (state < __LINE__) {
+			state = __LINE__;
+			OLED::println("BME280");
+			OLED::print(this->bme280_humidity, 0);
+			OLED_space_or_newline();
+			OLED::print("%RH");
+		}
+	#endif
+	#if defined(ENABLE_LTR390)
+		else if (state < __LINE__) {
+			state = __LINE__;
+			OLED::println("LTR");
+			OLED::print(this->ltr390_ultraviolet);
+			OLED_space_or_newline();
+			OLED::print("UV");
+		}
+	#endif
+		else
+			state = 0;
+	}
+	while (!state);
+}
+
 namespace Sensor {
 	bool initialize(void) {
 		if (!RTC::initialize()) return false;

@@ -349,19 +349,10 @@ namespace DAEMON {
 	namespace Dashboard {
 		static struct Alarm alarm;
 		static struct Data data;
-		static unsigned int state = 0;
 
 		#if defined(OLED_ROTATION) && !(OLED_ROTATION & 1)
 			#define OLED_HORIZONAL
 		#endif
-
-		inline static void OLED_space_or_newline(void) {
-			#if defined(OLED_HORIZONAL)
-				OLED::print(' ');
-			#else
-				OLED::println();
-			#endif
-		}
 
 		static void show(void) {
 			OLED_LOCK(oled_lock);
@@ -374,122 +365,7 @@ namespace DAEMON {
 			#if defined(OLED_HORIZONAL)
 				OLED::print(' ');
 			#endif
-
-			OLED::println(static_cast<unsigned int>(Variable::device_id));
-			struct FullTime time = data.time;
-			#if defined(DASHBOARD_TIMEZONE)
-				time += DASHBOARD_TIMEZONE;
-			#endif
-			#if defined(OLED_HORIZONAL)
-				OLED::print(static_cast<unsigned int>(time.day));
-				OLED::print('/');
-				OLED::print(static_cast<unsigned int>(time.month));
-				OLED::print('/');
-				OLED::println(time.year);
-			#else
-				OLED::println(time.year);
-				OLED::print(static_cast<unsigned int>(time.day));
-				OLED::print('/');
-				OLED::println(static_cast<unsigned int>(time.month));
-			#endif
-			if (time.hour < 10) OLED::print('0');
-			OLED::print(static_cast<unsigned int>(time.hour));
-			OLED::print(':');
-			if (time.minute < 10) OLED::print('0');
-			OLED::println(static_cast<unsigned int>(time.minute));
-			#if defined(OLED_HORIZONAL)
-				OLED::println();
-			#endif
-
-			do {
-				if (state < __LINE__) {
-					state = __LINE__;
-					OLED::println("Measure");
-					OLED::print(Variable::measure_interval / 60000);
-					OLED_space_or_newline();
-					OLED::println("minutes");
-					break;
-				}
-			#if defined(ENABLE_BATTERY_GAUGE)
-				else if (state < __LINE__) {
-					state = __LINE__;
-					OLED::println("Power");
-					OLED::print(data.battery_voltage, 1);
-					OLED_space_or_newline();
-					OLED::print("V");
-					break;
-				}
-				else if (state < __LINE__) {
-					state = __LINE__;
-					OLED::println("Power");
-					OLED::print(data.battery_percentage, 0);
-					OLED_space_or_newline();
-					OLED::print("%");
-				}
-			#endif
-			#if defined(ENABLE_DALLAS)
-				else if (state < __LINE__) {
-					state = __LINE__;
-					OLED::println("Dallas");
-					OLED::print(data.dallas_temperature);
-					OLED_space_or_newline();
-					OLED::print("deg C");
-				}
-			#endif
-			#if defined(ENABLE_SHT40)
-				else if (state < __LINE__) {
-					state = __LINE__;
-					OLED::println("SHT40");
-					OLED::print(data.sht40_temperature);
-					OLED_space_or_newline();
-					OLED::print("deg C");
-				}
-				else if (state < __LINE__) {
-					state = __LINE__;
-					OLED::println("SHT40");
-					OLED::print(data.sht40_humidity);
-					OLED_space_or_newline();
-					OLED::print("%RH");
-				}
-			#endif
-			#if defined(ENABLE_BME280)
-				else if (state < __LINE__) {
-					state = __LINE__;
-					OLED::println("BME280");
-					OLED::print(data.bme280_temperature, 1);
-					OLED_space_or_newline();
-					OLED::print("deg C");
-				}
-				else if (state < __LINE__) {
-					state = __LINE__;
-					OLED::println("BME280");
-					OLED::print(data.bme280_pressure, 0);
-					OLED_space_or_newline();
-					OLED::print("Pa");
-				}
-				else if (state < __LINE__) {
-					state = __LINE__;
-					OLED::println("BME280");
-					OLED::print(data.bme280_humidity, 0);
-					OLED_space_or_newline();
-					OLED::print("%RH");
-				}
-			#endif
-			#if defined(ENABLE_LTR390)
-				else if (state < __LINE__) {
-					state = __LINE__;
-					OLED::println("LTR");
-					OLED::print(data.ltr390_ultraviolet);
-					OLED_space_or_newline();
-					OLED::print("UV");
-				}
-			#endif
-				else if (!state)
-					break;
-				else
-					state = 0;
-			}
-			while (!state);
+			data.dashboard();
 			if (Push::send_success.load())
 				OLED::draw_received();
 			OLED::display();
