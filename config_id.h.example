@@ -1,6 +1,8 @@
 #ifndef INCLUDE_CONFIG_ID_H
 #define INCLUDE_CONFIG_ID_H
 
+#include "config_device.h"
+
 /* Device identity */
 #if defined(ENABLE_GATEWAY)
 	#define DEVICE_ID 0
@@ -9,9 +11,13 @@
 #endif
 
 #if DEVICE_ID == 0
-	#define ENABLE_GATEWAY
+	#if !defined(ENABLE_GATEWAY)
+		#define ENABLE_GATEWAY
+	#endif
 #else
-	#define ENABLE_MEASURE
+	#if !defined(ENABLE_MEASURE)
+		#define ENABLE_MEASURE
+	#endif
 #endif
 
 #endif // INCLUDE_CONFIG_ID_H

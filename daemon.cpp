@@ -1,3 +1,5 @@
+#include <cstdlib>
+#include <cstring>
 #include <limits>
 #include <vector>
 #include <chrono>
@@ -249,13 +251,64 @@ namespace DAEMON {
 		static std::atomic<SerialNumber> current_serial(0);
 		static std::atomic<SerialNumber> acked_serial(0);
 		static std::atomic<bool> send_success;
+		#if !defined(ENABLE_SDCARD)
+			static std::mutex mutex;
+			static bool filled = false;
+			static union NewData *last_data = nullptr;
+		#endif
 
-		static void send_data(struct Data const data) {
+		bool initialize(void) {
+			#if !defined(ENABLE_SDCARD)
+				Debug::print("DEBUG: NewData::total_size = ");
+				Debug::println(NewData::total_size);
+				last_data = static_cast<union NewData *>(malloc(NewData::total_size));
+				if (last_data == nullptr) {
+					Display::println("No memory to store measurement data");
+					return false;
+				}
+			#endif
+			return true;
+		}
+
+		static void add_data(union NewData const *const data) {
+			#if defined(ENABLE_SDCARD)
+				SDCard::add_data(data);
+			#else
+				if (last_data != nullptr) {
+					std::lock_guard<std::mutex> lock(mutex);
+					filled = true;
+					*last_data = *data;
+				}
+			#endif
+		}
+
+		static bool read_data(union NewData *const data) {
+			#if defined(ENABLE_SDCARD)
+				return SDCard::read_data(data);
+			#else
+				std::lock_guard<std::mutex> lock(mutex);
+				if (!filled || last_data == nullptr) return false;
+				std::memcpy(data, last_data, NewData::total_size);
+				return true;
+			#endif
+		}
+
+		static void next_data(void) {
+			#if defined(ENABLE_SDCARD)
+				SDCard::next_data();
+			#else
+				std::lock_guard<std::mutex> lock(mutex);
+				filled = false;
+			#endif
+		}
+
+		static void send_data(union NewData const *data) {
 			if (Variable::enable_gateway) {
 				struct WIFI::upload__result const upload_result =
-					WIFI::upload(Variable::device_id, ++current_serial, &data);
+					WIFI::upload(Variable::device_id, ++current_serial, data);
 				if (upload_result.upload_success) {
 					send_success.store(true);
+					if (Variable::enable_measure) next_data();
 					#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
 						{
 							OLED_LOCK(oled_lock);
@@ -267,17 +320,17 @@ namespace DAEMON {
 				}
 				else {
 					COM::print("HTTP unable to send data: time=");
-					COM::println(String(data.time));
+					COM::println(String(*data->get_time()));
 				}
 			}
 			else {
 				/* TODO: add routing */
-				for (unsigned int t=0;;) {
-					LORA::Send::SEND(Variable::device_id, ++current_serial, &data);
+				for (unsigned int t = 0;;) {
+					LORA::Send::SEND(Variable::device_id, ++current_serial, data);
 					Schedule::idle(&alarm, ACK_TIMEOUT);
 					if (acked_serial.load() == current_serial.load()) {
 						send_success.store(true);
-						SDCard::next_data();
+						next_data();
 						break;
 					}
 					Debug::print("DEBUG: DAEMON::Push::send_data t=");
@@ -287,10 +340,6 @@ namespace DAEMON {
 					++t;
 				}
 			}
-		}
-
-		void data(struct Data const *const data) {
-			SDCard::add_data(data);
 		}
 
 		void ack(SerialNumber const serial) {
@@ -303,8 +352,9 @@ namespace DAEMON {
 			Schedule::sleep(&alarm, START_DELAY);
 			for (;;)
 				try {
-					struct Data data;
-					if (SDCard::read_data(&data)) {
+					char memory[NewData::total_size];
+					union NewData *const data = reinterpret_cast<union NewData *>(memory);
+					if (read_data(data)) {
 						send_success.store(false);
 						send_data(data);
 						Debug::print("DEBUG: DAEMON::Push::loop send_success=");
@@ -348,7 +398,7 @@ namespace DAEMON {
 
 	namespace Dashboard {
 		static struct Alarm alarm;
-		static struct Data data;
+		static union NewData *data;
 
 		#if defined(OLED_ROTATION) && !(OLED_ROTATION & 1)
 			#define OLED_HORIZONAL
@@ -365,7 +415,7 @@ namespace DAEMON {
 			#if defined(OLED_HORIZONAL)
 				OLED::print(' ');
 			#endif
-			data.dashboard();
+			data->dashboard();
 			if (Push::send_success.load())
 				OLED::draw_received();
 			OLED::display();
@@ -397,33 +447,38 @@ namespace DAEMON {
 			#endif
 		}
 
-		[[noreturn]]
 		void loop(void) {
-			Schedule::add_timer(&alarm, "DAEMON::Dashboard");
-			Schedule::sleep(&alarm, MEASURE_INTERVAL + DASHBOARD_INTERVAL + START_DELAY);
-			#if !defined(OLED_HORIZONAL)
-				OLED::large_font();
+			#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
+				char memory[NewData::total_size];
+				data = reinterpret_cast<union NewData *>(memory);
+				Schedule::add_timer(&alarm, "DAEMON::Dashboard");
+				Schedule::sleep(&alarm, MEASURE_INTERVAL + DASHBOARD_INTERVAL + START_DELAY);
+				#if !defined(OLED_HORIZONAL)
+					OLED::large_font();
+				#endif
+				for (;;)
+					try {
+						if (check_switch()) {
+							show();
+							Schedule::sleep(&alarm, DASHBOARD_INTERVAL);
+						}
+						else {
+							Schedule::sleep(&alarm, DASHBOARD_SLEEP_INTERVAL);
+						}
+					}
+					catch (...) {
+						COM::println("ERROR: DAEMON::Dashboard::loop exception thrown");
+					}
+			#else
+				Display::println("ERROR: DAEMON::Dashboard::loop is executed");
 			#endif
-			for (;;)
-				try {
-					if (check_switch()) {
-						show();
-						Schedule::sleep(&alarm, DASHBOARD_INTERVAL);
-					}
-					else {
-						Schedule::sleep(&alarm, DASHBOARD_SLEEP_INTERVAL);
-					}
-				}
-				catch (...) {
-					COM::println("ERROR: DAEMON::Dashboard::loop exception thrown");
-				}
 		}
 	}
 
 	namespace Measure {
 		static struct Alarm alarm;
 
-		static void print_data(struct Data const *const data) {
+		static void print_data(union NewData const *const data) {
 			OLED_LOCK(oled_lock);
 			OLED::home();
 			Display::print("Device ");
@@ -434,17 +489,18 @@ namespace DAEMON {
 
 		[[noreturn]]
 		void loop(void) {
+			char memory[NewData::total_size];
+			union NewData *const data = reinterpret_cast<union NewData *>(memory);
 			Schedule::add_timer(&alarm, "DAEMON::Measure");
 			Schedule::sleep(&alarm, START_DELAY);
 			for (;;)
 				try {
-					struct Data data;
-					if (Sensor::measure(&data)) {
-						Dashboard::data = data;
+					if (Sensor::measure(data)) {
+						std::memcpy(Dashboard::data, data, NewData::total_size);
 						#if !defined(DASHBOARD_INTERVAL) || !(DASHBOARD_INTERVAL > 0)
-							print_data(&data);
+							print_data(data);
 						#endif
-						Push::data(&data);
+						Push::add_data(data);
 					}
 					else
 						COM::println("Failed to measure");
@@ -490,6 +546,11 @@ namespace DAEMON {
 
 		esp_pthread_set_cfg(&esp_pthread_cfg);
 		std::thread(Schedule::loop).detach();
+	}
+
+	bool initialize(void) {
+		if (!Push::initialize()) return false;
+		return true;
 	}
 }
 

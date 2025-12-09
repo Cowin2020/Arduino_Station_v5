@@ -11,16 +11,32 @@
 /* Hardware */
 #if defined(ENABLE_MEASURE)
 	#define ENABLE_SDCARD
+	#define ENABLE_LOG_FILE
 #endif
-//	#define ENABLE_LOG_FILE
-#define ENABLE_BATTERY_GAUGE BATTERY_GAUGE_DFROBOT
+
+#define CLOCK_PCF85063TP 1
+#define CLOCK_DS1307 2
+#define CLOCK_DS3231 3
+#if defined(ENABLE_MEASURE)
+	#define ENABLE_CLOCK CLOCK_DS3231
+#endif
+#define ENABLE_BATTERY_GAUGE_LC709203F
+#define ENABLE_BATTERY_GAUGE_MAX17043
+#if defined(ENABLE_BATTERY_GAUGE_LC709203F) || defined(ENABLE_BATTERY_GAUGE_MAX17043)
+	#define ENABLE_BATTERY_GAUGE
+#endif 
 #define ENABLE_DALLAS 3
 #define ENABLE_SHT40
 #define ENABLE_BME280
 #define ENABLE_LTR390
-#if defined(ENABLE_MEASURE)
-	#define ENABLE_CLOCK CLOCK_DS3231
-#endif
+#define DEFAULT_SENSOR_SETTING { \
+	[0] = -1U, \
+	[battery] = LC709203F, \
+	[Dallas] = -1U, \
+	[SHT40] = -1U, \
+	[BME280] = -1U, \
+	[LTR390] = -1U \
+}
 
 /* LoRa */
 #define SECRET_KEY "16-byte secret!"
@@ -30,16 +46,44 @@
 /* Internet */
 #define WIFI_SSID "my Wifi ID"
 #define WIFI_PASS "my WiFi password"
-#define HTTP_UPLOAD_LENGTH 512
-#define SITE_CODE "my_site"
-#define HTTP_UPLOAD_FORMAT \
-	"http://www.example.com/REST/upload" \
-	"?site=%1s&device=%2$u&serial=%3$u&time=%4$s"
+#define NTP_SERVER "stdtime.gov.hk"
+#define NTP_INTERVAL 1234567UL /* milliseconds */
 #define HTTP_AUTHORIZATION_TYPE "Basic"
 #define HTTP_AUTHORIZATION_CODE "passcode for webserver"
 #define HTTP_RESPONE_SIZE 256
-#define NTP_SERVER "stdtime.gov.hk"
-#define NTP_INTERVAL 1234567UL /* milliseconds */
+#define HTTP_UPLOAD_LENGTH 512
+#define SITE_CODE "my_site"
+#define HTTP_UPLOAD_FORMAT \
+	"http://www.example.com/path/to/upload" \
+	"?site=%1s&device=%2$u&serial=%3$u&time=%4$s"
+#define HTTP_UPLOAD_FIELDS { \
+	[0] = {}, \
+	[Setting::clock] = {}, \
+	[Setting::battery] = \
+		(char const *[]){ \
+			"battery_voltage", \
+			"battery_percentage" \
+		}, \
+	[Setting::Dallas] = \
+		(char const *[]){ \
+			"dallas_temperature" \
+		}, \
+	[Setting::SHT40] = \
+		(char const *[]){ \
+			"sht40_temperature", \
+			"sht40_humitidy" \
+		}, \
+	[Setting::BME280] = \
+		(char const *[]) { \
+			"bme280_temperature", \
+			"bme280_pressure", \
+			"bme280_humitidy" \
+		}, \
+	[Setting::LTR390] = \
+		(char const *[]) { \
+			"LTR390_ultraviolet" \
+		} \
+}
 
 /* Timing */
 #define START_DELAY 10000UL /* milliseconds */
@@ -52,7 +96,7 @@
 #define SEND_IDLE_INTERVAL SEND_INTERVAL
 //	#define SEND_IDLE_INTERVAL 987654UL /* milliseconds */
 #define SYNCHONIZE_INTERVAL 12345678UL /* milliseconds */
-#define SYNCHONIZE_MARGIN 1234UL /* milliseconds */
+#define SYNCHONIZE_TIMEOUT 1234UL /* milliseconds */ /* MUST: > SYNCHONIZE_INTERVAL */
 #define CLEANLOG_INTERVAL 21600000UL /* milliseconds */
 #define SLEEP_MARGIN 500UL /* milliseconds */
 //	#define REBOOT_TIMEOUT 3600000UL /* milliseconds */

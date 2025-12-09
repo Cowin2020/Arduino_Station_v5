@@ -15,6 +15,16 @@ typedef unsigned long int Millisecond;
 typedef uint8_t Device;
 typedef uint32_t SerialNumber;
 
+template<typename TO, typename FROM>
+inline static TO *pointer_offset(FROM *const from, size_t const offset) {
+	return reinterpret_cast<TO *>(reinterpret_cast<char *>(from) + offset);
+}
+
+template<typename TO, typename FROM>
+inline static TO const *pointer_offset(FROM const *const from, size_t const offset) {
+	return reinterpret_cast<TO const *>(reinterpret_cast<char const *>(from) + offset);
+}
+
 unsigned int parse_uint(char const **next);
 
 struct [[gnu::packed]] FullTime {

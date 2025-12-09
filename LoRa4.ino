@@ -29,10 +29,15 @@ void setup(void) {
 	OLED::initialize();
 	if (!SDCard::initialize()) goto end;
 	SDCard::read_config();
+	Setting::load(&Variable::active_devices);
+	NewData::initialize();
+	if (SDCard::clean_up())
+		Display::println("Data file cleaned");
 	if (!RTC::initialize()) goto end;
 	if (!Sensor::initialize()) goto end;
 	WIFI::initialize();
 	if (!LORA::initialize()) goto end;
+	if (!DAEMON::initialize()) goto end;
 	DAEMON::run();
 	#if defined(ENABLE_OLED_SWITCH)
 		pinMode(ENABLE_OLED_SWITCH, INPUT_PULLDOWN);

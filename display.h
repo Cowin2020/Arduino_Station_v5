@@ -7,12 +7,6 @@
 
 #include <Adafruit_SSD1306.h>
 
-#define CLOCK_PCF85063TP 1
-#define CLOCK_DS1307 2
-#define CLOCK_DS3231 3
-#define BATTERY_GAUGE_DFROBOT 1
-#define BATTERY_GAUGE_LC709203F 2
-
 #include "config_device.h"
 
 #if !defined(COM_BAUND)
@@ -47,28 +41,28 @@ namespace COM {
 		extern void initialize(void);
 
 		template <typename TYPE>
-		inline void print(TYPE const x) {
+		inline static void print(TYPE const x) {
 			Serial.print(x);
 		}
 
 		template <typename TYPE>
-		inline void println(TYPE const x) {
+		inline static void println(TYPE const x) {
 			Serial.println(x);
 		}
 
 		template <typename TYPE>
-		inline void print(TYPE const x, int const option) {
+		inline static void print(TYPE const x, int const option) {
 			Serial.print(x, option);
 		}
 
 		template <typename TYPE>
-		inline void println(TYPE const x, int const option) {
+		inline static void println(TYPE const x, int const option) {
 			Serial.println(x, option);
 		}
 
 		extern void dump(char const *const label, void const *const memory, size_t const size);
 
-		inline void flush(void) {
+		inline static void flush(void) {
 			Serial.flush();
 		}
 	#else
@@ -76,10 +70,16 @@ namespace COM {
 			Serial.end();
 		}
 
-		template <typename TYPE> inline void print([[maybe_unused]] TYPE const x) {}
-		template <typename TYPE> inline void println([[maybe_unused]] TYPE const x) {}
-		template <typename TYPE> inline void print([[maybe_unused]] TYPE const x, [[maybe_unused]] int const option) {}
-		template <typename TYPE> inline void println([[maybe_unused]] TYPE const x, [[maybe_unused]] int const option) {}
+		template <typename TYPE> inline static void print([[maybe_unused]] TYPE const x) {}
+		template <typename TYPE> inline static void println([[maybe_unused]] TYPE const x) {}
+		template <typename TYPE> inline static void print(
+			[[maybe_unused]] TYPE const x,
+			[[maybe_unused]] int const option
+		) {}
+		template <typename TYPE> inline static void println(
+			[[maybe_unused]] TYPE const x,
+			[[maybe_unused]] int const opt
+		) {}
 		inline static void dump(
 			[[maybe_unused]] char const *const label,
 			[[maybe_unused]] void const *const memory,
@@ -113,22 +113,22 @@ namespace OLED {
 		}
 
 		template <typename TYPE>
-		inline void print(TYPE const x) {
+		inline static void print(TYPE const x) {
 			SSD1306.print(x);
 		}
 
 		template <typename TYPE>
-		inline void println(TYPE const x) {
+		inline static void println(TYPE const x) {
 			SSD1306.println(x);
 		}
 
 		template <typename TYPE>
-		inline void print(TYPE const x, int const option) {
+		inline static void print(TYPE const x, int const option) {
 			SSD1306.print(x, option);
 		}
 
 		template <typename TYPE>
-		inline void println(TYPE const x, int const option) {
+		inline static void println(TYPE const x, int const option) {
 			SSD1306.println(x, option);
 		}
 
@@ -164,25 +164,25 @@ namespace OLED {
 
 namespace Display {
 	template <typename TYPE>
-	inline void print(TYPE const x) {
+	inline static void print(TYPE const x) {
 		COM::print(x);
 		OLED::print(x);
 	}
 
 	template <typename TYPE>
-	inline void println(TYPE const x) {
+	inline static void println(TYPE const x) {
 		COM::println(x);
 		OLED::println(x);
 	}
 
 	template <typename TYPE>
-	inline void print(TYPE const x, int const option) {
+	inline static void print(TYPE const x, int const option) {
 		COM::print(x, option);
 		OLED::print(x, option);
 	}
 
 	template <typename TYPE>
-	inline void println(TYPE const x, int const option) {
+	inline static void println(TYPE const x, int const option) {
 		COM::println(x, option);
 		OLED::println(x, option);
 	}
@@ -191,7 +191,7 @@ namespace Display {
 namespace Debug {
 	template <typename TYPE>
 	[[maybe_unused]]
-	inline void print([[maybe_unused]] TYPE const x) {
+	inline static void print([[maybe_unused]] TYPE const x) {
 		#if !defined(NDEBUG)
 			COM::print(x);
 		#endif
@@ -199,13 +199,13 @@ namespace Debug {
 
 	template <typename TYPE>
 	[[maybe_unused]]
-	inline void println([[maybe_unused]] TYPE const x) {
+	inline static void println([[maybe_unused]] TYPE const x) {
 		#if !defined(NDEBUG)
 			COM::println(x);
 		#endif
 	}
 
-	inline void dump(
+	inline static void dump(
 		[[maybe_unused]] char const *const label,
 		[[maybe_unused]] void const *const memory,
 		[[maybe_unused]] size_t const size
@@ -216,13 +216,13 @@ namespace Debug {
 	}
 
 	#if defined(NDEBUG)
-		inline void print_thread(char const *const message) {}
+		inline static void print_thread(char const *const message) {}
 	#else
 		extern void print_thread(char const *message);
 	#endif
 
 	[[maybe_unused]]
-	inline void flush(void) {
+	inline static void flush(void) {
 		#if !defined(NDEBUG)
 			COM::flush();
 		#endif

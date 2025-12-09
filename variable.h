@@ -4,6 +4,7 @@
 /* ************************************************************************** */
 
 #include <stdbool.h>
+#include <map>
 
 #include <WString.h>
 #include <Print.h>
@@ -25,6 +26,7 @@ namespace Variable {
 	extern class String site_code;
 	extern Millisecond measure_interval;
 	extern bool enable_sleep;
+	extern std::map<unsigned int, unsigned int> active_devices;
 
 	extern void dump_to_stream(class Print *print);
 	extern bool set_from_strings(String key, String value);

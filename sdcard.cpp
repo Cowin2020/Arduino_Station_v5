@@ -127,8 +127,9 @@ namespace SDCard {
 					class String const s = cleanup_file.readStringUntil(',');
 					if (!s.length()) break;
 
-					struct Data data;
-					if (!(s == "0" || s == "1") || !data.readln(&cleanup_file)) {
+					char memory[NewData::total_size];
+					union NewData *data = reinterpret_cast<union NewData *>(memory);
+					if (!(s == "0" || s == "1") || !data->readln(&cleanup_file)) {
 						COM::println("WARN: SDCard::clean_up: invalid data");
 						cleanup_file.close();
 						data_file.close();
@@ -138,7 +139,7 @@ namespace SDCard {
 
 					if (s == "0") {
 						data_file.print("0,");
-						data.writeln(&data_file);
+						data->writeln(&data_file);
 					}
 				}
 			#endif
@@ -151,7 +152,7 @@ namespace SDCard {
 			return true;
 		}
 
-		void add_data(struct Data const *const data) {
+		void add_data(union NewData const *const data) {
 			if (!Variable::enable_measure) return;
 			DEVICE_LOCK(device_lock);
 			class File data_file = SD.open(data_file_path, "a");
@@ -186,7 +187,7 @@ namespace SDCard {
 			#endif
 		}
 
-		bool read_data(struct Data *const data) {
+		bool read_data(union NewData *const data) {
 			if (!Variable::enable_measure) return false;
 			DEVICE_LOCK(device_lock);
 			class File file = SD.open(DATA_FILE_PATH, "r+", true);
@@ -261,11 +262,6 @@ namespace SDCard {
 					Display::println("SD card initialized");
 					COM::println(String("SD Card type: ") + String(SD.cardType()));
 				}
-				if (clean_up()) {
-					OLED_LOCK(oled_lock);
-					Display::println("Data file cleaned");
-					OLED::display();
-				}
 				return true;
 			}
 			else {
@@ -276,40 +272,13 @@ namespace SDCard {
 			}
 		}
 	#else
-		static std::mutex mutex;
-		static bool filled = false;
-		static struct Data last_data;
-
 		void write_config(void) {}
 		void read_config(void) {}
 		bool clean_up(void) {return false;}
-
-		void add_data(struct Data const *const data) {
-			std::lock_guard<std::mutex> lock(mutex);
-			filled = true;
-			last_data = *data;
-		}
-
-		bool read_data(struct Data *const data) {
-			std::lock_guard<std::mutex> lock(mutex);
-			if (filled) {
-				*data = last_data;
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
-
-		void next_data(void) {
-			std::lock_guard<std::mutex> lock(mutex);
-			filled = false;
-		}
-
-		bool initialize(void) {
-			filled = false;
-			return true;
-		}
+		void add_data(union NewData const *const data) {}
+		bool read_data(union NewData *const data) {return false;}
+		void next_data(void) {}
+		bool initialize(void) {return true;}
 	#endif
 }
 

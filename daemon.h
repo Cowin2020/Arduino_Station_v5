@@ -38,8 +38,9 @@ namespace DAEMON {
 		[[noreturn]] extern void loop(void);
 	}
 	namespace Push {
-		extern void data(struct Data const *data);
+		bool initialize(void);
 		extern void ack(SerialNumber serial);
+		[[noreturn]] void loop(void);
 	}
 	namespace Dashboard {
 		[[noreturn]] extern void loop(void);
@@ -48,6 +49,7 @@ namespace DAEMON {
 		[[noreturn]] extern void loop(void);
 	}
 	extern void run(void);
+	extern bool initialize(void);
 }
 
 /* ************************************************************************** */

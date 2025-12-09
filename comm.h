@@ -14,7 +14,7 @@ namespace LORA {
 	namespace Send {
 		extern void TIME(struct FullTime const *fulltime);
 		extern void ASKTIME(void);
-		extern void SEND(Device receiver, SerialNumber serial, Data const *data);
+		extern void SEND(Device receiver, SerialNumber serial, union NewData const *data);
 	}
 	namespace Receive {
 		void packet(void);

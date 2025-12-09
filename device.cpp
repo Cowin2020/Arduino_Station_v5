@@ -1,3 +1,6 @@
+#include <climits>
+#include <stdexcept>
+
 #include "variable.h"
 #include "display.h"
 #include "device.h"
@@ -38,6 +41,95 @@ unsigned long int const CPU_frequency =
 	;
 
 std::mutex device_mutex;
+
+inline static void OLED_space_or_newline(void) {
+	#if defined(OLED_HORIZONAL)
+		OLED::print(' ');
+	#else
+		OLED::println();
+	#endif
+}
+
+/* ************************************************************************** */
+
+namespace Setting {
+	unsigned int active_sensors[num_of_sensors] = DEFAULT_SENSOR_SETTING;
+	char const *const *const upload_names[] = HTTP_UPLOAD_FIELDS;
+
+	static bool FIELD_INT_read(void *const memory, char const *const string) {
+		char *remaining = nullptr;
+		int const result = strtol(string, &remaining, 10);
+		if (remaining == nullptr || !*remaining) return false;
+		*static_cast<int *>(memory) = result;
+		return true;
+	}
+	static class String FIELD_INT_write(void const *const memory) {
+		return String(*static_cast<int const *>(memory));
+	}
+	static constexpr struct FieldAccess const FIELD_INT = {sizeof (float), FIELD_INT_read, FIELD_INT_write};
+
+	static bool FIELD_FLOAT_read(void *const memory, char const *const string) {
+		char *remaining = nullptr;
+		float const result = strtof(string, &remaining);
+		if (remaining == nullptr || !*remaining) return false;
+		*static_cast<float *>(memory) = result;
+		return true;
+	}
+	static class String FIELD_FLOAT_write(void const *const memory) {
+		return String(*static_cast<float const *>(memory));
+	}
+	static constexpr struct FieldAccess const FIELD_FLOAT = {sizeof (float), FIELD_FLOAT_read, FIELD_FLOAT_write};
+
+	constinit struct SensorField const *const device_fields[] = {
+		[0] = (struct SensorField const []){
+			{{sizeof (struct FullTime)}},
+			{{0}}
+		},
+		[battery] = (struct SensorField const []){
+			{FIELD_FLOAT, "Battery",         "Power",  "V"},
+			{FIELD_FLOAT, "Battery",         "Power",  "%"},
+			{{0}}
+		},
+		[Dallas] = (struct SensorField const []){
+			{FIELD_FLOAT, "Dallas temp.",    "Dallas", "deg C"},
+			{{0}}
+		},
+		[SHT40] = (struct SensorField const []){
+			{FIELD_FLOAT, "SHT40 temp.",     "SHT40",  "deg C"},
+			{FIELD_FLOAT, "SHT40 humidity",  "SHT40",  "%RH"},
+			{{0}}
+		},
+		[BME280] = (struct SensorField const []){
+			{FIELD_FLOAT, "BME280 temp.",    "BME280", "deg C"},
+			{FIELD_FLOAT, "BME280 pressure", "BME280", "Pa"},
+			{FIELD_FLOAT, "BME280 humidity", "BME280", "%RH"},
+			{{0}}
+		},
+		[LTR390] = (struct SensorField const []){
+			{FIELD_FLOAT, "LTR390 UV",       "LTR UV", ""},
+			{{0}}
+		}
+	};
+
+	std::map<unsigned int, unsigned int> save(void) {
+		std::map<unsigned int, unsigned int> map;
+		for (unsigned int i = 1; i < num_of_sensors; ++i) {
+			unsigned int const choice = active_sensors[i];
+			if (active_sensors[i])
+				map[i] = active_sensors[i];
+		}
+		return map;
+	}
+
+	void load(std::map<unsigned int, unsigned int> const *const map) {
+		active_sensors[0] = UINT_MAX;
+		for (unsigned int i = 1; i < num_of_sensors; ++i) {
+			std::map<unsigned int, unsigned int>::const_iterator found = map->find(i);
+			if (found != map->end())
+				active_sensors[i] = found->second;
+		}
+	}
+}
 
 /* ************************************************************************** */
 
@@ -218,14 +310,15 @@ namespace NTP {
 }
 
 #if defined(ENABLE_BATTERY_GAUGE)
-	#if ENABLE_BATTERY_GAUGE == BATTERY_GAUGE_DFROBOT
-		#include <DFRobot_MAX17043.h>
-
-		static class DFRobot_MAX17043 battery;
-	#elif ENABLE_BATTERY_GAUGE == BATTERY_GAUGE_LC709203F
+	#if defined(ENABLE_BATTERY_GAUGE_LC709203F)
 		#include <Adafruit_LC709203F.h>
 
-		static class Adafruit_LC709203F battery;
+		static class Adafruit_LC709203F lc709203f;
+	#endif
+	#if defined(ENABLE_BATTERY_GAUGE_MAX17043)
+		#include <DFRobot_MAX17043.h>
+
+		static class DFRobot_MAX17043 max17043;
 	#endif
 #endif
 
@@ -260,42 +353,347 @@ namespace NTP {
 
 /* ************************************************************************** */
 
+size_t NewData::total_size;
+size_t NewData::offset[Setting::num_of_sensors];
+
+void NewData::initialize(void) {
+	total_size = 0;
+	for (unsigned int i = 0; i < Setting::num_of_sensors; ++i) {
+		size_t device_size = 0;
+		unsigned int j = 0;
+		for (;;) {
+			size_t const field_size = Setting::device_fields[i][j].access.size;
+			if (!field_size) break;
+			device_size += field_size;
+			++j;
+		}
+		offset[i] = total_size;
+		if (Setting::active_sensors[i]) total_size += device_size;
+	}
+}
+
+void NewData::writeln(class Print *const print) const {
+	{
+		struct FullTime const *const time = this->get_time();
+		print->printf(
+			"%04u-%02u-%02uT%02u:%02u:%02uZ,",
+			time->year, time->month, time->day,
+			time->hour, time->minute, time->second
+		);
+	}
+
+	#if defined(ENABLE_BATTERY_GAUGE)
+		if (Setting::active_sensors[Setting::battery]) {
+			float const *const values = this->device_pointer<float>(Setting::battery);
+			print->printf("%f,%f,", values[0], values[1]);
+		}
+	#endif
+
+	#if defined(ENABLE_DALLAS)
+		if (Setting::active_sensors[Setting::Dallas])
+			print->printf("%f,", *this->device_pointer<float>(Setting::Dallas));
+	#endif
+
+	#if defined(ENABLE_SHT40)
+		if (Setting::active_sensors[Setting::SHT40]) {
+			float const *const values = this->device_pointer<float>(Setting::SHT40);
+			print->printf("%f,%f,", values[0], values[1]);
+		}
+	#endif
+
+	#if defined(ENABLE_BME280)
+		if (Setting::active_sensors[Setting::BME280]) {
+			float const *const values = this->device_pointer<float>(Setting::BME280);
+			print->printf("%f,%f,%f,", values[0], values[1], values[2]);
+		}
+	#endif
+
+	#if defined(ENABLE_LTR390)
+		if (Setting::active_sensors[Setting::LTR390])
+			print->printf("%f,", *this->device_pointer<float>(Setting::LTR390));
+	#endif
+
+	print->write('\n');
+}
+
+bool NewData::readln(class Stream *const stream) {
+	{
+		class String const s = stream->readStringUntil(',');
+		struct FullTime *const time = this->get_time();
+		if (
+			sscanf(
+				s.c_str(),
+				"%4hu-%2hhu-%2hhuT%2hhu:%2hhu:%2hhuZ",
+				&time->year, &time->month, &time->day,
+				&time->hour, &time->minute, &time->second
+			) != 6
+		) return false;
+	}
+
+	#ifdef ENABLE_BATTERY_GAUGE
+		if (Setting::active_sensors[Setting::battery]) {
+			float *const values = this->device_pointer<float>(Setting::battery);
+			class String const voltage = stream->readStringUntil(',');
+			if (sscanf(voltage.c_str(), "%f", values+0) != 1) return false;
+			class String const percentage = stream->readStringUntil(',');
+			if (sscanf(percentage.c_str(), "%f", values+1) != 1) return false;
+		}
+	#endif
+
+	#ifdef ENABLE_DALLAS
+		if (Setting::active_sensors[Setting::Dallas]) {
+			float *const value = this->device_pointer<float>(Setting::Dallas);
+			class String const temperature = stream->readStringUntil(',');
+			if (sscanf(temperature.c_str(), "%f", value) != 1) return false;
+		}
+	#endif
+
+	#ifdef ENABLE_SHT40
+		if (Setting::active_sensors[Setting::SHT40]) {
+			float *const values = this->device_pointer<float>(Setting::SHT40);
+			class String const temperature = stream->readStringUntil(',');
+			if (sscanf(temperature.c_str(), "%f", values+0) != 1) return false;
+			class String const humidity = stream->readStringUntil(',');
+			if (sscanf(humidity.c_str(), "%f", values+1) != 1) return false;
+		}
+	#endif
+
+	#ifdef ENABLE_BME280
+		if (Setting::active_sensors[Setting::BME280]) {
+			float *const values = this->device_pointer<float>(Setting::BME280);
+			class String const temperature = stream->readStringUntil(',');
+			if (sscanf(temperature.c_str(), "%f", values+0) != 1) return false;
+			class String const pressure = stream->readStringUntil(',');
+			if (sscanf(pressure.c_str(), "%f", values+1) != 1) return false;
+			class String const humidity = stream->readStringUntil(',');
+			if (sscanf(humidity.c_str(), "%f", values+2) != 1) return false;
+		}
+	#endif
+
+	#ifdef ENABLE_LTR390
+		if (Setting::active_sensors[Setting::LTR390]) {
+			float *const value = this->device_pointer<float>(Setting::LTR390);
+			class String const ultraviolet = stream->readStringUntil(',');
+			if (sscanf(ultraviolet.c_str(), "%f", value) != 1) return false;
+		}
+	#endif
+
+	stream->readStringUntil('\n');
+	return true;
+}
+
+void NewData::println(void) const {
+	COM::print("Time: ");
+	Display::println(String(*this->get_time()));
+
+	#if defined(ENABLE_BATTERY_GAUGE)
+		if (Setting::active_sensors[Setting::battery]) {
+			float const *const values = this->device_pointer<float>(Setting::battery);
+			Display::print("Battery: ");
+			Display::print(values[0], 1);
+			Display::print("V ");
+			Display::print(values[1], 0);
+			Display::println("%");
+		}
+	#endif
+
+	#if defined(ENABLE_DALLAS)
+		if (Setting::active_sensors[Setting::Dallas]) {
+			Display::print("Dallas temp.: ");
+			Display::println(*this->device_pointer<float>(Setting::Dallas));
+		}
+	#endif
+
+	#if defined(ENABLE_SHT40)
+		if (Setting::active_sensors[Setting::SHT40]) {
+			float const *const values = this->device_pointer<float>(Setting::SHT40);
+			Display::print("SHT temp.: ");
+			Display::println(values[0], 1);
+			Display::print("SHT humidity: ");
+			Display::println(values[1], 0);
+		}
+	#endif
+
+	#if defined(ENABLE_BME280)
+		if (Setting::active_sensors[Setting::BME280]) {
+			float const *const values = this->device_pointer<float>(Setting::BME280);
+			Display::print("BME temp.: ");
+			Display::println(values[0], 1);
+			Display::print("BME pressure: ");
+			Display::println(values[1], 0);
+			Display::print("BME humidity: ");
+			Display::println(values[2], 0);
+		}
+	#endif
+
+	#if defined(ENABLE_LTR390)
+		if (Setting::active_sensors[Setting::LTR390]) {
+			float const *const value = this->device_pointer<float>(Setting::LTR390);
+			Display::print("LTR UV: ");
+			Display::println(*value);
+		}
+	#endif
+}
+
+void NewData::dashboard(void) const {
+	OLED::println(static_cast<unsigned int>(Variable::device_id));
+	struct FullTime time = *this->get_time();
+	#if defined(DASHBOARD_TIMEZONE)
+		time += DASHBOARD_TIMEZONE;
+	#endif
+	#if defined(OLED_HORIZONAL)
+		OLED::print(static_cast<unsigned int>(time.day));
+		OLED::print('/');
+		OLED::print(static_cast<unsigned int>(time.month));
+		OLED::print('/');
+		OLED::println(time.year);
+	#else
+		OLED::println(time.year);
+		OLED::print(static_cast<unsigned int>(time.day));
+		OLED::print('/');
+		OLED::println(static_cast<unsigned int>(time.month));
+	#endif
+	if (time.hour < 10) OLED::print('0');
+	OLED::print(static_cast<unsigned int>(time.hour));
+	OLED::print(':');
+	if (time.minute < 10) OLED::print('0');
+	OLED::println(static_cast<unsigned int>(time.minute));
+	#if defined(OLED_HORIZONAL)
+		OLED::println();
+	#endif
+
+	static unsigned int state = 0;
+	do {
+		if (state < __LINE__) {
+			state = __LINE__;
+			OLED::println("Every");
+			OLED::print(Variable::measure_interval / 60000., 2);
+			OLED_space_or_newline();
+			OLED::println("min.");
+		}
+	#if defined(ENABLE_BATTERY_GAUGE)
+		else if (state < __LINE__ && Setting::active_sensors[Setting::battery]) {
+			state = __LINE__;
+			OLED::println("Power");
+			OLED::print(this->device_pointer<float>(Setting::battery)[0], 1);
+			OLED_space_or_newline();
+			OLED::print("V");
+		}
+		else if (state < __LINE__ && Setting::active_sensors[Setting::battery]) {
+			state = __LINE__;
+			OLED::println("Power");
+			OLED::print(this->device_pointer<float>(Setting::battery)[1], 0);
+			OLED_space_or_newline();
+			OLED::print("%");
+		}
+	#endif
+	#if defined(ENABLE_DALLAS)
+		else if (state < __LINE__ && Setting::active_sensors[Setting::Dallas]) {
+			state = __LINE__;
+			OLED::println("Dallas");
+			OLED::print(this->device_pointer<float>(Setting::Dallas)[0]);
+			OLED_space_or_newline();
+			OLED::print("deg C");
+		}
+	#endif
+	#if defined(ENABLE_SHT40)
+		else if (state < __LINE__ && Setting::active_sensors[Setting::SHT40]) {
+			state = __LINE__;
+			OLED::println("SHT40");
+			OLED::print(this->device_pointer<float>(Setting::SHT40)[0]);
+			OLED_space_or_newline();
+			OLED::print("deg C");
+		}
+		else if (state < __LINE__ && Setting::active_sensors[Setting::SHT40]) {
+			state = __LINE__;
+			OLED::println("SHT40");
+			OLED::print(this->device_pointer<float>(Setting::SHT40)[1]);
+			OLED_space_or_newline();
+			OLED::print("%RH");
+		}
+	#endif
+	#if defined(ENABLE_BME280)
+		else if (state < __LINE__ && Setting::active_sensors[Setting::BME280]) {
+			state = __LINE__;
+			OLED::println("BME280");
+			OLED::print(this->device_pointer<float>(Setting::BME280)[0], 1);
+			OLED_space_or_newline();
+			OLED::print("deg C");
+		}
+		else if (state < __LINE__ && Setting::active_sensors[Setting::BME280]) {
+			state = __LINE__;
+			OLED::println("BME280");
+			OLED::print(this->device_pointer<float>(Setting::BME280)[1], 0);
+			OLED_space_or_newline();
+			OLED::print("Pa");
+		}
+		else if (state < __LINE__ && Setting::active_sensors[Setting::BME280]) {
+			state = __LINE__;
+			OLED::println("BME280");
+			OLED::print(this->device_pointer<float>(Setting::BME280)[2], 0);
+			OLED_space_or_newline();
+			OLED::print("%RH");
+		}
+	#endif
+	#if defined(ENABLE_LTR390)
+		else if (state < __LINE__ && Setting::active_sensors[Setting::LTR390]) {
+			state = __LINE__;
+			OLED::println("LTR");
+			OLED::print(this->device_pointer<float>(Setting::LTR390)[0]);
+			OLED_space_or_newline();
+			OLED::print("UV");
+		}
+	#endif
+		else
+			state = 0;
+	}
+	while (!state);
+}
+
+/* ************************************************************************** */
+
 void Data::writeln(class Print *const print) const {
 	print->printf(
 		"%04u-%02u-%02uT%02u:%02u:%02uZ,",
 		this->time.year, this->time.month, this->time.day,
 		this->time.hour, this->time.minute, this->time.second
 	);
+
 	#ifdef ENABLE_BATTERY_GAUGE
 		print->printf(
 			"%f,%f,",
 			this->battery_voltage, this->battery_percentage
 		);
 	#endif
+
 	#ifdef ENABLE_DALLAS
 		print->printf(
 			"%f,",
 			this->dallas_temperature
 		);
 	#endif
+
 	#ifdef ENABLE_SHT40
 		print->printf(
 			"%f,%f,",
 			this->sht40_temperature, this->sht40_humidity
 		);
 	#endif
+
 	#ifdef ENABLE_BME280
 		print->printf(
 			"%f,%f,%f,",
 			this->bme280_temperature, this->bme280_pressure, this->bme280_humidity
 		);
 	#endif
+
 	#ifdef ENABLE_LTR390
 		print->printf(
 			"%f,",
 			this->ltr390_ultraviolet
 		);
 	#endif
+
 	print->write('\n');
 }
 
@@ -412,14 +810,6 @@ void Data::println(void) const {
 	#endif
 }
 
-inline static void OLED_space_or_newline(void) {
-	#if defined(OLED_HORIZONAL)
-		OLED::print(' ');
-	#else
-		OLED::println();
-	#endif
-}
-
 void Data::dashboard(void) const {
 	OLED::println(static_cast<unsigned int>(Variable::device_id));
 	struct FullTime time = this->time;
@@ -458,9 +848,6 @@ void Data::dashboard(void) const {
 		}
 	#if defined(ENABLE_BATTERY_GAUGE)
 		else if (state < __LINE__) {
-		Debug::println("DEBUG: upload");
-		Debug::flush();
-		delay(10);
 			state = __LINE__;
 			OLED::println("Power");
 			OLED::print(this->battery_voltage, 1);
@@ -545,94 +932,136 @@ namespace Sensor {
 		DEVICE_LOCK(device_lock);
 
 		/* Initial battery gauge */
-		#if defined(ENABLE_BATTERY_GAUGE)
-			battery.begin();
+		#if defined(ENABLE_BATTERY_GAUGE_LC709203F)
+			if (Setting::active_sensors[Setting::battery] == Setting::LC709203F)
+				lc709203f.begin();
+		#endif
+		#if defined(ENABLE_BATTERY_GAUGE_MAX17043)
+			if (Setting::active_sensors[Setting::battery] == Setting::MAX17043)
+				max17043.begin();
 		#endif
 
 		/* Initialize Dallas thermometer */
 		#if defined(ENABLE_DALLAS)
-			dallas.begin();
-			DeviceAddress thermometer_address;
-			if (dallas.getAddress(thermometer_address, 0)) {
-				Display::println("Dallas thermometer found");
-			}
-			else {
-				Display::println("Dallas thermometer not found");
-				return false;
+			if (Setting::active_sensors[Setting::Dallas]) {
+				dallas.begin();
+				DeviceAddress thermometer_address;
+				if (dallas.getAddress(thermometer_address, 0)) {
+					Display::println("Dallas thermometer found");
+				}
+				else {
+					Display::println("Dallas thermometer not found");
+					return false;
+				}
 			}
 		#endif
 
 		/* Initialize SHT40 sensor */
 		#if defined(ENABLE_SHT40)
-			if (SHT.begin()) {
-				Display::println("SHT40 sensor found");
+			if (Setting::active_sensors[Setting::SHT40]) {
+				if (SHT.begin()) {
+					Display::println("SHT40 sensor found");
+				}
+				else {
+					Display::println("SHT40 sensor not found");
+					return false;
+				}
+				SHT.setPrecision(SHT4X_HIGH_PRECISION);
+				SHT.setHeater(SHT4X_NO_HEATER);
 			}
-			else {
-				Display::println("SHT40 sensor not found");
-				return false;
-			}
-			SHT.setPrecision(SHT4X_HIGH_PRECISION);
-			SHT.setHeater(SHT4X_NO_HEATER);
 		#endif
 
 		/* Initialize BME280 sensor */
 		#if defined(ENABLE_BME280)
-			if (BME.begin()) {
-				Display::println("BME280 sensor found");
-			}
-			else {
-				Display::println("BME280 sensor not found");
-				return false;
+			if (Setting::active_sensors[Setting::BME280]) {
+				if (BME.begin()) {
+					Display::println("BME280 sensor found");
+				}
+				else {
+					Display::println("BME280 sensor not found");
+					return false;
+				}
 			}
 		#endif
 
 		/* Initial LTR390 sensor */
 		#if defined(ENABLE_LTR390)
-			if (LTR.begin()) {
-				LTR.setMode(LTR390_MODE_UVS);
-				Display::println("LTR390 sensor found");
-			}
-			else {
-				Display::println("LTR390 sensor not found");
-				return false;
+			if (Setting::active_sensors[Setting::LTR390]) {
+				if (LTR.begin()) {
+					LTR.setMode(LTR390_MODE_UVS);
+					Display::println("LTR390 sensor found");
+				}
+				else {
+					Display::println("LTR390 sensor not found");
+					return false;
+				}
 			}
 		#endif
 
 		return true;
 	}
 
-	bool measure(struct Data *const data) {
+	bool measure(union NewData *const data) {
 		DEVICE_LOCK(device_lock);
-		if (!RTC::now(&data->time))
+		if (!RTC::now(data->get_time()))
 			return false;
+
 		#if defined(ENABLE_BATTERY_GAUGE)
-			#if ENABLE_BATTERY_GAUGE == BATTERY_GAUGE_DFROBOT
-				data->battery_voltage = battery.readVoltage() / 1000;
-				data->battery_percentage = battery.readPercentage();
-			#elif ENABLE_BATTERY_GAUGE == BATTERY_GAUGE_LC709203F
-				data->battery_voltage = battery.cellVoltage();
-				data->battery_percentage = battery.cellPercent();
-			#endif
+			{
+				enum Setting::battery const type = static_cast<enum Setting::battery>(Setting::active_sensors[Setting::battery]);
+				if (!type) ;
+				#if defined(ENABLE_BATTERY_GAUGE_LC709203F)
+					else if (type == Setting::LC709203F) {
+						float *const values = data->device_pointer<float>(Setting::battery);
+						values[0] = lc709203f.cellVoltage();
+						values[1] = lc709203f.cellPercent();
+					}
+				#endif
+				#if defined(ENABLE_BATTERY_GAUGE_MAX17043)
+					else if (type == Setting::MAX17043) {
+						float *const values = data->device_pointer<float>(Setting::battery);
+						values[0] = max17043.readVoltage() / 1000;
+						values[1] = max17043.readPercentage();
+					}
+				#endif
+			}
 		#endif
+
 		#if defined(ENABLE_DALLAS)
-			dallas.requestTemperatures();
-			delay(750);
-			data->dallas_temperature = dallas.getTempCByIndex(0);
+			if (Setting::active_sensors[Setting::Dallas]) {
+				float *const value = data->device_pointer<float>(Setting::Dallas);
+				dallas.requestTemperatures();
+				delay(750);
+				*value = dallas.getTempCByIndex(0);
+			}
 		#endif
+
 		#if defined(ENABLE_SHT40)
-			sensors_event_t temperature_event, humidity_event;
-			SHT.getEvent(&humidity_event, &temperature_event);
-			data->sht40_temperature = correct_SHT_temperature(temperature_event.temperature);
-			data->sht40_humidity = humidity_event.relative_humidity;
+			if (Setting::active_sensors[Setting::SHT40]) {
+				float *const values = data->device_pointer<float>(Setting::SHT40);
+				sensors_event_t temperature_event, humidity_event;
+				SHT.getEvent(&humidity_event, &temperature_event);
+				values[0] = correct_SHT_temperature(temperature_event.temperature);
+				values[1] = humidity_event.relative_humidity;
+			}
 		#endif
+
 		#if defined(ENABLE_BME280)
-			data->bme280_temperature = BME.readTemperature();
-			data->bme280_pressure = BME.readPressure();
-			data->bme280_humidity = BME.readHumidity();
+			if (Setting::active_sensors[Setting::BME280]) {
+				float *const values = data->device_pointer<float>(Setting::BME280);
+				values[0] = BME.readTemperature();
+				values[1] = BME.readPressure();
+				values[2] = BME.readHumidity();
+			}
 		#endif
+
 		#if defined(ENABLE_LTR390)
-			data->ltr390_ultraviolet = LTR.readUVS();
+			if (Setting::active_sensors[Setting::LTR390]) {
+				float *const value = data->device_pointer<float>(Setting::Dallas);
+				*value = LTR.readUVS();
+			}
 		#endif
+
 		return true;
 	}
 }

@@ -34,16 +34,6 @@ typedef GCM<AES128> AuthCipher;
 
 static Device const router_topology[][2] = ROUTER_TOPOLOGY;
 
-template<typename TO, typename FROM>
-static inline TO *pointer_offset(FROM *const from, size_t const offset) {
-	return reinterpret_cast<TO *>(reinterpret_cast<char *>(from) + offset);
-}
-
-template<typename TO, typename FROM>
-static inline TO const *pointer_offset(FROM const *const from, size_t const offset) {
-	return reinterpret_cast<TO const *>(reinterpret_cast<char const *>(from) + offset);
-}
-
 namespace LORA {
 	static Device last_receiver = 0;
 
@@ -158,7 +148,7 @@ namespace LORA {
 			packet("ASKTIME", PACKET_ASKTIME, last_receiver, &Variable::device_id, sizeof Variable::device_id);
 		}
 
-		void SEND(Device const receiver, SerialNumber const serial, Data const *const data) {
+		void SEND(Device const receiver, SerialNumber const serial, union NewData const *const data) {
 			{
 				DEBUG_LOCK(debug_lock);
 				Debug::print("DEBUG: LORA::Send::SEND ");
@@ -166,11 +156,11 @@ namespace LORA {
 					data->writeln(&Serial);
 				#endif
 			}
-			char content[static_cast<size_t>(2 * sizeof Variable::device_id + sizeof serial + sizeof *data)];
+			char content[static_cast<size_t>(2 * sizeof Variable::device_id + sizeof serial + NewData::total_size)];
 			std::memcpy(content, &Variable::device_id, sizeof Variable::device_id);
 			std::memcpy(content + sizeof Variable::device_id, &Variable::device_id, sizeof Variable::device_id);
 			std::memcpy(content + 2 * sizeof Variable::device_id, &serial, sizeof serial);
-			std::memcpy(content + 2 * sizeof Variable::device_id + sizeof serial, data, sizeof *data);
+			std::memcpy(content + 2 * sizeof Variable::device_id + sizeof serial, data, NewData::total_size);
 			packet("SEND", PACKET_SEND, receiver, content, sizeof content);
 		}
 	}
@@ -219,7 +209,7 @@ namespace LORA {
 				sizeof (Device)         /* terminal */
 				+ sizeof (Device)       /* router list length >= 1 */
 				+ sizeof (SerialNumber) /* serial code */
-				+ sizeof (struct Data); /* data */
+				+ NewData::total_size; /* data */
 			if (Variable::enable_gateway) {
 				if (!(content.size() >= minimal_content_size)) {
 					COM::print("WARN: LoRa SEND: incorrect packet size: ");
@@ -262,8 +252,8 @@ namespace LORA {
 				size_t const overhead_size =
 					sizeof (Device) * (1 + routers_length)
 					+ sizeof (SerialNumber);
-				struct Data const data =
-					*reinterpret_cast<struct Data const *>(
+				union NewData const data =
+					*reinterpret_cast<union NewData const *>(
 						content.data()
 						+ overhead_size
 					);
@@ -300,7 +290,7 @@ namespace LORA {
 					sizeof (Device)         /* terminal */
 					+ sizeof (Device)       /* router list length >= 1 */
 					+ sizeof (SerialNumber) /* serial code */
-					+ sizeof (struct Data); /* data */
+					+ sizeof (NewData::total_size); /* data */
 
 				if (!(content.size() >= minimal_content_size)) {
 					COM::print("WARN: LoRa SEND: incorrect packet size: ");

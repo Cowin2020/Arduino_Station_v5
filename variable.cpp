@@ -1,3 +1,5 @@
+#include <climits>
+
 #include "variable.h"
 
 #include "config_id.h"
@@ -49,6 +51,8 @@ namespace Variable {
 		#endif
 		;
 
+	std::map<unsigned int, unsigned int> active_devices;
+
 	void dump_to_stream(class Print *const stream) {
 		stream->print("DEVICE_ID=");
 		stream->println(device_id);
@@ -75,9 +79,18 @@ namespace Variable {
 		stream->println(site_code);
 		stream->print("MEASURE_INTERVAL/minute=");
 		stream->println(measure_interval / (1000*60));
+		stream->print("ACTIVE_SENSORS=");
+		for (std::map<unsigned int, unsigned int>::value_type pair : active_devices) {
+			stream->print(pair.first);
+			if (pair.second != UINT_MAX) {
+				stream->print(':');
+				stream->print(pair.second);
+			}
+		}
+		stream->println();
 	}
 
-	bool set_from_strings(String const key, String const value) {
+	bool set_from_strings(class String const key, class String const value) {
 		if (key == "DEVICE_ID" && !enable_gateway) {
 			char const *p = value.c_str();
 			unsigned int const n = parse_uint(&p);
@@ -114,6 +127,46 @@ namespace Variable {
 				return false;
 			}
 			measure_interval = n;
+		}
+		else if (key == "ACTIVE_SENSORS") {
+			active_devices.clear();
+			unsigned int n = 0;
+			char const *p = value.c_str();
+			for (;;) {
+				char const c = *(p++);
+				if (c == ' ') ;
+				else if (c >= '0' && c <= '9')
+					n = n * 10 + (c - '0');
+				else if (!c || c == ',') {
+					if (n) {
+						active_devices[n] = UINT_MAX;
+						n = 0;
+					}
+					if (!c) break;
+				}
+				else if (c == ':' && n) {
+					unsigned int m = 0;
+					for (;;) {
+						char const c = *(p++);
+						if (c >= '0' && c <= '9')
+							m = m * 10 + (c - '0');
+						else if (!c || c == ',') {
+							active_devices[n] = m;
+							n = 0;
+						}
+						else {
+							COM::print("WARN: Incorrect sensor value ");
+							COM::println(value);
+							break;
+						}
+					}
+				}
+				else {
+					COM::print("WARN: Incorrect active sensors ");
+					COM::println(value);
+					break;
+				}
+			}
 		}
 		else {
 			COM::print("WARN: Unknown config key ");

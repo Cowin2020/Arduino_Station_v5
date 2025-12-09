@@ -1,3 +1,4 @@
+#include <cstring>
 #include <HTTPClient.h>
 
 #include "variable.h"
@@ -46,7 +47,32 @@ namespace WIFI {
 		return WiFi.status() == WL_CONNECTED;
 	}
 
-	struct upload__result upload(Device device, SerialNumber serial, struct Data const *data) {
+	size_t build_URL_querystring(char *const buffer, union NewData const *const data, Setting::sensor const sensor) {
+		if (!Setting::active_sensors[sensor]) return 0;
+		char const *const *name = Setting::upload_names[sensor];
+		void const *value = data->device_pointer<void const>(sensor);
+		Setting::SensorField const *field = Setting::device_fields[sensor];
+		size_t p = 0;
+		size_t n;
+		while (field->access.size) {
+			String const value_string = field->access.write(value);
+			buffer[p++] = '&';
+			n = std::strlen(*name);
+			std::memcpy(buffer + p, *name, n);
+			p += n;
+			buffer[p++] = '=';
+			n = value_string.length();
+			std::memcpy(buffer + p, value_string.c_str(), n);
+			p += n;
+			++name;
+			value = pointer_offset<void const, void const>(value, field->access.size);
+			++field;
+		}
+		buffer[p] = '\0';
+		return p;
+	}
+
+	struct upload__result upload(Device const device, SerialNumber const serial, union NewData const *const data) {
 		signed int const WiFi_status = WiFi.status();
 		if (WiFi_status != WL_CONNECTED) {
 			OLED_LOCK(oled_lock);
@@ -54,48 +80,43 @@ namespace WIFI {
 			Display::println(status_message(WiFi.status()));
 			return {.upload_success = false};
 		}
-		class String const time = String(data->time);
-		class HTTPClient HTTP_client;
+		class String const time = String(*data->get_time());
 		char URL[HTTP_UPLOAD_LENGTH];
-		snprintf(
-			URL, sizeof URL,
-			HTTP_UPLOAD_FORMAT,
-			Variable::site_code.c_str(),
-			device, serial, time.c_str()
-			#ifdef ENABLE_BATTERY_GAUGE
-				, data->battery_voltage
-				, data->battery_percentage
-			#endif
-			#ifdef ENABLE_DALLAS
-				, data->dallas_temperature
-			#endif
-			#ifdef ENABLE_SHT40
-				, data->sht40_temperature
-				, data->sht40_humidity
-			#endif
-			#ifdef ENABLE_BME280
-				, data->bme280_temperature
-				, data->bme280_pressure
-				, data->bme280_humidity
-			#endif
-			#ifdef ENABLE_LTR390
-				, data->ltr390_ultraviolet
-			#endif
-		);
+		int p = snprintf(URL, sizeof URL, HTTP_UPLOAD_FORMAT, Variable::site_code.c_str(), device, serial, time.c_str());
+		if (p < 0) {
+			COM::println("ERROR: Unable to create HTTP URL from snprintf");
+			return {.upload_success = false};
+		}
+		#if defined(ENABLE_BATTERY_GAUGE)
+			p += build_URL_querystring(URL + p, data, Setting::battery);
+		#endif
+		#if defined(ENABLE_DALLAS)
+			p += build_URL_querystring(URL + p, data, Setting::Dallas);
+		#endif
+		#if defined(ENABLE_SHT40)
+			p += build_URL_querystring(URL + p, data, Setting::SHT40);
+		#endif
+		#if defined(ENABLE_BME280)
+			p += build_URL_querystring(URL + p, data, Setting::BME280);
+		#endif
+		#if defined(ENABLE_LTR390)
+			p += build_URL_querystring(URL + p, data, Setting::LTR390);
+		#endif
 		COM::print("Upload to ");
 		COM::println(URL);
+		class HTTPClient HTTP_client;
 		HTTP_client.begin(URL);
 		if (Variable::http_authorization_type.length() && Variable::http_authorization_code.length()) {
 			HTTP_client.setAuthorizationType(Variable::http_authorization_type.c_str());
 			HTTP_client.setAuthorization(Variable::http_authorization_code.c_str());
 		}
-		signed int HTTP_status = HTTP_client.GET();
+		signed int const HTTP_status = HTTP_client.GET();
 		{
 			OLED_LOCK(oled_lock);
 			Display::print("HTTP status: ");
 			Display::println(HTTP_status);
 		}
-		if (not (HTTP_status >= 200 and HTTP_status < 300))
+		if (!(HTTP_status >= 200 && HTTP_status < 300))
 			return {.upload_success = false};
 		if (HTTP_status != 200)
 			return {.upload_success = true, .update_configuration = false};
