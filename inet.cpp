@@ -51,7 +51,7 @@ namespace WIFI {
 		if (!Setting::active_sensors[sensor]) return 0;
 		char const *const *name = Setting::upload_names[sensor];
 		void const *value = data->device_pointer<void const>(sensor);
-		Setting::SensorField const *field = Setting::device_fields[sensor];
+		Setting::SensorField const *field = Setting::sensor_fields[sensor];
 		size_t p = 0;
 		size_t n;
 		while (field->access.size) {
@@ -87,21 +87,8 @@ namespace WIFI {
 			COM::println("ERROR: Unable to create HTTP URL from snprintf");
 			return {.upload_success = false};
 		}
-		#if defined(ENABLE_BATTERY_GAUGE)
-			p += build_URL_querystring(URL + p, data, Setting::battery);
-		#endif
-		#if defined(ENABLE_DALLAS)
-			p += build_URL_querystring(URL + p, data, Setting::Dallas);
-		#endif
-		#if defined(ENABLE_SHT40)
-			p += build_URL_querystring(URL + p, data, Setting::SHT40);
-		#endif
-		#if defined(ENABLE_BME280)
-			p += build_URL_querystring(URL + p, data, Setting::BME280);
-		#endif
-		#if defined(ENABLE_LTR390)
-			p += build_URL_querystring(URL + p, data, Setting::LTR390);
-		#endif
+		for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor)
+			p += build_URL_querystring(URL + p, data, static_cast<enum Setting::sensor>(sensor));
 		COM::print("Upload to ");
 		COM::println(URL);
 		class HTTPClient HTTP_client;

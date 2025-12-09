@@ -87,8 +87,10 @@ void Configuration::apply(void) const {
 			&& measure_interval > (2 + RESEND_TIMES) * SEND_INTERVAL
 			&& measure_interval <= 1000*60*60*24
 	) {
-		Variable::measure_interval = measure_interval;
-		SDCard::write_config();
+		if (Variable::measure_interval != measure_interval) {
+			Variable::measure_interval = measure_interval;
+			SDCard::write_config();
+		}
 	}
 }
 

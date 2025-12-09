@@ -398,7 +398,7 @@ namespace DAEMON {
 
 	namespace Dashboard {
 		static struct Alarm alarm;
-		static union NewData *data;
+		static union NewData *data = nullptr;
 
 		#if defined(OLED_ROTATION) && !(OLED_ROTATION & 1)
 			#define OLED_HORIZONAL
@@ -496,8 +496,10 @@ namespace DAEMON {
 			for (;;)
 				try {
 					if (Sensor::measure(data)) {
-						std::memcpy(Dashboard::data, data, NewData::total_size);
-						#if !defined(DASHBOARD_INTERVAL) || !(DASHBOARD_INTERVAL > 0)
+						#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
+							if (Dashboard::data != nullptr)
+								std::memcpy(Dashboard::data, data, NewData::total_size);
+						#else
 							print_data(data);
 						#endif
 						Push::add_data(data);

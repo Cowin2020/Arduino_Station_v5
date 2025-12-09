@@ -27,9 +27,14 @@ void setup(void) {
 	LED::initialize();
 	COM::initialize();
 	OLED::initialize();
+
 	if (!SDCard::initialize()) goto end;
 	SDCard::read_config();
+	Variable::active_devices = Setting::save();
 	Setting::load(&Variable::active_devices);
+	Variable::active_devices = Setting::save();
+	SDCard::write_config();
+
 	NewData::initialize();
 	if (SDCard::clean_up())
 		Display::println("Data file cleaned");

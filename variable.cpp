@@ -86,6 +86,7 @@ namespace Variable {
 				stream->print(':');
 				stream->print(pair.second);
 			}
+			stream->print(',');
 		}
 		stream->println();
 	}
@@ -153,6 +154,7 @@ namespace Variable {
 						else if (!c || c == ',') {
 							active_devices[n] = m;
 							n = 0;
+							if (!c) break;
 						}
 						else {
 							COM::print("WARN: Incorrect sensor value ");
