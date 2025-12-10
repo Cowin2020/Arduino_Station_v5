@@ -451,7 +451,7 @@ namespace DAEMON {
 				data = reinterpret_cast<union Data *>(memory);
 				Schedule::add_timer(&alarm, "DAEMON::Dashboard");
 				Schedule::sleep(&alarm, MEASURE_INTERVAL + DASHBOARD_INTERVAL + START_DELAY);
-				#if !defined(OLED_HORIZONAL)
+				#if !defined(OLED_HORIZONAL) && defined(LARGE_FONT)
 					OLED::large_font();
 				#endif
 				for (;;)

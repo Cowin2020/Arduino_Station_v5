@@ -1,30 +1,23 @@
 #ifndef INCLUDE_CONFIG_DEVICE_H
 #define INCLUDE_CONFIG_DEVICE_H
 
-#define ENABLE_GATEWAY
-//	#define ENABLE_MEASURE
+//	#define ENABLE_GATEWAY
+#define ENABLE_MEASURE
 
 /* Debug */
 #define NDEBUG
 //	#define DEBUG_CLEAN_DATA
 
 /* Hardware */
+#define ENABLE_SDCARD
+#define ENABLE_LOG_FILE
 #if defined(ENABLE_MEASURE)
-	#define ENABLE_SDCARD
-	#define ENABLE_LOG_FILE
-#endif
-
-#define CLOCK_PCF85063TP 1
-#define CLOCK_DS1307 2
-#define CLOCK_DS3231 3
-#if defined(ENABLE_MEASURE)
-	#define ENABLE_CLOCK CLOCK_DS3231
+	//	#define ENABLE_CLOCK_PCF85063TP
+	//	#define ENABLE_CLOCK_DS1307
+	#define ENABLE_CLOCK_DS3231
 #endif
 #define ENABLE_BATTERY_GAUGE_LC709203F
 #define ENABLE_BATTERY_GAUGE_MAX17043
-#if defined(ENABLE_BATTERY_GAUGE_LC709203F) || defined(ENABLE_BATTERY_GAUGE_MAX17043)
-	#define ENABLE_BATTERY_GAUGE
-#endif 
 #define ENABLE_DALLAS 3
 #define ENABLE_SHT40
 #define ENABLE_BME280
@@ -85,7 +78,7 @@
 }
 
 /* Timing */
-#define START_DELAY 10000UL /* milliseconds */
+#define START_DELAY 1000UL /* milliseconds */
 #define IDLE_INTERVAL 123UL /* milliseconds */
 #define ACK_TIMEOUT 1000UL /* milliseconds */
 #define RESEND_TIMES 3
@@ -108,6 +101,7 @@
 #define ENABLE_COM_OUTPUT
 #define ENABLE_OLED_OUTPUT
 #define ENABLE_OLED_SWITCH 35
+#define LARGE_FONT
 #if defined(ENABLE_MEASURE)
 	#define OLED_ROTATION 3 /* vertical */
 #else

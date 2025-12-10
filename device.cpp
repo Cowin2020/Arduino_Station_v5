@@ -18,17 +18,15 @@
 
 /* ************************************************************************** */
 
-#if defined(ENABLE_BATTERY_GAUGE)
-	#if defined(ENABLE_BATTERY_GAUGE_LC709203F)
-		#include <Adafruit_LC709203F.h>
+#if defined(ENABLE_BATTERY_GAUGE_LC709203F)
+	#include <Adafruit_LC709203F.h>
 
-		static class Adafruit_LC709203F lc709203f;
-	#endif
-	#if defined(ENABLE_BATTERY_GAUGE_MAX17043)
-		#include <DFRobot_MAX17043.h>
+	static class Adafruit_LC709203F lc709203f;
+#endif
+#if defined(ENABLE_BATTERY_GAUGE_MAX17043)
+	#include <DFRobot_MAX17043.h>
 
-		static class DFRobot_MAX17043 max17043;
-	#endif
+	static class DFRobot_MAX17043 max17043;
 #endif
 
 #ifdef ENABLE_DALLAS
@@ -175,47 +173,7 @@ namespace Setting {
 
 /* ************************************************************************** */
 
-#if !defined(ENABLE_CLOCK)
-	#include <RTClib.h>
-
-	namespace RTC {
-		static bool clock_available;
-		static class RTC_Millis internal_clock;
-
-		bool initialize(void) {
-			clock_available = false;
-			return true;
-		}
-
-		void set(struct FullTime const *const fulltime) {
-			class DateTime const datetime(
-				fulltime->year, fulltime->month, fulltime->day,
-				fulltime->hour, fulltime->minute, fulltime->second
-			);
-			if (clock_available) {
-				internal_clock.adjust(datetime);
-			}
-			else {
-				internal_clock.begin(datetime);
-				clock_available = true;
-			}
-		}
-
-		bool now(struct FullTime *const fulltime) {
-			class DateTime const datetime = internal_clock.now();
-			if (fulltime != NULL)
-				*fulltime = {
-					.year = (unsigned short int)datetime.year(),
-					.month = (unsigned char)datetime.month(),
-					.day = (unsigned char)datetime.day(),
-					.hour = (unsigned char)datetime.hour(),
-					.minute = (unsigned char)datetime.minute(),
-					.second = (unsigned char)datetime.second()
-				};
-			return clock_available;
-		}
-	}
-#elif ENABLE_CLOCK == CLOCK_PCF85063TP
+#if defined(ENABLE_CLOCK_PCF85063TP)
 	#include <PCF85063TP.h>
 
 	namespace RTC {
@@ -258,13 +216,13 @@ namespace Setting {
 			return available;
 		}
 	}
-#elif ENABLE_CLOCK == CLOCK_DS1307 || ENABLE_CLOCK == CLOCK_DS3231
+#elif defined(ENABLE_CLOCK_DS1307) || defined(ENABLE_CLOCK_DS3231)
 	#include <RTClib.h>
 
 	namespace RTC {
-		#if ENABLE_CLOCK == CLOCK_DS1307
+		#if defined(ENABLE_CLOCK_DS1307)
 			static class RTC_DS1307 external_clock;
-		#elif ENABLE_CLOCK == CLOCK_DS3231
+		#elif defined(ENABLE_CLOCK_DS3231)
 			static class RTC_DS3231 external_clock;
 		#endif
 
@@ -274,7 +232,7 @@ namespace Setting {
 				Display::println("Clock not found");
 				return false;
 			}
-			#if ENABLE_CLOCK == CLOCK_DS1307
+			#if defined(ENABLE_CLOCK_DS1307)
 				if (!external_clock.isrunning()) {
 					DEVICE_LOCK(device_lock);
 					Display::println("DS1307 not running");
@@ -304,6 +262,46 @@ namespace Setting {
 					.second = datetime.second()
 				};
 			return datetime.isValid();
+		}
+	}
+#else
+	#include <RTClib.h>
+
+	namespace RTC {
+		static bool clock_available;
+		static class RTC_Millis internal_clock;
+
+		bool initialize(void) {
+			clock_available = false;
+			return true;
+		}
+
+		void set(struct FullTime const *const fulltime) {
+			class DateTime const datetime(
+				fulltime->year, fulltime->month, fulltime->day,
+				fulltime->hour, fulltime->minute, fulltime->second
+			);
+			if (clock_available) {
+				internal_clock.adjust(datetime);
+			}
+			else {
+				internal_clock.begin(datetime);
+				clock_available = true;
+			}
+		}
+
+		bool now(struct FullTime *const fulltime) {
+			class DateTime const datetime = internal_clock.now();
+			if (fulltime != NULL)
+				*fulltime = {
+					.year = (unsigned short int)datetime.year(),
+					.month = (unsigned char)datetime.month(),
+					.day = (unsigned char)datetime.day(),
+					.hour = (unsigned char)datetime.hour(),
+					.minute = (unsigned char)datetime.minute(),
+					.second = (unsigned char)datetime.second()
+				};
+			return clock_available;
 		}
 	}
 #endif
@@ -510,7 +508,7 @@ void Data::dashboard(void) const {
 	}
 	offset += sensor_field->access.size;
 	++field;
-	while (!Setting::sensor_fields[sensor][field].access.size) {
+	while (!Setting::active_sensors[sensor] || !Setting::sensor_fields[sensor][field].access.size) {
 		field = 0;
 		++sensor;
 		if (sensor >= Setting::num_of_sensors) {
@@ -604,7 +602,7 @@ namespace Sensor {
 		if (!RTC::now(data->get_time()))
 			return false;
 
-		#if defined(ENABLE_BATTERY_GAUGE)
+		#if defined(ENABLE_BATTERY_GAUGE_LC709203F) || defined(ENABLE_BATTERY_GAUGE_MAX17043)
 			{
 				enum Setting::battery const type = static_cast<enum Setting::battery>(Setting::active_sensors[Setting::battery]);
 				if (!type) ;
