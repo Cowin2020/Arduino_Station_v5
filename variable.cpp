@@ -51,7 +51,7 @@ namespace Variable {
 		#endif
 		;
 
-	std::map<unsigned int, unsigned int> active_devices;
+	std::map<unsigned int, unsigned int> active_sensors;
 
 	void dump_to_stream(class Print *const stream) {
 		stream->print("DEVICE_ID=");
@@ -80,7 +80,7 @@ namespace Variable {
 		stream->print("MEASURE_INTERVAL/minute=");
 		stream->println(measure_interval / (1000*60));
 		stream->print("ACTIVE_SENSORS=");
-		for (std::map<unsigned int, unsigned int>::value_type pair : active_devices) {
+		for (std::map<unsigned int, unsigned int>::value_type pair : active_sensors) {
 			stream->print(pair.first);
 			if (pair.second != UINT_MAX) {
 				stream->print(':');
@@ -130,7 +130,7 @@ namespace Variable {
 			measure_interval = n;
 		}
 		else if (key == "ACTIVE_SENSORS") {
-			active_devices.clear();
+			active_sensors.clear();
 			unsigned int n = 0;
 			char const *p = value.c_str();
 			for (;;) {
@@ -140,7 +140,10 @@ namespace Variable {
 					n = n * 10 + (c - '0');
 				else if (!c || c == ',') {
 					if (n) {
-						active_devices[n] = UINT_MAX;
+						Debug::print("DEBUG: Variable::set_from_strings active_sensors[");
+						Debug::print(n);
+						Debug::println("] = UINT_MAX");
+						active_sensors[n] = UINT_MAX;
 						n = 0;
 					}
 					if (!c) break;
@@ -152,9 +155,12 @@ namespace Variable {
 						if (c >= '0' && c <= '9')
 							m = m * 10 + (c - '0');
 						else if (!c || c == ',') {
-							active_devices[n] = m;
-							n = 0;
-							if (!c) break;
+							Debug::print("DEBUG: Variable::set_from_strings active_sensors[");
+							Debug::print(n);
+							Debug::print("] = ");
+							Debug::println(m);
+							active_sensors[n] = m;
+							break;
 						}
 						else {
 							COM::print("WARN: Incorrect sensor value ");
@@ -162,6 +168,8 @@ namespace Variable {
 							break;
 						}
 					}
+					n = 0;
+					if (!c) break;
 				}
 				else {
 					COM::print("WARN: Incorrect active sensors ");

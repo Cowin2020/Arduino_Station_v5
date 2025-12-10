@@ -155,22 +155,20 @@ namespace Setting {
 		}
 	};
 
-	std::map<unsigned int, unsigned int> save(void) {
-		std::map<unsigned int, unsigned int> map;
+	void save(std::map<unsigned int, unsigned int> *const map) {
+		map->clear();
 		for (unsigned int i = 1; i < num_of_sensors; ++i) {
 			unsigned int const choice = active_sensors[i];
 			if (active_sensors[i])
-				map[i] = active_sensors[i];
+				(*map)[i] = active_sensors[i];
 		}
-		return map;
 	}
 
 	void load(std::map<unsigned int, unsigned int> const *const map) {
 		active_sensors[0] = UINT_MAX;
 		for (unsigned int i = 1; i < num_of_sensors; ++i) {
 			std::map<unsigned int, unsigned int>::const_iterator found = map->find(i);
-			if (found != map->end())
-				active_sensors[i] = found->second;
+			active_sensors[i] = found == map->end() ? 0 : found->second;
 		}
 	}
 }
@@ -355,10 +353,10 @@ namespace NTP {
 
 /* ************************************************************************** */
 
-size_t NewData::total_size;
-size_t NewData::offset[Setting::num_of_sensors];
+size_t Data::total_size;
+size_t Data::offset[Setting::num_of_sensors];
 
-void NewData::initialize(void) {
+void Data::initialize(void) {
 	total_size = 0;
 	for (unsigned int sensor = 0; sensor < Setting::num_of_sensors; ++sensor) {
 		size_t device_size = 0;
@@ -374,7 +372,7 @@ void NewData::initialize(void) {
 	}
 }
 
-void NewData::writeln(class Print *const print) const {
+void Data::writeln(class Print *const print) const {
 	{
 		/* write measure time */
 		struct FullTime const *const time = this->get_time();
@@ -387,7 +385,7 @@ void NewData::writeln(class Print *const print) const {
 
 	{
 		/* write measured values across all fields of all active sensors */
-		void const *p = pointer_offset<void const, union NewData const>(this, offset[1]);
+		void const *p = pointer_offset<void const, union Data const>(this, offset[1]);
 		for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor) {
 			if (Setting::active_sensors[sensor]) {
 				size_t field = 0;
@@ -406,7 +404,7 @@ void NewData::writeln(class Print *const print) const {
 	print->write('\n');
 }
 
-bool NewData::readln(class Stream *const stream) {
+bool Data::readln(class Stream *const stream) {
 	{
 		/* read time */
 		class String const s = stream->readStringUntil(',');
@@ -423,7 +421,7 @@ bool NewData::readln(class Stream *const stream) {
 
 	{
 		/* read fields of all active sensors */
-		void *p = pointer_offset<void, union NewData>(this, offset[1]);
+		void *p = pointer_offset<void, union Data>(this, offset[1]);
 		for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor) {
 			if (Setting::active_sensors[sensor]) {
 				size_t field = 0;
@@ -443,12 +441,12 @@ bool NewData::readln(class Stream *const stream) {
 	return true;
 }
 
-void NewData::println(void) const {
+void Data::println(void) const {
 	COM::print("Time: ");
 	Display::println(String(*this->get_time()));
 
 	/* print values across all fields of all active sensors */
-	void const *p = pointer_offset<void const, union NewData const>(this, offset[1]);
+	void const *p = pointer_offset<void const, union Data const>(this, offset[1]);
 	for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor) {
 		if (Setting::active_sensors[sensor]) {
 			size_t field = 0;
@@ -466,7 +464,7 @@ void NewData::println(void) const {
 	}
 }
 
-void NewData::dashboard(void) const {
+void Data::dashboard(void) const {
 	OLED::println(static_cast<unsigned int>(Variable::device_id));
 	struct FullTime time = *this->get_time();
 	#if defined(DASHBOARD_TIMEZONE)
@@ -506,7 +504,7 @@ void NewData::dashboard(void) const {
 	}
 	else {
 		OLED::println(sensor_field->label);
-		OLED::print(sensor_field->access.write(pointer_offset<void const, union NewData const>(this, offset)));
+		OLED::print(sensor_field->access.write(pointer_offset<void const, union Data const>(this, offset)));
 		OLED_space_or_newline();
 		OLED::println(sensor_field->unit);
 	}
@@ -524,279 +522,6 @@ void NewData::dashboard(void) const {
 }
 
 /* ************************************************************************** */
-
-void Data::writeln(class Print *const print) const {
-	print->printf(
-		"%04u-%02u-%02uT%02u:%02u:%02uZ,",
-		this->time.year, this->time.month, this->time.day,
-		this->time.hour, this->time.minute, this->time.second
-	);
-
-	#ifdef ENABLE_BATTERY_GAUGE
-		print->printf(
-			"%f,%f,",
-			this->battery_voltage, this->battery_percentage
-		);
-	#endif
-
-	#ifdef ENABLE_DALLAS
-		print->printf(
-			"%f,",
-			this->dallas_temperature
-		);
-	#endif
-
-	#ifdef ENABLE_SHT40
-		print->printf(
-			"%f,%f,",
-			this->sht40_temperature, this->sht40_humidity
-		);
-	#endif
-
-	#ifdef ENABLE_BME280
-		print->printf(
-			"%f,%f,%f,",
-			this->bme280_temperature, this->bme280_pressure, this->bme280_humidity
-		);
-	#endif
-
-	#ifdef ENABLE_LTR390
-		print->printf(
-			"%f,",
-			this->ltr390_ultraviolet
-		);
-	#endif
-
-	print->write('\n');
-}
-
-bool Data::readln(class Stream *const stream) {
-	/* Time */
-	{
-		class String const s = stream->readStringUntil(',');
-		if (
-			sscanf(
-				s.c_str(),
-				"%4hu-%2hhu-%2hhuT%2hhu:%2hhu:%2hhuZ",
-				&this->time.year, &this->time.month, &this->time.day,
-				&this->time.hour, &this->time.minute, &this->time.second
-			) != 6
-		) return false;
-	}
-
-	/* Battery gauge */
-	#ifdef ENABLE_BATTERY_GAUGE
-		{
-			class String const s = stream->readStringUntil(',');
-			if (sscanf(s.c_str(), "%f", &this->battery_voltage) != 1) return false;
-		}
-		{
-			class String const s = stream->readStringUntil(',');
-			if (sscanf(s.c_str(), "%f", &this->battery_percentage) != 1) return false;
-		}
-	#endif
-
-	/* Dallas thermometer */
-	#ifdef ENABLE_DALLAS
-		{
-			class String const s = stream->readStringUntil(',');
-			if (sscanf(s.c_str(), "%f", &this->dallas_temperature) != 1) return false;
-		}
-	#endif
-
-	/* SHT40 sensor */
-	#ifdef ENABLE_SHT40
-		{
-			class String const s = stream->readStringUntil(',');
-			if (sscanf(s.c_str(), "%f", &this->sht40_temperature) != 1) return false;
-		}
-		{
-			class String const s = stream->readStringUntil(',');
-			if (sscanf(s.c_str(), "%f", &this->sht40_humidity) != 1) return false;
-		}
-	#endif
-
-	/* BME280 sensor */
-	#ifdef ENABLE_BME280
-		{
-			class String const s = stream->readStringUntil(',');
-			if (sscanf(s.c_str(), "%f", &this->bme280_temperature) != 1) return false;
-		}
-		{
-			class String const s = stream->readStringUntil(',');
-			if (sscanf(s.c_str(), "%f", &this->bme280_pressure) != 1) return false;
-		}
-		{
-			class String const s = stream->readStringUntil(',');
-			if (sscanf(s.c_str(), "%f", &this->bme280_humidity) != 1) return false;
-		}
-	#endif
-
-	/* LTR390 sensor */
-	#ifdef ENABLE_LTR390
-		{
-			class String const s = stream->readStringUntil('\n');
-			if (sscanf(s.c_str(), "%f", &this->ltr390_ultraviolet) != 1) return false;
-		}
-	#endif
-
-	stream->readStringUntil('\n');
-	return true;
-}
-
-void Data::println(void) const {
-	COM::print("Time: ");
-	Display::println(String(this->time));
-
-	#if defined(ENABLE_BATTERY_GAUGE)
-		Display::print("Battery: ");
-		Display::print(this->battery_voltage, 1);
-		Display::print("V ");
-		Display::print(this->battery_percentage, 0);
-		Display::println("%");
-	#endif
-
-	#if defined(ENABLE_DALLAS)
-		Display::print("Dallas temp.: ");
-		Display::println(this->dallas_temperature);
-	#endif
-
-	#if defined(ENABLE_SHT40)
-		Display::print("SHT temp.: ");
-		Display::println(this->sht40_temperature, 1);
-		Display::print("SHT humidity: ");
-		Display::println(this->sht40_humidity, 0);
-	#endif
-
-	#if defined(ENABLE_BME280)
-		Display::print("BME temp.: ");
-		Display::println(this->bme280_temperature, 1);
-		Display::print("BME pressure: ");
-		Display::println(this->bme280_pressure, 0);
-		Display::print("BME humidity: ");
-		Display::println(this->bme280_humidity, 0);
-	#endif
-
-	#if defined(ENABLE_LTR390)
-		Display::print("LTR UV: ");
-		Display::println(this->ltr390_ultraviolet);
-	#endif
-}
-
-void Data::dashboard(void) const {
-	OLED::println(static_cast<unsigned int>(Variable::device_id));
-	struct FullTime time = this->time;
-	#if defined(DASHBOARD_TIMEZONE)
-		time += DASHBOARD_TIMEZONE;
-	#endif
-	#if defined(OLED_HORIZONAL)
-		OLED::print(static_cast<unsigned int>(time.day));
-		OLED::print('/');
-		OLED::print(static_cast<unsigned int>(time.month));
-		OLED::print('/');
-		OLED::println(time.year);
-	#else
-		OLED::println(time.year);
-		OLED::print(static_cast<unsigned int>(time.day));
-		OLED::print('/');
-		OLED::println(static_cast<unsigned int>(time.month));
-	#endif
-	if (time.hour < 10) OLED::print('0');
-	OLED::print(static_cast<unsigned int>(time.hour));
-	OLED::print(':');
-	if (time.minute < 10) OLED::print('0');
-	OLED::println(static_cast<unsigned int>(time.minute));
-	#if defined(OLED_HORIZONAL)
-		OLED::println();
-	#endif
-
-	static unsigned int state = 0;
-	do {
-		if (state < __LINE__) {
-			state = __LINE__;
-			OLED::println("Measure");
-			OLED::print(Variable::measure_interval / 60000);
-			OLED_space_or_newline();
-			OLED::println("minutes");
-		}
-	#if defined(ENABLE_BATTERY_GAUGE)
-		else if (state < __LINE__) {
-			state = __LINE__;
-			OLED::println("Power");
-			OLED::print(this->battery_voltage, 1);
-			OLED_space_or_newline();
-			OLED::print("V");
-		}
-		else if (state < __LINE__) {
-			state = __LINE__;
-			OLED::println("Power");
-			OLED::print(this->battery_percentage, 0);
-			OLED_space_or_newline();
-			OLED::print("%");
-		}
-	#endif
-	#if defined(ENABLE_DALLAS)
-		else if (state < __LINE__) {
-			state = __LINE__;
-			OLED::println("Dallas");
-			OLED::print(this->dallas_temperature);
-			OLED_space_or_newline();
-			OLED::print("deg C");
-		}
-	#endif
-	#if defined(ENABLE_SHT40)
-		else if (state < __LINE__) {
-			state = __LINE__;
-			OLED::println("SHT40");
-			OLED::print(this->sht40_temperature);
-			OLED_space_or_newline();
-			OLED::print("deg C");
-		}
-		else if (state < __LINE__) {
-			state = __LINE__;
-			OLED::println("SHT40");
-			OLED::print(this->sht40_humidity);
-			OLED_space_or_newline();
-			OLED::print("%RH");
-		}
-	#endif
-	#if defined(ENABLE_BME280)
-		else if (state < __LINE__) {
-			state = __LINE__;
-			OLED::println("BME280");
-			OLED::print(this->bme280_temperature, 1);
-			OLED_space_or_newline();
-			OLED::print("deg C");
-		}
-		else if (state < __LINE__) {
-			state = __LINE__;
-			OLED::println("BME280");
-			OLED::print(this->bme280_pressure, 0);
-			OLED_space_or_newline();
-			OLED::print("Pa");
-		}
-		else if (state < __LINE__) {
-			state = __LINE__;
-			OLED::println("BME280");
-			OLED::print(this->bme280_humidity, 0);
-			OLED_space_or_newline();
-			OLED::print("%RH");
-		}
-	#endif
-	#if defined(ENABLE_LTR390)
-		else if (state < __LINE__) {
-			state = __LINE__;
-			OLED::println("LTR");
-			OLED::print(this->ltr390_ultraviolet);
-			OLED_space_or_newline();
-			OLED::print("UV");
-		}
-	#endif
-		else
-			state = 0;
-	}
-	while (!state);
-}
 
 namespace Sensor {
 	bool initialize(void) {
@@ -874,7 +599,7 @@ namespace Sensor {
 		return true;
 	}
 
-	bool measure(union NewData *const data) {
+	bool measure(union Data *const data) {
 		DEVICE_LOCK(device_lock);
 		if (!RTC::now(data->get_time()))
 			return false;

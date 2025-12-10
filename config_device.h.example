@@ -30,7 +30,7 @@
 #define ENABLE_BME280
 #define ENABLE_LTR390
 #define DEFAULT_SENSOR_SETTING { \
-	[0] = -1U, \
+	[0] = 0, \
 	[battery] = LC709203F, \
 	[Dallas] = -1U, \
 	[SHT40] = -1U, \
@@ -58,7 +58,6 @@
 	"?site=%1s&device=%2$u&serial=%3$u&time=%4$s"
 #define HTTP_UPLOAD_FIELDS { \
 	[0] = {}, \
-	[Setting::clock] = {}, \
 	[Setting::battery] = \
 		(char const *[]){ \
 			"battery_voltage", \

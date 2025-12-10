@@ -89,7 +89,7 @@ void Configuration::apply(void) const {
 	) {
 		if (Variable::measure_interval != measure_interval) {
 			Variable::measure_interval = measure_interval;
-			SDCard::write_config();
+			//	SDCard::write_config();
 		}
 	}
 }

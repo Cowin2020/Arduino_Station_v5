@@ -22,6 +22,7 @@ void setup(void) {
 	#if !defined(NDEBUG) && defined(START_DELAY)
 		delay(START_DELAY);
 	#endif
+
 	setup_success = false;
 	if (CPU_frequency) setCpuFrequencyMhz(CPU_frequency);
 	LED::initialize();
@@ -29,24 +30,26 @@ void setup(void) {
 	OLED::initialize();
 
 	if (!SDCard::initialize()) goto end;
+	Setting::save(&Variable::active_sensors);
 	SDCard::read_config();
-	Variable::active_devices = Setting::save();
-	Setting::load(&Variable::active_devices);
-	Variable::active_devices = Setting::save();
-	SDCard::write_config();
+	Setting::load(&Variable::active_sensors);
+	Setting::save(&Variable::active_sensors);
+	SDCard::create_new_config();
 
-	NewData::initialize();
+	Data::initialize();
 	if (SDCard::clean_up())
 		Display::println("Data file cleaned");
+
 	if (!RTC::initialize()) goto end;
 	if (!Sensor::initialize()) goto end;
 	WIFI::initialize();
 	if (!LORA::initialize()) goto end;
 	if (!DAEMON::initialize()) goto end;
-	DAEMON::run();
 	#if defined(ENABLE_OLED_SWITCH)
 		pinMode(ENABLE_OLED_SWITCH, INPUT_PULLDOWN);
 	#endif
+
+	DAEMON::run();
 	setup_success = true;
 end:
 	OLED::display();

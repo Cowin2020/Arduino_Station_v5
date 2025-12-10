@@ -40,6 +40,10 @@ namespace COM {
 	#ifdef ENABLE_COM_OUTPUT
 		extern void initialize(void);
 
+		inline static void println(void) {
+			Serial.println();
+		}
+
 		template <typename TYPE>
 		inline static void print(TYPE const x) {
 			Serial.print(x);
@@ -163,6 +167,11 @@ namespace OLED {
 }
 
 namespace Display {
+	inline static void println(void) {
+		COM::println();
+		OLED::println();
+	}
+
 	template <typename TYPE>
 	inline static void print(TYPE const x) {
 		COM::print(x);

@@ -254,14 +254,12 @@ namespace DAEMON {
 		#if !defined(ENABLE_SDCARD)
 			static std::mutex mutex;
 			static bool filled = false;
-			static union NewData *last_data = nullptr;
+			static union Data *last_data = nullptr;
 		#endif
 
 		bool initialize(void) {
 			#if !defined(ENABLE_SDCARD)
-				Debug::print("DEBUG: NewData::total_size = ");
-				Debug::println(NewData::total_size);
-				last_data = static_cast<union NewData *>(malloc(NewData::total_size));
+				last_data = static_cast<union Data *>(malloc(Data::total_size));
 				if (last_data == nullptr) {
 					Display::println("No memory to store measurement data");
 					return false;
@@ -270,25 +268,25 @@ namespace DAEMON {
 			return true;
 		}
 
-		static void add_data(union NewData const *const data) {
+		static void add_data(union Data const *const data) {
 			#if defined(ENABLE_SDCARD)
 				SDCard::add_data(data);
 			#else
 				if (last_data != nullptr) {
 					std::lock_guard<std::mutex> lock(mutex);
 					filled = true;
-					*last_data = *data;
+					std::memcpy(last_data, data, Data::total_size);
 				}
 			#endif
 		}
 
-		static bool read_data(union NewData *const data) {
+		static bool read_data(union Data *const data) {
 			#if defined(ENABLE_SDCARD)
 				return SDCard::read_data(data);
 			#else
 				std::lock_guard<std::mutex> lock(mutex);
 				if (!filled || last_data == nullptr) return false;
-				std::memcpy(data, last_data, NewData::total_size);
+				std::memcpy(data, last_data, Data::total_size);
 				return true;
 			#endif
 		}
@@ -302,7 +300,7 @@ namespace DAEMON {
 			#endif
 		}
 
-		static void send_data(union NewData const *data) {
+		static void send_data(union Data const *data) {
 			if (Variable::enable_gateway) {
 				struct WIFI::upload__result const upload_result =
 					WIFI::upload(Variable::device_id, ++current_serial, data);
@@ -352,8 +350,8 @@ namespace DAEMON {
 			Schedule::sleep(&alarm, START_DELAY);
 			for (;;)
 				try {
-					char memory[NewData::total_size];
-					union NewData *const data = reinterpret_cast<union NewData *>(memory);
+					char memory[Data::total_size];
+					union Data *const data = reinterpret_cast<union Data *>(memory);
 					if (read_data(data)) {
 						send_success.store(false);
 						send_data(data);
@@ -398,7 +396,7 @@ namespace DAEMON {
 
 	namespace Dashboard {
 		static struct Alarm alarm;
-		static union NewData *data = nullptr;
+		static union Data *data = nullptr;
 
 		#if defined(OLED_ROTATION) && !(OLED_ROTATION & 1)
 			#define OLED_HORIZONAL
@@ -449,8 +447,8 @@ namespace DAEMON {
 
 		void loop(void) {
 			#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
-				char memory[NewData::total_size];
-				data = reinterpret_cast<union NewData *>(memory);
+				char memory[Data::total_size];
+				data = reinterpret_cast<union Data *>(memory);
 				Schedule::add_timer(&alarm, "DAEMON::Dashboard");
 				Schedule::sleep(&alarm, MEASURE_INTERVAL + DASHBOARD_INTERVAL + START_DELAY);
 				#if !defined(OLED_HORIZONAL)
@@ -478,7 +476,7 @@ namespace DAEMON {
 	namespace Measure {
 		static struct Alarm alarm;
 
-		static void print_data(union NewData const *const data) {
+		static void print_data(union Data const *const data) {
 			OLED_LOCK(oled_lock);
 			OLED::home();
 			Display::print("Device ");
@@ -489,8 +487,8 @@ namespace DAEMON {
 
 		[[noreturn]]
 		void loop(void) {
-			char memory[NewData::total_size];
-			union NewData *const data = reinterpret_cast<union NewData *>(memory);
+			char memory[Data::total_size];
+			union Data *const data = reinterpret_cast<union Data *>(memory);
 			Schedule::add_timer(&alarm, "DAEMON::Measure");
 			Schedule::sleep(&alarm, START_DELAY);
 			for (;;)
@@ -498,7 +496,7 @@ namespace DAEMON {
 					if (Sensor::measure(data)) {
 						#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
 							if (Dashboard::data != nullptr)
-								std::memcpy(Dashboard::data, data, NewData::total_size);
+								std::memcpy(Dashboard::data, data, Data::total_size);
 						#else
 							print_data(data);
 						#endif

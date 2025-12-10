@@ -57,7 +57,7 @@ namespace Setting {
 		char const *unit;
 	} const *const sensor_fields[];
 
-	extern std::map<unsigned int, unsigned int> save(void);
+	extern void save(std::map<unsigned int, unsigned int> *map);
 	extern void load(std::map<unsigned int, unsigned int> const *map);
 }
 
@@ -73,7 +73,7 @@ namespace NTP {
 	extern void synchronize(void);
 }
 
-union NewData {
+union Data {
 private:
 	struct FullTime time;
 
@@ -84,11 +84,11 @@ public:
 
 	template <typename T>
 	inline T const *device_pointer(unsigned int const sensor) const {
-		return pointer_offset<T const, union NewData const>(this, offset[sensor]);
+		return pointer_offset<T const, union Data const>(this, offset[sensor]);
 	}
 	template <typename T>
 	inline T *device_pointer(unsigned int const sensor) {
-		return pointer_offset<T, union NewData>(this, offset[sensor]);
+		return pointer_offset<T, union Data>(this, offset[sensor]);
 	}
 	inline struct FullTime const *get_time(void) const {
 		return &this->time;
@@ -102,37 +102,9 @@ public:
 	void dashboard(void) const;
 };
 
-struct [[gnu::packed]] Data {
-	struct FullTime time;
-	#ifdef ENABLE_BATTERY_GAUGE
-		float battery_voltage;
-		float battery_percentage;
-	#endif
-	#ifdef ENABLE_DALLAS
-		float dallas_temperature;
-	#endif
-	#ifdef ENABLE_SHT40
-		float sht40_temperature;
-		float sht40_humidity;
-	#endif
-	#ifdef ENABLE_BME280
-		float bme280_temperature;
-		float bme280_pressure;
-		float bme280_humidity;
-	#endif
-	#ifdef ENABLE_LTR390
-		float ltr390_ultraviolet;
-	#endif
-
-	void writeln(class Print *print) const;
-	bool readln(class Stream *stream);
-	void println(void) const;
-	void dashboard(void) const;
-};
-
 namespace Sensor {
 	extern bool initialize(void);
-	extern bool measure(union NewData *data);
+	extern bool measure(union Data *data);
 }
 
 /* ************************************************************************** */

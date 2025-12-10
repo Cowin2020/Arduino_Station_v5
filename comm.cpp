@@ -148,7 +148,7 @@ namespace LORA {
 			packet("ASKTIME", PACKET_ASKTIME, last_receiver, &Variable::device_id, sizeof Variable::device_id);
 		}
 
-		void SEND(Device const receiver, SerialNumber const serial, union NewData const *const data) {
+		void SEND(Device const receiver, SerialNumber const serial, union Data const *const data) {
 			{
 				DEBUG_LOCK(debug_lock);
 				Debug::print("DEBUG: LORA::Send::SEND ");
@@ -156,11 +156,11 @@ namespace LORA {
 					data->writeln(&Serial);
 				#endif
 			}
-			char content[static_cast<size_t>(2 * sizeof Variable::device_id + sizeof serial + NewData::total_size)];
+			char content[static_cast<size_t>(2 * sizeof Variable::device_id + sizeof serial + Data::total_size)];
 			std::memcpy(content, &Variable::device_id, sizeof Variable::device_id);
 			std::memcpy(content + sizeof Variable::device_id, &Variable::device_id, sizeof Variable::device_id);
 			std::memcpy(content + 2 * sizeof Variable::device_id, &serial, sizeof serial);
-			std::memcpy(content + 2 * sizeof Variable::device_id + sizeof serial, data, NewData::total_size);
+			std::memcpy(content + 2 * sizeof Variable::device_id + sizeof serial, data, Data::total_size);
 			packet("SEND", PACKET_SEND, receiver, content, sizeof content);
 		}
 	}
@@ -209,7 +209,7 @@ namespace LORA {
 				sizeof (Device)         /* terminal */
 				+ sizeof (Device)       /* router list length >= 1 */
 				+ sizeof (SerialNumber) /* serial code */
-				+ NewData::total_size; /* data */
+				+ Data::total_size;     /* data */
 			if (Variable::enable_gateway) {
 				if (!(content.size() >= minimal_content_size)) {
 					COM::print("WARN: LoRa SEND: incorrect packet size: ");
@@ -252,8 +252,8 @@ namespace LORA {
 				size_t const overhead_size =
 					sizeof (Device) * (1 + routers_length)
 					+ sizeof (SerialNumber);
-				union NewData const data =
-					*reinterpret_cast<union NewData const *>(
+				union Data const data =
+					*reinterpret_cast<union Data const *>(
 						content.data()
 						+ overhead_size
 					);
@@ -287,10 +287,10 @@ namespace LORA {
 			}
 			else {
 				size_t const minimal_content_size =
-					sizeof (Device)         /* terminal */
-					+ sizeof (Device)       /* router list length >= 1 */
-					+ sizeof (SerialNumber) /* serial code */
-					+ sizeof (NewData::total_size); /* data */
+					sizeof (Device)              /* terminal */
+					+ sizeof (Device)            /* router list length >= 1 */
+					+ sizeof (SerialNumber)      /* serial code */
+					+ sizeof (Data::total_size); /* data */
 
 				if (!(content.size() >= minimal_content_size)) {
 					COM::print("WARN: LoRa SEND: incorrect packet size: ");
