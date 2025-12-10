@@ -357,7 +357,7 @@ namespace DAEMON {
 						send_data(data);
 						Debug::print("DEBUG: DAEMON::Push::loop send_success=");
 						Debug::println((int)send_success.load());
-						#if defined(ENABLE_SDCARD) && SEND_IDLE_INTERVAL > SEND_INTERVAL
+						#if SEND_IDLE_INTERVAL > SEND_INTERVAL
 							if (!send_success.load())
 								Schedule::sleep(&alarm, SEND_IDLE_INTERVAL);
 							else
