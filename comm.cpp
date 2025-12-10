@@ -252,11 +252,9 @@ namespace LORA {
 				size_t const overhead_size =
 					sizeof (Device) * (1 + routers_length)
 					+ sizeof (SerialNumber);
-				union Data const data =
-					*reinterpret_cast<union Data const *>(
-						content.data()
-						+ overhead_size
-					);
+				char memory[Data::total_size];
+				union Data const *const data = reinterpret_cast<union Data *>(memory);
+				std::memcpy(memory, content.data() + overhead_size, Data::total_size);
 				{
 					OLED_LOCK(oled_lock);
 					OLED::home();
@@ -264,11 +262,11 @@ namespace LORA {
 					OLED::print(device);
 					OLED::print(" #");
 					OLED::println(serial);
-					data.println();
+					data->println();
 					OLED::display();
 				}
 
-				class WIFI::upload__result const upload_result = WIFI::upload(device, serial, &data);
+				class WIFI::upload__result const upload_result = WIFI::upload(device, serial, data);
 				{
 					OLED_LOCK(oled_lock);
 					OLED::display();

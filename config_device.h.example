@@ -58,18 +58,18 @@
 		}, \
 	[Setting::Dallas] = \
 		(char const *[]){ \
-			"dallas_temperature" \
+			"Dallas_temperature" \
 		}, \
 	[Setting::SHT40] = \
 		(char const *[]){ \
-			"sht40_temperature", \
-			"sht40_humitidy" \
+			"SHT40_temperature", \
+			"SHT40_humitidy" \
 		}, \
 	[Setting::BME280] = \
 		(char const *[]) { \
-			"bme280_temperature", \
-			"bme280_pressure", \
-			"bme280_humitidy" \
+			"BME280_temperature", \
+			"BME280_pressure", \
+			"BME280_humitidy" \
 		}, \
 	[Setting::LTR390] = \
 		(char const *[]) { \
