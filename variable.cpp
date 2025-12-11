@@ -41,6 +41,11 @@ namespace Variable {
 	class String wifi_pass = WIFI_PASS;
 	class String http_authorization_type = HTTP_AUTHORIZATION_TYPE;
 	class String http_authorization_code = HTTP_AUTHORIZATION_CODE;
+	class String http_upload_base = HTTP_UPLOAD_BASE;
+	class String http_upload_field_site = HTTP_UPLOAD_FILED_SITE;
+	class String http_upload_field_device = HTTP_UPLOAD_FILED_DEVICE;
+	class String http_upload_field_serial = HTTP_UPLOAD_FILED_SERIAL;
+	class String http_upload_field_time = HTTP_UPLOAD_FILED_TIME;
 	class String site_code = SITE_CODE;
 	Millisecond measure_interval = MEASURE_INTERVAL;
 	bool enable_sleep =

@@ -26,6 +26,8 @@ inline static TO const *pointer_offset(FROM const *const from, size_t const offs
 }
 
 unsigned int parse_uint(char const **next);
+extern size_t append_buffer(char *buffer, char const *string);
+extern size_t append_buffer(char *buffer, class String const &string);
 
 struct [[gnu::packed]] FullTime {
 	unsigned short int year;

@@ -46,9 +46,11 @@
 #define HTTP_RESPONE_SIZE 256
 #define HTTP_UPLOAD_LENGTH 512
 #define SITE_CODE "my_site"
-#define HTTP_UPLOAD_FORMAT \
-	"http://www.example.com/path/to/upload" \
-	"?site=%1s&device=%2$u&serial=%3$u&time=%4$s"
+#define HTTP_UPLOAD_BASE "http://www.example.com/path/to/upload?"
+#define HTTP_UPLOAD_FILED_SITE "site"
+#define HTTP_UPLOAD_FILED_DEVICE "device"
+#define HTTP_UPLOAD_FILED_SERIAL "serial"
+#define HTTP_UPLOAD_FILED_TIME "time"
 #define HTTP_UPLOAD_FIELDS { \
 	[0] = {}, \
 	[Setting::battery] = \

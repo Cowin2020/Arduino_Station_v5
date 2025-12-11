@@ -1,4 +1,3 @@
-#include <cstring>
 #include <HTTPClient.h>
 
 #include "variable.h"
@@ -55,17 +54,11 @@ namespace WIFI {
 		void const *value = data->device_pointer<void const>(sensor);
 		Setting::SensorField const *field = Setting::sensor_fields[sensor];
 		size_t p = 0;
-		size_t n;
 		while (field->access.size) {
-			String const value_string = field->access.write(value);
 			buffer[p++] = '&';
-			n = std::strlen(*name);
-			std::memcpy(buffer + p, *name, n);
-			p += n;
+			p += append_buffer(buffer + p, *name);
 			buffer[p++] = '=';
-			n = value_string.length();
-			std::memcpy(buffer + p, value_string.c_str(), n);
-			p += n;
+			p += append_buffer(buffer + p, field->access.write(value));
 			++name;
 			value = pointer_offset<void const, void const>(value, field->access.size);
 			++field;
@@ -82,13 +75,23 @@ namespace WIFI {
 			Display::println(status_message(WiFi.status()));
 			return {.upload_success = false};
 		}
-		class String const time = String(*data->get_time());
 		char URL[HTTP_UPLOAD_LENGTH];
-		int p = snprintf(URL, sizeof URL, HTTP_UPLOAD_FORMAT, Variable::site_code.c_str(), device, serial, time.c_str());
-		if (p < 0) {
-			COM::println("ERROR: Unable to create HTTP URL from snprintf");
-			return {.upload_success = false};
-		}
+		size_t p = append_buffer(URL, Variable::http_upload_base);
+		p += append_buffer(URL + p, Variable::http_upload_field_site);
+		URL[p++] = '=';
+		p += append_buffer(URL + p, Variable::site_code);
+		URL[p++] = '&';
+		p += append_buffer(URL + p, Variable::http_upload_field_device);
+		URL[p++] = '=';
+		p += append_buffer(URL + p, String(device));
+		URL[p++] = '&';
+		p += append_buffer(URL + p, Variable::http_upload_field_serial);
+		URL[p++] = '=';
+		p += append_buffer(URL + p, String(serial));
+		URL[p++] = '&';
+		p += append_buffer(URL + p, Variable::http_upload_field_time);
+		URL[p++] = '=';
+		p += append_buffer(URL + p, String(*data->get_time()));
 		for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor)
 			p += build_URL_querystring(URL + p, data, static_cast<enum Setting::sensor>(sensor));
 		COM::print("Upload to ");

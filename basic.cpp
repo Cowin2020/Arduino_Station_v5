@@ -1,3 +1,4 @@
+#include <cstring>
 #include <ctime>
 #include <cstdio>
 
@@ -20,6 +21,18 @@ unsigned int parse_uint(char const **const next) {
 		}
 		x = (x * 10) + (c - '0');
 	}
+}
+
+size_t append_buffer(char *const buffer, char const *const string) {
+	size_t const length = std::strlen(string);
+	std::memcpy(buffer, string, length);
+	return length;
+}
+
+size_t append_buffer(char *const buffer, class String const &string) {
+	size_t const length = string.length();
+	std::memcpy(buffer, string.c_str(), length);
+	return length;
 }
 
 FullTime::operator String(void) const {
