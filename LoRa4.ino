@@ -67,8 +67,7 @@ void loop(void) {
 				esp_restart();
 		#endif
 		RNG.loop();
-		vTaskDelay(pdMS_TO_TICKS(IDLE_INTERVAL));
-		//	delay(IDLE_INTERVAL);
+		DAEMON::thread_delay(IDLE_INTERVAL);
 	}
 	catch (...) {
 		COM::println("ERROR: loop exception thrown");

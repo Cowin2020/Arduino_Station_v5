@@ -32,11 +32,11 @@ extern std::mutex device_mutex;
 
 namespace Setting {
 	enum sensor {
-		battery       = 1,
-		Dallas        = 2,
-		SHT40         = 3,
-		BME280        = 4,
-		LTR390        = 5,
+		battery = 1,
+		Dallas  = 2,
+		SHT40   = 3,
+		BME280  = 4,
+		LTR390  = 5,
 		num_of_sensors
 	};
 	enum battery {

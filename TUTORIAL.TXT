@@ -1,0 +1,124 @@
+How to add new sensor
+=====================
+
+Since Arduino program is basically a C++ program with little difference, better
+understanding of C++ programming language can help modify this program.
+
+In the tutorial, we add a new sensor called "xyzzy" into the program for
+a simple example.  The procedure will be described step by step.
+
+1. In "config_device.h.example" and "config_device.h", add a configuration
+option, such as:
+	#define ENABLE_XYZZY
+
+2. In file "device.h" -> namespace Setting -> enum sensor, add a new identity
+for the new sensor above the line "num_of_sensors", such as:
+	enum sensor {
+		battery = 1,
+		Dallas  = 2,
+		SHT40   = 3,
+		BME280  = 4,
+		LTR390  = 5,
+		xyzzy   = 6,
+		num_of_sensors
+	};
+
+The identities should be in sequence, starting at 1 and "num_of_sensors" must
+be the last entry.
+
+3. In file "device.c", include necessary headers of library for the new sensor,
+declaring data types and define global variables.  Probably at the section
+labelled "Include headers of libraries and define related global variables".
+Preprocessor guard (#if/#endif) is suggested to be used around the code.
+	#if defined(ENABLE_XYZZY)
+		#include <xyzzy_libraray.h>
+		struct xyzzy_values {
+			int a;
+			float b;
+		};
+		static XyzzyDriver xyzzy_driver;
+	#endif
+
+4. In file "device.c" -> namespace Sensor -> function initialize, add some
+initialize code for the new sensor if necessary.  The function may return a
+false value if the sensor is failed to initialize.
+	#if defined(ENABLE_XYZZY)
+		if (Setting::active_sensors[Setting::Dallas]) {
+			if (xyzzy.begin("some parameters...")) {
+				Display::println("xyzzy found");
+			}
+			else {
+				Display::println("xyzzy not found");
+				return false;
+			}
+		}
+	#endif
+
+5. In file "device.c" -> namespace Sensor -> function measure, add code to
+receive measured values from the sensor.  The memory address to store values
+can be calculated by "data->pointer" template method.
+	#if defined(ENABLE_XYZZY)
+		if (Setting::active_sensors[Setting::Dallas]) {
+			xyzzy_values *const values = data->device_pointer<xyzzy_values>(Setting::xyzzy);
+			values->a = xyzzy_driver.get_a();
+			values->b = xyzzy_driver.get_b();
+		}
+	#endif
+
+6. In file "device.c" -> namespace Setting -> sensor_fields, add information
+about the measured values, such as
+	constinit struct SensorField const *const sensor_fields[] = {
+		[0] = (struct SensorField const []){
+			{{sizeof (struct FullTime)}},
+			{{0}}
+		},
+... skipped
+		[LTR390] = (struct SensorField const []){
+			{FIELD_FLOAT, "LTR390", "UV"},
+			{{0}}
+		},
+		[xyzzy] = (struct SensorField const []){
+			{FIELD_INT,   "XYZZY", "UnitA"},
+			{FIELD_FLOAT, "XYZZY", "UnitB"},
+			{{0}}
+		}
+	};
+The value in the blanket ("xyzzy" in this example) is the value defined in
+"enum sensor" in step 2 above.
+
+The first value of "SensorField" is the information about how to process the
+value.  FIELD_INT and FIELD_FLOAT are predefined for C "int" and "float" types,
+respectively.  You are free to duplicate the code and support more types, but
+"int" and "float" should be sufficient for most casts.
+
+The second value of "SensorField" is the label displayed on OLED.  For vertical
+and large font, only six characters can be shown on a line, so the label should
+not be more six characters.
+
+The third value of "SensorField" is the unit displayed on OLED.  Similar to the
+label, the unit should not be more than six characters.
+
+A "{{0}}" must be put at the end of the array to indicates the end of the array
+because the length of the arrays are not fixed across different sensors.
+
+7. In "config_device.h.example" and "config_device.h", add names of fields of
+HTTP query string for upload the measured values.
+	#define HTTP_UPLOAD_FIELDS { \
+		[0] = {}, \
+...skipped
+		[Setting::LTR390] = \
+			(char const *[]) { \
+				"ltr_ultraviolet" \
+			}, \
+		[Setting::xyzzy] = \
+			(char const *[]) { \
+				"xyzzy_a", \
+				"xyzzy_b" \
+			} \
+	}
+
+Every lines except the last must ended by a backslash (\) character because it
+is a preprocessor directive.
+
+The value in the blanket ("xyzzy" in this example) is the value defined in
+"enum sensor" in step 2 above.

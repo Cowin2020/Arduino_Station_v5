@@ -21,7 +21,7 @@ Libraries used
 Additional Board Manager URLs:
 https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json
 
-Boards: esp32 (tested versions 2.0.17 - 3.0.5)
+Boards: esp32 (tested versions 2.0.17 - 3.3.4)
 
 Crypto
 ------
@@ -65,6 +65,16 @@ RTClib
 
 Driver of DS1307 and DS3231 real-time clocks
 
+Adafruit LC709203F
+------------------
+
+LC709203F battery gauge
+
+DFRobot_MAX17043
+----------------
+
+MAX17043 battery gauge
+
 OneWire
 -------
 
@@ -92,22 +102,43 @@ Adafruit LTR390 Library
 
 LTR390 I2C ambient/ultraviolet light sensor
 
-DFRobot_MAX17043
-----------------
+Device identity
+===============
 
-MAX17043 battery gauge
+Create "config_id.h" in the root directory of repository.
+The file "config_id.h.example" is an example of "config_id.h".
 
-Adafruit LC709203F
-------------------
+DEVICE_ID
+---------
 
-LC709203F battery gauge
+ID of the arduino device
 
-CONFIGURATION
-=============
+Each device should have a unique ID.
 
-Create "config.h" in the root directory of repository.
-Define or undefine variables for configuration.
-The file "config.h.example" is an example of "config.h".
+Type: Single byte integer
+Values:
+	0
+		LoRa-WiFi gateway (optional measurement)
+	1-255
+		terminal measurement devices
+
+Device configuration
+====================
+
+Create "config_device.h" in the root directory of repository.
+The file "config_device.h.example" is an example of "config_device.h".
+
+ENABLE_GATEWAY, ENABLE_MEASURE
+------------------------------
+
+Working mode
+
+Type: one or both defined
+
+ENABLE_GATEWAY
+	This device is used as LoRa gateway
+ENABLE_MEASURE
+	This device will measure data
 
 NDEBUG
 ------
@@ -130,20 +161,6 @@ All measured data will be saved in log file on SD card.
 
 Type: defined or undefined
 
-DEVICE_ID
----------
-
-ID of the arduino device
-
-Each device should have a unique ID.
-
-Type: Single byte integer
-Values:
-	0
-		LoRa-WiFi gateway (optional measurement)
-	1-255
-		terminal measurement devices
-
 NUMBER_OF_DEVICES
 -----------------
 
@@ -160,62 +177,49 @@ Type: defined or undefined
 
 Should be defined for devices 1-255, and optional for device 0.
 
-ENABLE_LED
-----------
-
-Blink on board LED on error
-
-Type: defined or undefined
-
-ENABLE_COM_OUTPUT
------------------
-
-Output debug message to USB serial port
-
-Type: defined or undefined
-
-ENABLE_OLED_OUTPUT
-------------------
-
-Output message to OLED display
-
-Type: defined or undefined
-
-ENABLE_CLOCK
-------------
-
-Grove high precision RTC is used
-
-Values:
-	(undefined)
-		Use internal clock only
-	CLOCK_PCF85063TP
-		Grove high precision real-time clock
-	CLOCK_DS1307
-		DS1307 real-time clock
-	CLOCK_DS3231
-		DS3231 real-time clock
-
-ENABLE_SD_CARD
+ENABLE_SDCARD
 --------------
 
 SD card is installed and used to store measurement data
 
 Type: defined or undefined
 
-ENABLE_SLEEP
-------------
+ENABLE_LOG_FILE
+---------------
 
-Go to sleep mode when it is not sending or measuring data
+Record all measured data in log file
 
-Type: defined or undefined
+Type defined or undefined
 
-ENABLE_BATTERY_GAUGE
---------------------
+ENABLE_CLOCK_PCF85063TP, ENABLE_CLOCK_DS1307, ENABLE_CLOCK_DS3231
+-----------------------------------------------------------------
+
+Real-time clock
+
+Type: defined one of them or undefined at all
+
+undefined
+	Use internal clock only
+ENABLE_CLOCK_PCF85063TP
+	Grove high precision real-time clock
+ENABLE_CLOCK_DS1307
+	DS1307 real-time clock
+ENABLE_CLOCK_DS3231
+	DS3231 real-time clock
+
+ENABLE_BATTERY_GAUGE_DFROBOT, ENABLE_BATTERY_GAUGE_LC709203F
+------------------------------------------------------------
 
 Battery gauge is used to monitor battery usage
 
-Type: undefined or BATTERY_GAUGE_DFROBOT or BATTERY_GAUGE_LC709203F
+Type: defined or undefined
+	They can be both defined and then select one to use by
+"DEFAULT_SENSOR_SETTING" or settings loaded from SD card.
+
+ENABLE_BATTERY_GAUGE_MAX17043
+	MAX17043 fuel gauge
+ENABLE_BATTERY_GAUGE_LC709203F
+	LC709203F battery monitor
 
 ENABLE_DALLAS
 -------------
@@ -239,6 +243,15 @@ ENABLE_LTR390
 LTR390 I2C sensor is used
 
 Type: defined or undefined
+
+DEFAULT_SENSOR_SETTING
+----------------------
+
+Default settings of sensors
+
+Type: arrary of unsigned int
+
+The settings may be loaded from SD card.
 
 SECRET_KEY
 ----------
@@ -274,12 +287,33 @@ Device 1 sends data through device 2 or directly sends to device 0 (gateway devi
 Device 4 only sends data through device 2, and device 3 only send through device 4.
 Devices send only to device 0 by default if not listed.
 
+LORA_BAND
+---------
+
+Radio frequency used for LoRa
+
+Type: signed long int
+
 WIFI_SSID and WIFI_PASS
 -----------------------
 
 WiFi access point and password
 
 Type: C strings
+
+NTP_SERVER
+----------
+
+NTP server that provides network clock
+
+Type: C string
+
+NTP_INTERVAL
+------------
+
+Milliseconds to (re)synchronize with network clock.
+
+Type: natural number
 
 HTTP_UPLOAD_LENGTH
 ---------------
@@ -288,31 +322,8 @@ Maximum length of HTTP URL string
 
 Type: natural number
 
-HTTP_UPLOAD_FORMAT
----------------
-
-Printf format string of URL to upload data
-
-Type: C string
-
-Position arguments:
-	%1$u
-		device ID
-	%2$lu
-		serial number of transmission
-	%3$s
-		date and time in ISO8601 format
-	%4$f, %5$f, %6$f, ...
-		measure data, orderred by
-			Dallas temperature
-			BME280 temperature
-			BME280 pressure
-			BME280 humidity
-			LTR390 ultraviolet
-		data can be missing if corresponding ENABLE_* is not defined
-
-HTTP_AUTHORIZATION_TYPE and HTTP_AUTHORIZATION_CODE
----------------------------------------------------
+HTTP_AUTHORIZATION_TYPE, HTTP_AUTHORIZATION_CODE
+------------------------------------------------
 
 Authorization code on HTTP for uploading.
 
@@ -325,64 +336,106 @@ Buffer size for HTTP response from data server.
 
 Type: natural number
 
-NTP_INTERVAL
-------------
+SITE_CODE
+---------
 
-Milliseconds to (re)synchronize with network clock.
+Identifier of the measurement site
 
-Type: natural number
+HTTP_UPLOAD_FORMAT
+------------------
 
-DATA_FILE_PATH
--------------
-
-File name in SD card to store data in terminal device
+Printf format string of URL to upload data
 
 Type: C string
 
-CLEANUP_FILE_PATH
--------------
+Position arguments:
+	%1s
+		site code, which defined by "SITE_CODE"
+	%2$u
+		device ID
+	%3$u
+		serial number of transmission
+	%4$s
+		date and time in ISO8601 format
 
-Temporary file name in SD card for clean up data file
+HTTP_UPLOAD_FORMAT
+------------------
 
-Type: C string
+A list of mapping HTTP keys of querystring and measured values
+
+Type: array of arrays of C strings
+
+The first index is Setting::sensor matches the sensors, and the second index
+matches different values that measured by the sensor.
 
 START_DELAY
 -----------
 
 Delay in milliseconds before starting first measure and send data.
 
-Type: natural number
+Type: unsigned long int
 
 IDLE_INTERVAL
 -------------
 
 Delay in milliseconds in the idle loop.
+In the idle loop, internet (WiFi) status is checked.
 
-Type: natural number
+Type: unsigned long int
 
 ACK_TIMEOUT
 -----------
 
 Period in milliseconds to wait for ACK response
 
-Type: natural number
+Type: unsigned long int
 
 RESEND_TIMES
 ------------
 
-Number of times to resend data if ACK is not received
+Number of times to re-send data if ACK is not received
 
-Type: natural number
+Type: unsigned int
 
-UPLOAD_INTERVAL
+SEND_INTERVAL
 ---------------
 
-Maximum period in milliseconds to upload data if SD card is used
+Milliseconds between re-send data
 
 This value should be larger than (ACK_TIMEOUT * (RESEND_TIMES + 1)).
 
-Type: natural number
-Default: (ACK_TIMEOUT * (RESEND_TIMES + 2))
+Type: unsigned long int
+Suggested value: (ACK_TIMEOUT * (RESEND_TIMES + 2))
+
+MEASURE_INTERVAL
+----------------
+
+Period in milliseconds to measure data
+
+This value should be larger than SEND_INTERVAL.
+
+Type: unsigned long int
+
+SEND_IDLE_INTERVAL
+------------------
+
+Milliseconds to suspend sending LoRa data after failed RESEND_TIMES times
+
+Type: unsigned long int
+
+SYNCHONIZE_INTERVAL
+-------------------
+
+Period in milliseconds to synchonize real-time clock through LoRa
+
+Type: unsigned long int
+
+SYNCHONIZE_TIMEOUT
+------------------
+
+Milliseconds to wait the response of time synchonization
+
+Type: unsigned long int
 
 CLEANLOG_INTERVAL
 -----------------
@@ -391,30 +444,83 @@ Period in milliseconds to clear data file on SD card
 
 It can be undefined or set to zero to disable this function.
 
-Type: undefined or natural number
+Type: undefined or unsigned long int
 
-MEASURE_INTERVAL
---------------
-
-Period in milliseconds to measure data
-
-This value should be larger than UPLOAD_INTERVAL.
-
-Type: natural number
-
-INTERNET_INTERVAL
------------------
-
-Period in milliseconds to check internet (WiFi) status
-
-Type: natural number
+Suggestion: few hours to a day
 
 SLEEP_MARGIN
 ------------
 
 Number of milliseconds to wake up before measuring or sending data
 
-Type: natural number
+Type: unsigned long int
+
+REBOOT_TIMEOUT
+--------------
+
+Milliseconds to reboot
+
+Type: undefined or unsigned long int
+
+DASHBOARD_INTERVAL
+------------------
+
+Milliseconds to refresh the OLED display in dashboard mode
+
+Type: undefined or unsigned long int
+
+The dashboard mode is turned off if this variable is undefined.
+
+DASHBOARD_SLEEP_INTERVAL
+------------------------
+
+Milliseconds to suspend dashboard refresh when OLED display is switched off
+
+Type: unsigned long int
+
+DASHBOARD_TIMEZONE
+------------------
+
+Time zone (in hours) that used on dashboard display
+
+Type: signed int
+
+Positive number for eastern hemisphere, and negative number for western hemisphere
+
+ENABLE_LED
+----------
+
+Blink on board LED on error
+
+Type: defined or undefined
+
+ENABLE_COM_OUTPUT
+-----------------
+
+Output debug message to USB serial port
+
+Type: defined or undefined
+
+ENABLE_OLED_OUTPUT
+------------------
+
+Output message to OLED display
+
+Type: defined or undefined
+
+OLED_ROTATION
+-------------
+
+The rotation of the contents on OLED display
+
+Type: integer between in [0, 3]
+
+ENABLE_SLEEP
+------------
+
+Go to sleep mode when it is not sending or measuring data
+
+Type: defined or undefined
 
 CPU_FREQUENCY
 -------------
@@ -439,17 +545,3 @@ OLED_WIDTH and OLED_HEIGHT
 The dimension of OLED display
 
 Type: positive numbers
-
-OLED_ROTATION
--------------
-
-The rotation of the contents on OLED display
-
-Type: integer between in [0, 3]
-
-LORA_BAND
----------
-
-Radio frequency used for LoRa
-
-Type: signed long int

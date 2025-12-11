@@ -10,6 +10,8 @@
 /* ************************************************************************** */
 
 namespace WIFI {
+	static char const *const *const upload_names[] = HTTP_UPLOAD_FIELDS;
+
 	void initialize(void) {
 		if (Variable::enable_gateway) {
 			WiFi.mode(WIFI_STA);
@@ -49,7 +51,7 @@ namespace WIFI {
 
 	size_t build_URL_querystring(char *const buffer, union Data const *const data, Setting::sensor const sensor) {
 		if (!Setting::active_sensors[sensor]) return 0;
-		char const *const *name = Setting::upload_names[sensor];
+		char const *const *name = upload_names[sensor];
 		void const *value = data->device_pointer<void const>(sensor);
 		Setting::SensorField const *field = Setting::sensor_fields[sensor];
 		size_t p = 0;

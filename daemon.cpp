@@ -383,14 +383,16 @@ namespace DAEMON {
 
 		void loop(void) {
 			Schedule::add_timer(&alarm, "DAEMON::CleanLog");
-			for (;;)
-				try {
-					Schedule::sleep(&alarm, CLEANLOG_INTERVAL);
-					SDCard::clean_up();
-				}
-				catch (...) {
-					COM::println("ERROR: DAEMON::CleanData::loop exception thrown");
-				}
+			#if defined(CLEANLOG_INTERVAL)
+				for (;;)
+					try {
+						Schedule::sleep(&alarm, CLEANLOG_INTERVAL);
+						SDCard::clean_up();
+					}
+					catch (...) {
+						COM::println("ERROR: DAEMON::CleanData::loop exception thrown");
+					}
+			#endif
 		}
 	}
 

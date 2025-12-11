@@ -17,6 +17,7 @@
 #endif
 
 /* ************************************************************************** */
+/* Include headers of libraries and define related global variables */
 
 #if defined(ENABLE_BATTERY_GAUGE_LC709203F)
 	#include <Adafruit_LC709203F.h>
@@ -60,16 +61,12 @@
 
 /* ************************************************************************** */
 
-#define MINIMUM_CPU_FREQUENCY 20
-
-#if defined(ENABLE_OLED_OUTPUT)
-	#undef MINIMUM_CPU_FREQUENCY
-	#define MINIMUM_CPU_FREQUENCY 24
-#endif
-
 #if defined(ENABLE_GATEWAY)
-	#undef MINIMUM_CPU_FREQUENCY
 	#define MINIMUM_CPU_FREQUENCY 80
+#elif defined(ENABLE_OLED_OUTPUT)
+	#define MINIMUM_CPU_FREQUENCY 24
+#else
+	#define MINIMUM_CPU_FREQUENCY 20
 #endif
 
 unsigned long int const CPU_frequency =
@@ -96,7 +93,6 @@ inline static void OLED_space_or_newline(void) {
 
 namespace Setting {
 	unsigned int active_sensors[num_of_sensors] = DEFAULT_SENSOR_SETTING;
-	char const *const *const upload_names[] = HTTP_UPLOAD_FIELDS;
 
 	static bool FIELD_INT_read(void *const memory, char const *const string) {
 		char *remaining = nullptr;
