@@ -42,7 +42,7 @@ namespace Setting {
 		MAX17043 = 2
 	};
 
-	extern unsigned int active_sensors[num_of_sensors];
+	extern class Maybe<unsigned int> active_sensors[num_of_sensors];
 	extern char const *const *const upload_names[];
 	struct FieldAccess {
 		size_t size;

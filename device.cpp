@@ -74,7 +74,7 @@ inline static void OLED_space_or_newline(void) {
 /* ************************************************************************** */
 
 namespace Setting {
-	unsigned int active_sensors[num_of_sensors] = DEFAULT_SENSOR_SETTING;
+	class Maybe<unsigned int> active_sensors[num_of_sensors] = DEFAULT_SENSOR_SETTING;
 
 	static bool FIELD_INT_read(void *const memory, char const *const string) {
 		char *remaining = nullptr;
@@ -133,18 +133,19 @@ namespace Setting {
 
 	void save(std::map<unsigned int, unsigned int> *const map) {
 		map->clear();
-		for (unsigned int i = 1; i < num_of_sensors; ++i) {
-			unsigned int const choice = active_sensors[i];
-			if (active_sensors[i])
-				(*map)[i] = active_sensors[i];
-		}
+		for (unsigned int i = 1; i < num_of_sensors; ++i)
+			if (active_sensors[i].isJust())
+				(*map)[i] = active_sensors[i].unwrap();
 	}
 
 	void load(std::map<unsigned int, unsigned int> const *const map) {
-		active_sensors[0] = UINT_MAX;
+		active_sensors[0] = Maybe(UINT_MAX);
 		for (unsigned int i = 1; i < num_of_sensors; ++i) {
 			std::map<unsigned int, unsigned int>::const_iterator found = map->find(i);
-			active_sensors[i] = found == map->end() ? 0 : found->second;
+			if (found == map->end())
+				active_sensors[i] = Maybe<unsigned int>();
+			else
+				active_sensors[i] = Maybe(found->second);
 		}
 	}
 }
@@ -344,35 +345,32 @@ void Data::initialize(void) {
 			++field;
 		}
 		offset[sensor] = total_size;
-		if (Setting::active_sensors[sensor]) total_size += device_size;
+		if (Setting::active_sensors[sensor].isJust())
+			total_size += device_size;
 	}
 }
 
 void Data::writeln(class Print *const print) const {
-	{
-		/* write measure time */
-		struct FullTime const *const time = this->get_time();
-		print->printf(
-			"%04u-%02u-%02uT%02u:%02u:%02uZ,",
-			time->year, time->month, time->day,
-			time->hour, time->minute, time->second
-		);
-	}
+	/* write measure time */
+	struct FullTime const *const time = this->get_time();
+	print->printf(
+		"%04u-%02u-%02uT%02u:%02u:%02uZ,",
+		time->year, time->month, time->day,
+		time->hour, time->minute, time->second
+	);
 
-	{
-		/* write measured values across all fields of all active sensors */
-		void const *p = pointer_offset<void const, union Data const>(this, offset[1]);
-		for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor) {
-			if (Setting::active_sensors[sensor]) {
-				size_t field = 0;
-				for (;;) {
-					struct Setting::FieldAccess const *const access = &Setting::sensor_fields[sensor][field].access;
-					if (!access->size) break;
-					print->print(access->write(p));
-					print->write(',');
-					p = pointer_offset<void const, void const>(p, access->size);
-					++field;
-				}
+	/* write measured values across all fields of all active sensors */
+	void const *p = pointer_offset<void const, union Data const>(this, offset[1]);
+	for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor) {
+		if (Setting::active_sensors[sensor].isJust()) {
+			size_t field = 0;
+			for (;;) {
+				struct Setting::FieldAccess const *const access = &Setting::sensor_fields[sensor][field].access;
+				if (!access->size) break;
+				print->print(access->write(p));
+				print->write(',');
+				p = pointer_offset<void const, void const>(p, access->size);
+				++field;
 			}
 		}
 	}
@@ -399,7 +397,7 @@ bool Data::readln(class Stream *const stream) {
 		/* read fields of all active sensors */
 		void *p = pointer_offset<void, union Data>(this, offset[1]);
 		for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor) {
-			if (Setting::active_sensors[sensor]) {
+			if (Setting::active_sensors[sensor].isJust()) {
 				size_t field = 0;
 				for (;;) {
 					struct Setting::FieldAccess const *const access = &Setting::sensor_fields[sensor][field].access;
@@ -424,7 +422,7 @@ void Data::println(void) const {
 	/* print values across all fields of all active sensors */
 	void const *p = pointer_offset<void const, union Data const>(this, offset[1]);
 	for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor) {
-		if (Setting::active_sensors[sensor]) {
+		if (Setting::active_sensors[sensor].isJust()) {
 			size_t field = 0;
 			for (;;) {
 				struct Setting::SensorField const *const sensor_field = &Setting::sensor_fields[sensor][field];
@@ -486,7 +484,7 @@ void Data::dashboard(void) const {
 	}
 	offset += sensor_field->access.size;
 	++field;
-	while (!Setting::active_sensors[sensor] || !Setting::sensor_fields[sensor][field].access.size) {
+	while (!Setting::active_sensors[sensor].isJust() || !Setting::sensor_fields[sensor][field].access.size) {
 		field = 0;
 		++sensor;
 		if (sensor >= Setting::num_of_sensors) {
@@ -517,7 +515,7 @@ namespace Sensor {
 
 		/* Initialize Dallas thermometer */
 		#if defined(ENABLE_DALLAS)
-			if (Setting::active_sensors[Setting::Dallas]) {
+			if (Setting::active_sensors[Setting::Dallas].isJust()) {
 				dallas.begin();
 				DeviceAddress thermometer_address;
 				if (dallas.getAddress(thermometer_address, 0)) {
@@ -532,7 +530,7 @@ namespace Sensor {
 
 		/* Initialize SHT40 sensor */
 		#if defined(ENABLE_SHT40)
-			if (Setting::active_sensors[Setting::SHT40]) {
+			if (Setting::active_sensors[Setting::SHT40].isJust()) {
 				if (SHT.begin()) {
 					Display::println("SHT40 sensor found");
 				}
@@ -547,7 +545,7 @@ namespace Sensor {
 
 		/* Initialize BME280 sensor */
 		#if defined(ENABLE_BME280)
-			if (Setting::active_sensors[Setting::BME280]) {
+			if (Setting::active_sensors[Setting::BME280].isJust()) {
 				if (BME.begin()) {
 					Display::println("BME280 sensor found");
 				}
@@ -560,7 +558,7 @@ namespace Sensor {
 
 		/* Initial LTR390 sensor */
 		#if defined(ENABLE_LTR390)
-			if (Setting::active_sensors[Setting::LTR390]) {
+			if (Setting::active_sensors[Setting::LTR390].isJust()) {
 				if (LTR.begin()) {
 					LTR.setMode(LTR390_MODE_UVS);
 					Display::println("LTR390 sensor found");
@@ -581,8 +579,9 @@ namespace Sensor {
 			return false;
 
 		#if defined(ENABLE_BATTERY_GAUGE_LC709203F) || defined(ENABLE_BATTERY_GAUGE_MAX17043)
-			{
-				enum Setting::battery const type = static_cast<enum Setting::battery>(Setting::active_sensors[Setting::battery]);
+			if (Setting::active_sensors[Setting::battery].isJust()) {
+				enum Setting::battery const type =
+					static_cast<enum Setting::battery>(Setting::active_sensors[Setting::battery].unwrap());
 				if (!type) ;
 				#if defined(ENABLE_BATTERY_GAUGE_LC709203F)
 					else if (type == Setting::LC709203F) {
@@ -602,7 +601,7 @@ namespace Sensor {
 		#endif
 
 		#if defined(ENABLE_DALLAS)
-			if (Setting::active_sensors[Setting::Dallas]) {
+			if (Setting::active_sensors[Setting::Dallas].isJust()) {
 				float *const value = data->device_pointer<float>(Setting::Dallas);
 				dallas.requestTemperatures();
 				delay(750);
@@ -611,7 +610,7 @@ namespace Sensor {
 		#endif
 
 		#if defined(ENABLE_SHT40)
-			if (Setting::active_sensors[Setting::SHT40]) {
+			if (Setting::active_sensors[Setting::SHT40].isJust()) {
 				float *const values = data->device_pointer<float>(Setting::SHT40);
 				sensors_event_t temperature_event, humidity_event;
 				SHT.getEvent(&humidity_event, &temperature_event);
@@ -621,7 +620,7 @@ namespace Sensor {
 		#endif
 
 		#if defined(ENABLE_BME280)
-			if (Setting::active_sensors[Setting::BME280]) {
+			if (Setting::active_sensors[Setting::BME280].isJust()) {
 				float *const values = data->device_pointer<float>(Setting::BME280);
 				values[0] = BME.readTemperature();
 				values[1] = BME.readPressure();
@@ -630,7 +629,7 @@ namespace Sensor {
 		#endif
 
 		#if defined(ENABLE_LTR390)
-			if (Setting::active_sensors[Setting::LTR390]) {
+			if (Setting::active_sensors[Setting::LTR390].isJust()) {
 				float *const value = data->device_pointer<float>(Setting::Dallas);
 				*value = LTR.readUVS();
 			}
