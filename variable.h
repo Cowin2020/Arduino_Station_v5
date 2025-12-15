@@ -14,8 +14,8 @@
 /* ************************************************************************** */
 
 namespace Variable {
-	extern bool const enable_gateway;
-	extern bool const enable_measure;
+	extern bool enable_gateway;
+	extern bool enable_measure;
 	extern Device device_id;
 	extern unsigned char secret_key[16];
 	extern class String wifi_ssid;

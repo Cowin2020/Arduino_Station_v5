@@ -22,14 +22,14 @@
 
 namespace Variable {
 	Device device_id = DEVICE_ID;
-	bool const enable_gateway =
+	bool enable_gateway =
 		#if defined(ENABLE_GATEWAY)
 			true
 		#else
 			false
 		#endif
 		;
-	bool const enable_measure =
+	bool enable_measure =
 		#if defined(ENABLE_MEASURE)
 			true
 		#else
@@ -63,6 +63,14 @@ namespace Variable {
 	void dump_to_stream(class Print *const stream) {
 		stream->print("DEVICE_ID=");
 		stream->println(device_id);
+		stream->print("OPERATION_MODE=");
+		stream->println(
+			(device_id || !enable_gateway)
+				? "MEASURE"
+				: enable_measure
+					? "BOTH"
+					: "GATEWAY"
+		);
 		{
 			char ascii_key[sizeof secret_key << 1];
 			for (size_t i = 0; i < sizeof secret_key; ++i) {
@@ -104,12 +112,31 @@ namespace Variable {
 		if (key == "DEVICE_ID" && !enable_gateway) {
 			char const *p = value.c_str();
 			unsigned int const n = parse_uint(&p);
-			if (*p || n <= 0 || n > 255) {
+			if (*p || n <= 0 || n > UCHAR_MAX) {
 				COM::print("WARN: Incorrect device ID ");
 				COM::println(value);
 				return false;
 			}
 			device_id = n;
+			if (n) enable_measure = true;
+			else enable_gateway = true;
+		}
+		else if (key == "OPERATION_MODE") {
+			if (value == "GATEWAY") {
+				enable_gateway = true;
+				enable_measure = false;
+				device_id = 0;
+			}
+			else if (value == "MEASURE") {
+				enable_gateway = false;
+				enable_measure = true;
+				if (!device_id) device_id = UCHAR_MAX;
+			}
+			else if (value == "BOTH") {
+				enable_gateway = true;
+				enable_measure = true;
+				device_id = 0;
+			}
 		}
 		else if (key == "SECRET_KEY") {
 			memset(secret_key, 0, sizeof secret_key);
