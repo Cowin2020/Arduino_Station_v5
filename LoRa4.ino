@@ -18,13 +18,29 @@
 
 static bool setup_success;
 
+#if defined(CPU_FREQUENCY)
+	static void set_CPU_frequency(void) {
+		unsigned long int CPU_frequency = CPU_FREQUENCY;
+		if (CPU_frequency < 20)
+			CPU_frequency = 20;
+		#if defined(ENABLE_OLED_OUTPUT)
+			else if (CPU_frequency < 24)
+				CPU_frequency = 24;
+		#endif
+		else if (Variable::enable_gateway && CPU_frequency < 80)
+			CPU_frequency = 80;
+		setCpuFrequencyMhz(CPU_frequency);
+	}
+#else
+	inline static void set_CPU_frequency(void) {}
+#endif
+
 void setup(void) {
 	#if !defined(NDEBUG) && defined(START_DELAY)
 		delay(START_DELAY);
 	#endif
 
 	setup_success = false;
-	if (CPU_frequency) setCpuFrequencyMhz(CPU_frequency);
 	LED::initialize();
 	COM::initialize();
 	OLED::initialize();
@@ -40,6 +56,7 @@ void setup(void) {
 	if (SDCard::clean_up())
 		Display::println("Data file cleaned");
 
+	set_CPU_frequency();
 	if (!RTC::initialize()) goto end;
 	if (!Sensor::initialize()) goto end;
 	WIFI::initialize();

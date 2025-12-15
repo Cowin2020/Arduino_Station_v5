@@ -61,24 +61,6 @@
 
 /* ************************************************************************** */
 
-#if defined(ENABLE_GATEWAY)
-	#define MINIMUM_CPU_FREQUENCY 80
-#elif defined(ENABLE_OLED_OUTPUT)
-	#define MINIMUM_CPU_FREQUENCY 24
-#else
-	#define MINIMUM_CPU_FREQUENCY 20
-#endif
-
-unsigned long int const CPU_frequency =
-	#if defined(CPU_FREQUENCY)
-		CPU_FREQUENCY < MINIMUM_CPU_FREQUENCY
-			? MINIMUM_CPU_FREQUENCY
-			: CPU_FREQUENCY
-	#else
-		0
-	#endif
-	;
-
 std::mutex device_mutex;
 
 inline static void OLED_space_or_newline(void) {

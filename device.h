@@ -12,8 +12,6 @@
 
 /* ************************************************************************** */
 
-extern unsigned long int const CPU_frequency;
-
 extern std::mutex device_mutex;
 
 #define DEVICE_LOCK(VARIABLE) std::lock_guard<std::mutex> VARIALBE{device_mutex}
