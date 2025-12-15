@@ -41,12 +41,14 @@
 #define WIFI_PASS "my WiFi password"
 #define NTP_SERVER "stdtime.gov.hk"
 #define NTP_INTERVAL 1234567UL /* milliseconds */
-#define HTTP_AUTHORIZATION_TYPE "Basic"
-#define HTTP_AUTHORIZATION_CODE "passcode for webserver"
+#define HTTP_AUTHORIZATION_TYPE "BASIC"
+#define HTTP_AUTHORIZATION_USER "username for upload"
+#define HTTP_AUTHORIZATION_PASS "password for webserver"
 #define HTTP_RESPONE_SIZE 256
 #define HTTP_UPLOAD_LENGTH 512
-#define SITE_CODE "my_site"
-#define HTTP_UPLOAD_BASE "http://www.example.com/path/to/upload?"
+#define SITE_CODE "0"
+#define HTTP_UPLOAD_HOST "http://www.example.com"
+#define HTTP_UPLOAD_PATH_BASE "/path/to/upload?"
 #define HTTP_UPLOAD_FILED_SITE "site"
 #define HTTP_UPLOAD_FILED_DEVICE "device"
 #define HTTP_UPLOAD_FILED_SERIAL "serial"

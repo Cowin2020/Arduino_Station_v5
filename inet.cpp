@@ -1,4 +1,7 @@
+#include <Arduino.h>
+#include <base64.h>
 #include <HTTPClient.h>
+#include <SHA224.h>
 
 #include "variable.h"
 #include "display.h"
@@ -76,7 +79,9 @@ namespace WIFI {
 			return {.upload_success = false};
 		}
 		char URL[HTTP_UPLOAD_LENGTH];
-		size_t p = append_buffer(URL, Variable::http_upload_base);
+		size_t const path = append_buffer(URL, Variable::http_upload_host);
+		size_t p = path;
+		p += append_buffer(URL + p, Variable::http_upload_path_base);
 		p += append_buffer(URL + p, Variable::http_upload_field_site);
 		URL[p++] = '=';
 		p += append_buffer(URL + p, Variable::site_code);
@@ -98,9 +103,30 @@ namespace WIFI {
 		COM::println(URL);
 		class HTTPClient HTTP_client;
 		HTTP_client.begin(URL);
-		if (Variable::http_authorization_type.length() && Variable::http_authorization_code.length()) {
-			HTTP_client.setAuthorizationType(Variable::http_authorization_type.c_str());
-			HTTP_client.setAuthorization(Variable::http_authorization_code.c_str());
+		if (Variable::http_authorization_type.length() && Variable::http_authorization_pass.length()) {
+			if (Variable::http_authorization_user.length()) {
+				SHA224 sha224;
+				sha224.update(
+					Variable::http_authorization_user.c_str(),
+					Variable::http_authorization_user.length()
+				);
+				sha224.update(URL + path, p - path);
+				char hash[sha224.hashSize()];
+				sha224.finalize(hash, sizeof hash);
+				class String pair = String(Variable::http_authorization_pass);
+				pair.concat(':');
+				pair.concat(hash, sizeof hash);
+				class String const credential =
+					base64::encode(
+						reinterpret_cast<uint8_t const *>(pair.c_str()),
+						pair.length()
+					);
+				HTTP_client.setAuthorizationType(Variable::http_authorization_type.c_str());
+				HTTP_client.setAuthorization(credential.c_str());
+			} else {
+				HTTP_client.setAuthorizationType(Variable::http_authorization_type.c_str());
+				HTTP_client.setAuthorization(Variable::http_authorization_pass.c_str());
+			}
 		}
 		signed int const HTTP_status = HTTP_client.GET();
 		{

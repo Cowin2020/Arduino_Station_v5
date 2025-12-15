@@ -299,40 +299,40 @@ WIFI_SSID and WIFI_PASS
 
 WiFi access point and password
 
-Type: C strings
+Type: C++ strings
 
 NTP_SERVER
 ----------
 
 NTP server that provides network clock
 
-Type: C string
+Type: C++ string
 
 NTP_INTERVAL
 ------------
 
-Milliseconds to (re)synchronize with network clock.
+Milliseconds to (re)synchronize with network clock
 
 Type: natural number
 
 HTTP_UPLOAD_LENGTH
----------------
+------------------
 
 Maximum length of HTTP URL string
 
 Type: natural number
 
-HTTP_AUTHORIZATION_TYPE, HTTP_AUTHORIZATION_CODE
-------------------------------------------------
+HTTP_AUTHORIZATION_TYPE, HTTP_AUTHORIZATION_USER, HTTP_AUTHORIZATION_PASS
+-------------------------------------------------------------------------
 
-Authorization code on HTTP for uploading.
+Authorization password for uploading
 
-Type: C strings
+Type: C++ strings
 
 HTTP_RESPONE_SIZE
 -----------------
 
-Buffer size for HTTP response from data server.
+Buffer size for HTTP response from data server
 
 Type: natural number
 
@@ -341,29 +341,41 @@ SITE_CODE
 
 Identifier of the measurement site
 
-HTTP_UPLOAD_FORMAT
-------------------
+Type: C++ string
 
-Printf format string of URL to upload data
+HTTP_UPLOAD_HOST
+----------------
 
-Type: C string
+URL of the protocol, host and port of the HTTP server for upload data
 
-Position arguments:
-	%1s
-		site code, which defined by "SITE_CODE"
-	%2$u
-		device ID
-	%3$u
-		serial number of transmission
-	%4$s
-		date and time in ISO8601 format
+Printf format string of URL to upload data.
 
-HTTP_UPLOAD_FORMAT
+Type: C++ string
+
+HTTP_UPLOAD_PATH_BASE
+---------------------
+
+The path and query string of the upload URL
+
+A question mark "?" or ampersand "&" put at the end of the string for following
+parameters.
+
+Type: C++ string
+
+HTTP_UPLOAD_FILED_SITE, HTTP_UPLOAD_FILED_DEVICE, HTTP_UPLOAD_FILED_SERIAL
+--------------------------------------------------------------------------
+
+The field names of the site, the device and serial number in the HTTP query
+string respectively
+
+Type: C++ strings
+
+HTTP_UPLOAD_FIELDS
 ------------------
 
 A list of mapping HTTP keys of querystring and measured values
 
-Type: array of arrays of C strings
+Type: array of arrays of C++ strings
 
 The first index is Setting::sensor matches the sensors, and the second index
 matches different values that measured by the sensor.

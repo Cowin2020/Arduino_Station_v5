@@ -22,8 +22,10 @@ namespace Variable {
 	extern class String wifi_ssid;
 	extern class String wifi_pass;
 	extern class String http_authorization_type;
-	extern class String http_authorization_code;
-	extern class String http_upload_base;
+	extern class String http_authorization_user;
+	extern class String http_authorization_pass;
+	extern class String http_upload_host;
+	extern class String http_upload_path_base;
 	extern class String http_upload_field_site;
 	extern class String http_upload_field_device;
 	extern class String http_upload_field_serial;

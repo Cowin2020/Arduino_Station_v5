@@ -40,8 +40,10 @@ namespace Variable {
 	class String wifi_ssid = WIFI_SSID;
 	class String wifi_pass = WIFI_PASS;
 	class String http_authorization_type = HTTP_AUTHORIZATION_TYPE;
-	class String http_authorization_code = HTTP_AUTHORIZATION_CODE;
-	class String http_upload_base = HTTP_UPLOAD_BASE;
+	class String http_authorization_user = HTTP_AUTHORIZATION_USER;
+	class String http_authorization_pass = HTTP_AUTHORIZATION_PASS;
+	class String http_upload_host = HTTP_UPLOAD_HOST;
+	class String http_upload_path_base = HTTP_UPLOAD_PATH_BASE;
 	class String http_upload_field_site = HTTP_UPLOAD_FILED_SITE;
 	class String http_upload_field_device = HTTP_UPLOAD_FILED_DEVICE;
 	class String http_upload_field_serial = HTTP_UPLOAD_FILED_SERIAL;
@@ -78,8 +80,10 @@ namespace Variable {
 		stream->println(wifi_pass);
 		stream->print("HTTP_AUTHORIZATION_TYPE=");
 		stream->println(http_authorization_type);
-		stream->print("HTTP_AUTHORIZATION_CODE=");
-		stream->println(http_authorization_code);
+		stream->print("HTTP_AUTHORIZATION_USER=");
+		stream->println(http_authorization_user);
+		stream->print("HTTP_AUTHORIZATION_PASS=");
+		stream->println(http_authorization_pass);
 		stream->print("SITE_CODE=");
 		stream->println(site_code);
 		stream->print("MEASURE_INTERVAL/minute=");
@@ -120,8 +124,10 @@ namespace Variable {
 			wifi_pass = value;
 		else if (key == "HTTP_AUTHORIZATION_TYPE")
 			http_authorization_type = value;
-		else if (key == "HTTP_AUTHORIZATION_CODE")
-			http_authorization_code = value;
+		else if (key == "HTTP_AUTHORIZATION_USER")
+			http_authorization_user = value;
+		else if (key == "HTTP_AUTHORIZATION_PASS")
+			http_authorization_pass = value;
 		else if (key == "SITE_CODE")
 			site_code = value;
 		else if (key == "MEASURE_INTERVAL/minute") {
