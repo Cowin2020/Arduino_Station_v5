@@ -81,7 +81,7 @@ namespace WIFI {
 		char URL[HTTP_UPLOAD_LENGTH];
 		size_t const path = append_buffer(URL, Variable::http_upload_host);
 		size_t p = path;
-		p += append_buffer(URL + p, Variable::http_upload_path_base);
+		p += append_buffer(URL + p, Variable::http_upload_path_query);
 		p += append_buffer(URL + p, Variable::http_upload_field_site);
 		URL[p++] = '=';
 		p += append_buffer(URL + p, Variable::site_code);

@@ -352,8 +352,8 @@ Printf format string of URL to upload data.
 
 Type: C++ string
 
-HTTP_UPLOAD_PATH_BASE
----------------------
+HTTP_UPLOAD_PATH_QUERY
+----------------------
 
 The path and query string of the upload URL
 

@@ -48,11 +48,11 @@
 #define HTTP_UPLOAD_LENGTH 512
 #define SITE_CODE "0"
 #define HTTP_UPLOAD_HOST "http://www.example.com"
-#define HTTP_UPLOAD_PATH_BASE "/path/to/upload?"
-#define HTTP_UPLOAD_FILED_SITE "site"
-#define HTTP_UPLOAD_FILED_DEVICE "device"
-#define HTTP_UPLOAD_FILED_SERIAL "serial"
-#define HTTP_UPLOAD_FILED_TIME "time"
+#define HTTP_UPLOAD_PATH_QUERY "/path/to/upload?"
+#define HTTP_UPLOAD_FIELD_SITE "site"
+#define HTTP_UPLOAD_FIELD_DEVICE "device"
+#define HTTP_UPLOAD_FIELD_SERIAL "serial"
+#define HTTP_UPLOAD_FIELD_TIME "time"
 #define HTTP_UPLOAD_FIELDS { \
 	[0] = {}, \
 	[Setting::battery] = \

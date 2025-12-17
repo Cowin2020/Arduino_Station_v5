@@ -43,11 +43,11 @@ namespace Variable {
 	class String http_authorization_user = HTTP_AUTHORIZATION_USER;
 	class String http_authorization_pass = HTTP_AUTHORIZATION_PASS;
 	class String http_upload_host = HTTP_UPLOAD_HOST;
-	class String http_upload_path_base = HTTP_UPLOAD_PATH_BASE;
-	class String http_upload_field_site = HTTP_UPLOAD_FILED_SITE;
-	class String http_upload_field_device = HTTP_UPLOAD_FILED_DEVICE;
-	class String http_upload_field_serial = HTTP_UPLOAD_FILED_SERIAL;
-	class String http_upload_field_time = HTTP_UPLOAD_FILED_TIME;
+	class String http_upload_path_query = HTTP_UPLOAD_PATH_QUERY;
+	class String http_upload_field_site = HTTP_UPLOAD_FIELD_SITE;
+	class String http_upload_field_device = HTTP_UPLOAD_FIELD_DEVICE;
+	class String http_upload_field_serial = HTTP_UPLOAD_FIELD_SERIAL;
+	class String http_upload_field_time = HTTP_UPLOAD_FIELD_TIME;
 	class String site_code = SITE_CODE;
 	Millisecond measure_interval = MEASURE_INTERVAL;
 	bool enable_sleep =
@@ -86,6 +86,18 @@ namespace Variable {
 		stream->println(wifi_ssid);
 		stream->print("WIFI_PASS=");
 		stream->println(wifi_pass);
+		stream->print("HTTP_UPLOAD_HOST=");
+		stream->println(http_upload_host);
+		stream->print("HTTP_UPLOAD_PATH_QUERY=");
+		stream->println(http_upload_path_query);
+		stream->print("HTTP_UPLOAD_FIELD_SITE=");
+		stream->println(http_upload_field_site);
+		stream->print("HTTP_UPLOAD_FIELD_DEVICE=");
+		stream->println(http_upload_field_device);
+		stream->print("HTTP_UPLOAD_FIELD_SERIAL=");
+		stream->println(http_upload_field_serial);
+		stream->print("HTTP_UPLOAD_FIELD_TIME=");
+		stream->println(http_upload_field_time);
 		stream->print("HTTP_AUTHORIZATION_TYPE=");
 		stream->println(http_authorization_type);
 		stream->print("HTTP_AUTHORIZATION_USER=");
@@ -109,7 +121,7 @@ namespace Variable {
 	}
 
 	bool set_from_strings(class String const key, class String const value) {
-		if (key == "DEVICE_ID" && !enable_gateway) {
+		if (key == "DEVICE_ID") {
 			char const *p = value.c_str();
 			unsigned int const n = parse_uint(&p);
 			if (*p || n <= 0 || n > UCHAR_MAX) {
@@ -118,8 +130,8 @@ namespace Variable {
 				return false;
 			}
 			device_id = n;
+			enable_gateway = !device_id;
 			if (n) enable_measure = true;
-			else enable_gateway = true;
 		}
 		else if (key == "OPERATION_MODE") {
 			if (value == "GATEWAY") {
@@ -149,6 +161,18 @@ namespace Variable {
 			wifi_ssid = value;
 		else if (key == "WIFI_PASS")
 			wifi_pass = value;
+		else if (key == "HTTP_UPLOAD_HOST")
+			http_upload_host = value;
+		else if (key == "HTTP_UPLOAD_PATH_QUERY")
+			http_upload_path_query = value;
+		else if (key == "HTTP_UPLOAD_FIELD_SITE")
+			http_upload_field_site = value;
+		else if (key == "HTTP_UPLOAD_FIELD_DEVICE")
+			http_upload_field_device = value;
+		else if (key == "HTTP_UPLOAD_FIELD_SERIAL")
+			http_upload_field_serial = value;
+		else if (key == "HTTP_UPLOAD_FIELD_TIME")
+			http_upload_field_time = value;
 		else if (key == "HTTP_AUTHORIZATION_TYPE")
 			http_authorization_type = value;
 		else if (key == "HTTP_AUTHORIZATION_USER")
