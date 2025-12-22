@@ -90,14 +90,6 @@ namespace Variable {
 		stream->println(http_upload_host);
 		stream->print("HTTP_UPLOAD_PATH_QUERY=");
 		stream->println(http_upload_path_query);
-		stream->print("HTTP_UPLOAD_FIELD_SITE=");
-		stream->println(http_upload_field_site);
-		stream->print("HTTP_UPLOAD_FIELD_DEVICE=");
-		stream->println(http_upload_field_device);
-		stream->print("HTTP_UPLOAD_FIELD_SERIAL=");
-		stream->println(http_upload_field_serial);
-		stream->print("HTTP_UPLOAD_FIELD_TIME=");
-		stream->println(http_upload_field_time);
 		stream->print("HTTP_AUTHORIZATION_TYPE=");
 		stream->println(http_authorization_type);
 		stream->print("HTTP_AUTHORIZATION_USER=");
@@ -165,14 +157,6 @@ namespace Variable {
 			http_upload_host = value;
 		else if (key == "HTTP_UPLOAD_PATH_QUERY")
 			http_upload_path_query = value;
-		else if (key == "HTTP_UPLOAD_FIELD_SITE")
-			http_upload_field_site = value;
-		else if (key == "HTTP_UPLOAD_FIELD_DEVICE")
-			http_upload_field_device = value;
-		else if (key == "HTTP_UPLOAD_FIELD_SERIAL")
-			http_upload_field_serial = value;
-		else if (key == "HTTP_UPLOAD_FIELD_TIME")
-			http_upload_field_time = value;
 		else if (key == "HTTP_AUTHORIZATION_TYPE")
 			http_authorization_type = value;
 		else if (key == "HTTP_AUTHORIZATION_USER")
