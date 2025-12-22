@@ -106,11 +106,9 @@ namespace WIFI {
 		if (Variable::http_authorization_type.length() && Variable::http_authorization_pass.length()) {
 			if (Variable::http_authorization_user.length()) {
 				SHA224 sha224;
-				sha224.update(
-					Variable::http_authorization_user.c_str(),
-					Variable::http_authorization_user.length()
-				);
+				sha224.update(Variable::http_authorization_user.c_str(), Variable::http_authorization_user.length());
 				sha224.update(URL + path, p - path);
+				sha224.update(Variable::http_authorization_user.c_str(), Variable::http_authorization_user.length());
 				char hash[sha224.hashSize()];
 				sha224.finalize(hash, sizeof hash);
 				class String pair = String(Variable::http_authorization_pass);
