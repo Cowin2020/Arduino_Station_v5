@@ -52,7 +52,7 @@ namespace WIFI {
 	}
 
 	size_t build_URL_querystring(char *const buffer, union Data const *const data, Setting::sensor const sensor) {
-		if (!Setting::active_sensors[sensor].isJust()) return 0;
+		if (!Setting::active_sensors[sensor].has_value()) return 0;
 		char const *const *name = upload_names[sensor];
 		void const *value = data->device_pointer<void const>(sensor);
 		Setting::SensorField const *field = Setting::sensor_fields[sensor];

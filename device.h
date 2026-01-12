@@ -2,6 +2,7 @@
 #define INCLUDE_DEVICE_H
 
 #include <mutex>
+#include <optional>
 #include <map>
 
 #include <NTPClient.h>
@@ -43,7 +44,7 @@ namespace Setting {
 		MAX17048  = 3
 	};
 
-	extern class Maybe<unsigned int> active_sensors[num_of_sensors];
+	extern class std::optional<unsigned int> active_sensors[num_of_sensors];
 	extern char const *const *const upload_names[];
 	struct FieldAccess {
 		size_t size;

@@ -49,20 +49,6 @@ public:
 	void apply(void) const;
 };
 
-template <typename TYPE>
-class Maybe {
-protected:
-	TYPE value;
-	bool occupy : 1;
-public:
-	inline Maybe(void) : occupy(false) {}
-	inline Maybe(TYPE const x) : occupy(true), value(x) {}
-	inline bool isNothing(void) const {return !occupy;}
-	inline bool isJust(void) const {return occupy;}
-	inline TYPE unwrap(void) const {return value;}
-	inline bool operator==(TYPE const &x) {return occupy && value == x;}
-};
-
 /* ************************************************************************** */
 
 #endif // INCLUDE_BASIC_H

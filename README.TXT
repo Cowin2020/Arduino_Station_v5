@@ -255,9 +255,19 @@ DEFAULT_SENSOR_SETTING
 
 Default settings of sensors
 
-Type: arrary of unsigned int
+Type: arrary of optional type of unsigned int
 
 The settings may be loaded from SD card.
+
+The array indices of sensors are defined by "enum Sensor" in the
+"namespace Setting" in file "device.h".
+
+Value "std::nullopt" is used for disabled devices.  The values of
+battery gauges are defined by "enum battery" in the "namespace Setting"
+in file "device.h".
+
+Value at index 0 is unused and any value can be filled in, such as
+"std::nullopt".
 
 SECRET_KEY
 ----------
