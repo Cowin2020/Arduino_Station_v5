@@ -29,6 +29,11 @@
 
 	static class DFRobot_MAX17043 max17043;
 #endif
+#if defined(ENABLE_BATTERY_GAUGE_MAX17048)
+	#include <Adafruit_MAX1704X.h>
+
+	static class Adafruit_MAX17048 max17048;
+#endif
 
 #ifdef ENABLE_DALLAS
 	#include <OneWire.h>
@@ -512,6 +517,10 @@ namespace Sensor {
 			if (Setting::active_sensors[Setting::battery] == Setting::MAX17043)
 				max17043.begin();
 		#endif
+		#if defined(ENABLE_BATTERY_GAUGE_MAX17048)
+			if (Setting::active_sensors[Setting::battery] == Setting::MAX17048)
+				max17048.begin();
+		#endif
 
 		/* Initialize Dallas thermometer */
 		#if defined(ENABLE_DALLAS)
@@ -593,8 +602,15 @@ namespace Sensor {
 				#if defined(ENABLE_BATTERY_GAUGE_MAX17043)
 					else if (type == Setting::MAX17043) {
 						float *const values = data->device_pointer<float>(Setting::battery);
-						values[0] = max17043.readVoltage() / 1000;
+						values[0] = max17043.readVoltage() * 0.001;
 						values[1] = max17043.readPercentage();
+					}
+				#endif
+				#if defined(ENABLE_BATTERY_GAUGE_MAX17048)
+					else if (type == Setting::MAX17048) {
+						float *const values = data->device_pointer<float>(Setting::battery);
+						values[0] = max17048.cellVoltage();
+						values[1] = max17048.cellPercent();
 					}
 				#endif
 			}

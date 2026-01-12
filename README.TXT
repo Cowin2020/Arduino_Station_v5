@@ -75,6 +75,11 @@ DFRobot_MAX17043
 
 MAX17043 battery gauge
 
+Adafruit MAX1704X
+----------------
+
+MAX17048 battery gauge
+
 OneWire
 -------
 
@@ -216,10 +221,11 @@ Type: defined or undefined
 	They can be both defined and then select one to use by
 "DEFAULT_SENSOR_SETTING" or settings loaded from SD card.
 
-ENABLE_BATTERY_GAUGE_MAX17043
-	MAX17043 fuel gauge
 ENABLE_BATTERY_GAUGE_LC709203F
 	LC709203F battery monitor
+ENABLE_BATTERY_GAUGE_MAX17043
+ENABLE_BATTERY_GAUGE_MAX17048
+	MAX17043/MAX17048 fuel gauge
 
 ENABLE_DALLAS
 -------------

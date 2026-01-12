@@ -1,7 +1,7 @@
 #ifndef INCLUDE_CONFIG_DEVICE_H
 #define INCLUDE_CONFIG_DEVICE_H
 
-//	#define ENABLE_GATEWAY
+#define ENABLE_GATEWAY
 #define ENABLE_MEASURE
 
 /* Debug */
@@ -18,17 +18,18 @@
 #endif
 #define ENABLE_BATTERY_GAUGE_LC709203F
 #define ENABLE_BATTERY_GAUGE_MAX17043
+#define ENABLE_BATTERY_GAUGE_MAX17048
 #define ENABLE_DALLAS 3
 #define ENABLE_SHT40
 #define ENABLE_BME280
 #define ENABLE_LTR390
 #define DEFAULT_SENSOR_SETTING { \
-	[0] = 0, \
-	[battery] = LC709203F, \
-	[Dallas] = -1U, \
-	[SHT40] = -1U, \
-	[BME280] = -1U, \
-	[LTR390] = -1U \
+	[0]       = std::nullopt, \
+	[battery] = MAX17043, \
+	[Dallas]  = -1U, \
+	[SHT40]   = -1U, \
+	[BME280]  = -1U, \
+	[LTR390]  = -1U \
 }
 
 /* LoRa */

@@ -39,7 +39,8 @@ namespace Setting {
 	};
 	enum battery {
 		LC709203F = 1,
-		MAX17043 = 2
+		MAX17043  = 2,
+		MAX17048  = 3
 	};
 
 	extern class Maybe<unsigned int> active_sensors[num_of_sensors];
