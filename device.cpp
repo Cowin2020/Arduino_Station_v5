@@ -39,7 +39,7 @@
 	#include <OneWire.h>
 	#include <DallasTemperature.h>
 
-	static class OneWire onewire_thermometer(ENABLE_DALLAS);
+	static class OneWire onewire_thermometer;
 	static class DallasTemperature dallas(&onewire_thermometer);
 #endif
 
@@ -79,7 +79,7 @@ inline static void OLED_space_or_newline(void) {
 /* ************************************************************************** */
 
 namespace Setting {
-	class std::optional<unsigned int> active_sensors[num_of_sensors] = DEFAULT_SENSOR_SETTING;
+	class std::optional<unsigned int> active_sensors[num_of_sensors] = DEFAULT_ACTIVE_SENSORS;
 
 	static bool FIELD_INT_read(void *const memory, char const *const string) {
 		char *remaining = nullptr;
@@ -526,6 +526,7 @@ namespace Sensor {
 		/* Initialize Dallas thermometer */
 		#if defined(ENABLE_DALLAS)
 			if (Setting::active_sensors[Setting::Dallas].has_value()) {
+				onewire_thermometer.begin(Setting::active_sensors[Setting::Dallas].value());
 				dallas.begin();
 				DeviceAddress thermometer_address;
 				if (dallas.getAddress(thermometer_address, 0)) {

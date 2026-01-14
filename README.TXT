@@ -196,8 +196,10 @@ Record all measured data in log file
 
 Type defined or undefined
 
-ENABLE_CLOCK_PCF85063TP, ENABLE_CLOCK_DS1307, ENABLE_CLOCK_DS3231
------------------------------------------------------------------
+ENABLE_CLOCK_PCF85063TP
+ENABLE_CLOCK_DS1307
+ENABLE_CLOCK_DS3231
+-----------------------
 
 Real-time clock
 
@@ -212,14 +214,16 @@ ENABLE_CLOCK_DS1307
 ENABLE_CLOCK_DS3231
 	DS3231 real-time clock
 
-ENABLE_BATTERY_GAUGE_DFROBOT, ENABLE_BATTERY_GAUGE_LC709203F
+ENABLE_BATTERY_GAUGE_LC709203F
+ENABLE_BATTERY_GAUGE_MAX17043
+ENABLE_BATTERY_GAUGE_MAX17048
 ------------------------------------------------------------
 
 Battery gauge is used to monitor battery usage
 
 Type: defined or undefined
-	They can be both defined and then select one to use by
-"DEFAULT_SENSOR_SETTING" or settings loaded from SD card.
+	More than one of them can be defined and then select one to use by
+"DEFAULT_ACTIVE_SENSORS" or settings loaded from SD card.
 
 ENABLE_BATTERY_GAUGE_LC709203F
 	LC709203F battery monitor
@@ -250,7 +254,7 @@ LTR390 I2C sensor is used
 
 Type: defined or undefined
 
-DEFAULT_SENSOR_SETTING
+DEFAULT_ACTIVE_SENSORS
 ----------------------
 
 Default settings of sensors

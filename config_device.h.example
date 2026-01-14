@@ -19,17 +19,17 @@
 #define ENABLE_BATTERY_GAUGE_LC709203F
 #define ENABLE_BATTERY_GAUGE_MAX17043
 #define ENABLE_BATTERY_GAUGE_MAX17048
-#define ENABLE_DALLAS 3
+#define ENABLE_DALLAS
 #define ENABLE_SHT40
 #define ENABLE_BME280
 #define ENABLE_LTR390
-#define DEFAULT_SENSOR_SETTING { \
+#define DEFAULT_ACTIVE_SENSORS { \
 	[0]       = std::nullopt, \
 	[battery] = MAX17043, \
-	[Dallas]  = -1U, \
-	[SHT40]   = -1U, \
-	[BME280]  = -1U, \
-	[LTR390]  = -1U \
+	[Dallas]  = 3, \
+	[SHT40]   = -1, \
+	[BME280]  = -1, \
+	[LTR390]  = -1 \
 }
 
 /* LoRa */
