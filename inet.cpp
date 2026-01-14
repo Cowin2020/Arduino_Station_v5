@@ -71,6 +71,7 @@ namespace WIFI {
 	}
 
 	struct upload__result upload(Device const device, SerialNumber const serial, union Data const *const data) {
+		static char URL[HTTP_UPLOAD_LENGTH];
 		signed int const WiFi_status = WiFi.status();
 		if (WiFi_status != WL_CONNECTED) {
 			OLED_LOCK(oled_lock);
@@ -78,7 +79,6 @@ namespace WIFI {
 			Display::println(status_message(WiFi.status()));
 			return {.upload_success = false};
 		}
-		char URL[HTTP_UPLOAD_LENGTH];
 		size_t const path = append_buffer(URL, Variable::http_upload_host);
 		size_t p = path;
 		p += append_buffer(URL + p, Variable::http_upload_path_query);

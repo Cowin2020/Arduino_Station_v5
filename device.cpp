@@ -105,7 +105,7 @@ namespace Setting {
 	}
 	static constexpr struct FieldAccess const FIELD_FLOAT = {sizeof (float), FIELD_FLOAT_read, FIELD_FLOAT_write};
 
-	constinit struct SensorField const *const sensor_fields[] = {
+	struct SensorField const *const sensor_fields[] = {
 		[0] = (struct SensorField const []){
 			{{sizeof (struct FullTime)}},
 			{{0}}
@@ -328,7 +328,8 @@ namespace NTP {
 				.second = (unsigned char)time.tm_sec
 			};
 			RTC::set(&fulltime);
-			COM::println("NTP update");
+			COM::print("NTP updated ");
+			COM::println(String(fulltime));
 		}
 	}
 }
