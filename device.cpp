@@ -152,6 +152,8 @@ namespace Setting {
 			else
 				active_sensors[i] = std::optional<unsigned int>(found->second);
 		}
+		Data::initialize();
+		DAEMON::Push::initialize();
 	}
 }
 
@@ -589,7 +591,9 @@ namespace Sensor {
 		if (!RTC::now(data->get_time()))
 			return false;
 
-		#if defined(ENABLE_BATTERY_GAUGE_LC709203F) || defined(ENABLE_BATTERY_GAUGE_MAX17043)
+		#if defined(ENABLE_BATTERY_GAUGE_LC709203F) \
+			|| defined(ENABLE_BATTERY_GAUGE_MAX17043) \
+			|| defined(ENABLE_BATTERY_GAUGE_MAX17048)
 			if (Setting::active_sensors[Setting::battery].has_value()) {
 				enum Setting::battery const type =
 					static_cast<enum Setting::battery>(Setting::active_sensors[Setting::battery].value());

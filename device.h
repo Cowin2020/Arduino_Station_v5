@@ -78,9 +78,10 @@ private:
 	struct FullTime time;
 
 public:
-	static void initialize(void);
 	static size_t total_size;
 	static size_t offset[Setting::num_of_sensors];
+
+	static void initialize(void);
 
 	template <typename T>
 	inline T const *device_pointer(unsigned int const sensor) const {
