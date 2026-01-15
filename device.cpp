@@ -4,6 +4,7 @@
 #include "variable.h"
 #include "display.h"
 #include "device.h"
+#include "daemon.h"
 
 /* ************************************************************************** */
 
@@ -15,6 +16,8 @@
 		return corrected_value;
 	}
 #endif
+
+#define PH_SAMPLE_SIZE 12
 
 /* ************************************************************************** */
 /* Include headers of libraries and define related global variables */
@@ -158,6 +161,14 @@ namespace Setting {
 		},
 		[LTR390] = (struct SensorField const []){
 			{FIELD_FLOAT, "LTR390", "UV"},
+			{{0}}
+		},
+		[turbidity] = (struct SensorField const []){
+			{FIELD_FLOAT, "Turbi.", "%"},
+			{{0}}
+		},
+		[pH] = (struct SensorField const []){
+			{FIELD_FLOAT, "pH", "pH"},
 			{{0}}
 		}
 	};
@@ -537,7 +548,6 @@ namespace Sensor {
 		if (!Variable::enable_measure) return true;
 		DEVICE_LOCK(device_lock);
 
-		/* Initial battery gauge */
 		#if defined(ENABLE_BATTERY_GAUGE_LC709203F)
 			if (Setting::active_sensors[Setting::battery] == Setting::LC709203F)
 				lc709203f.begin();
@@ -551,7 +561,6 @@ namespace Sensor {
 				max17048.begin();
 		#endif
 
-		/* Initialize Dallas thermometer */
 		#if defined(ENABLE_DALLAS)
 			if (Setting::active_sensors[Setting::Dallas].has_value()) {
 				onewire_thermometer.begin(Setting::active_sensors[Setting::Dallas].value());
@@ -567,7 +576,6 @@ namespace Sensor {
 			}
 		#endif
 
-		/* Initialize SHT40 sensor */
 		#if defined(ENABLE_SHT40)
 			if (Setting::active_sensors[Setting::SHT40].has_value()) {
 				if (SHT.begin()) {
@@ -582,7 +590,6 @@ namespace Sensor {
 			}
 		#endif
 
-		/* Initialize BME280 sensor */
 		#if defined(ENABLE_BME280)
 			if (Setting::active_sensors[Setting::BME280].has_value()) {
 				if (BME.begin()) {
@@ -595,7 +602,6 @@ namespace Sensor {
 			}
 		#endif
 
-		/* Initial LTR390 sensor */
 		#if defined(ENABLE_LTR390)
 			if (Setting::active_sensors[Setting::LTR390].has_value()) {
 				if (LTR.begin()) {
@@ -606,6 +612,18 @@ namespace Sensor {
 					Display::println("LTR390 sensor not found");
 					return false;
 				}
+			}
+		#endif
+
+		#if defined(ENABLE_TURBIDITY)
+			if (Setting::active_sensors[Setting::turbidity].has_value()) {
+				pinMode(Setting::active_sensors[Setting::turbidity].value(), INPUT);
+			}
+		#endif
+
+		#if defined(ENABLE_PH)
+			if (Setting::active_sensors[Setting::pH].has_value()) {
+				pinMode(Setting::active_sensors[Setting::pH].value(), INPUT);
 			}
 		#endif
 
@@ -621,26 +639,27 @@ namespace Sensor {
 			|| defined(ENABLE_BATTERY_GAUGE_MAX17043) \
 			|| defined(ENABLE_BATTERY_GAUGE_MAX17048)
 			if (Setting::active_sensors[Setting::battery].has_value()) {
+				float *const values = data->device_pointer<float>(Setting::battery);
 				enum Setting::battery const type =
 					static_cast<enum Setting::battery>(Setting::active_sensors[Setting::battery].value());
-				if (!type) ;
+				if (!type) {
+					values[0] = NAN;
+					values[1] = NAN;
+				}
 				#if defined(ENABLE_BATTERY_GAUGE_LC709203F)
 					else if (type == Setting::LC709203F) {
-						float *const values = data->device_pointer<float>(Setting::battery);
 						values[0] = lc709203f.cellVoltage();
 						values[1] = lc709203f.cellPercent();
 					}
 				#endif
 				#if defined(ENABLE_BATTERY_GAUGE_MAX17043)
 					else if (type == Setting::MAX17043) {
-						float *const values = data->device_pointer<float>(Setting::battery);
 						values[0] = max17043.readVoltage() * 0.001;
 						values[1] = max17043.readPercentage();
 					}
 				#endif
 				#if defined(ENABLE_BATTERY_GAUGE_MAX17048)
 					else if (type == Setting::MAX17048) {
-						float *const values = data->device_pointer<float>(Setting::battery);
 						values[0] = max17048.cellVoltage();
 						values[1] = max17048.cellPercent();
 					}
@@ -680,6 +699,64 @@ namespace Sensor {
 			if (Setting::active_sensors[Setting::LTR390].has_value()) {
 				float *const value = data->device_pointer<float>(Setting::Dallas);
 				*value = LTR.readUVS();
+			}
+		#endif
+
+		#if defined(ENABLE_TURBIDITY)
+			if (Setting::active_sensors[Setting::turbidity].has_value()) {
+				float *const value = data->device_pointer<float>(Setting::turbidity);
+				int const raw_turbidity = analogRead(Setting::active_sensors[Setting::turbidity].value());
+				float const minimum = 3200; /* raw value at lowest turbidity (transparent) */
+				float const maximum = 50; /* raw value at highest turbidity (opacity) */
+				float turbidity = ((static_cast<float>(raw_turbidity) - minimum) / (maximum - minimum)) * 100;
+				if (turbidity < 0) turbidity = 0;
+				if (turbidity > 100) turbidity = 100;
+				*value = turbidity;
+			}
+		#endif
+
+		#if defined(ENABLE_PH)
+			if (Setting::active_sensors[Setting::pH].has_value()) {
+				unsigned int const pin = Setting::active_sensors[Setting::pH].value();
+				float *const value = data->device_pointer<float>(Setting::pH);
+				int values[PH_SAMPLE_SIZE];
+				for (size_t i = 0; i < PH_SAMPLE_SIZE; ++i) {
+					values[i] = analogRead(pin);
+					delay(1);
+				}
+
+				for (size_t i = 1; i < PH_SAMPLE_SIZE; ++i)
+					for (size_t j = i - 1; j < i; ++j)
+						if (values[i] < values[j]) {
+							int const x = values[i];
+							values[i] = values[j];
+							values[j] = x;
+						}
+				float pH = values[PH_SAMPLE_SIZE >> 1];
+
+				float const temperature =
+					#if defined(ENABLE_DALLAS)
+						Setting::active_sensors[Setting::Dallas].has_value() ?
+							*data->device_pointer<float>(Setting::Dallas) :
+					#endif
+					#if defined(ENABLE_SHT40)
+						Setting::active_sensors[Setting::SHT40].has_value() ?
+							*data->device_pointer<float>(Setting::SHT40) :
+					#endif
+					#if defined(ENABLE_BME280)
+						Setting::active_sensors[Setting::BME280].has_value() ?
+							*data->device_pointer<float>(Setting::BME280) :
+					#endif
+						0.;
+				if (temperature > 42.)
+					pH += 5.;
+				else if (temperature > 28.)
+					pH += 5. * (temperature - 28.) / 14.;
+				pH = -5.887 * (pH * 0.001) + 21.677;
+				pH = pH * 0.8 - 4.2; /* correction */
+				if (pH > 14.6) pH = 14.6;
+				if (pH < 0.) pH = 0.;
+				*value = pH;
 			}
 		#endif
 

@@ -23,13 +23,17 @@
 #define ENABLE_SHT40
 #define ENABLE_BME280
 #define ENABLE_LTR390
+#define ENABLE_TURBIDITY
+#define ENABLE_PH
 #define DEFAULT_ACTIVE_SENSORS { \
-	[0]       = std::nullopt, \
-	[battery] = std::nullopt, \
-	[Dallas]  = std::nullopt, \
-	[SHT40]   = std::nullopt, \
-	[BME280]  = std::nullopt, \
-	[LTR390]  = std::nullopt \
+	[0]         = std::nullopt, \
+	[battery]   = std::nullopt, \
+	[Dallas]    = std::nullopt, \
+	[SHT40]     = std::nullopt, \
+	[BME280]    = std::nullopt, \
+	[LTR390]    = std::nullopt, \
+	[turbidity] = std::nullopt, \
+	[pH]        = std::nullopt  \
 }
 
 /* LoRa */
@@ -79,6 +83,14 @@
 	[Setting::LTR390] = \
 		(char const *[]) { \
 			"LTR390_ultraviolet" \
+		}, \
+	[Setting::turbidity] = \
+		(char const *[]) { \
+			"turbidity" \
+		}, \
+	[Setting::pH] = \
+		(char const *[]) { \
+			"pH" \
 		} \
 }
 

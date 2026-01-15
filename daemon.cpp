@@ -259,6 +259,7 @@ namespace DAEMON {
 
 		bool initialize(void) {
 			#if !defined(ENABLE_SDCARD)
+				if (last_data != nullptr) free(last_data);
 				last_data = static_cast<union Data *>(malloc(Data::total_size));
 				if (last_data == nullptr) {
 					Display::println("No memory to store measurement data");
