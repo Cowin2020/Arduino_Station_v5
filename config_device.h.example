@@ -25,11 +25,11 @@
 #define ENABLE_LTR390
 #define DEFAULT_ACTIVE_SENSORS { \
 	[0]       = std::nullopt, \
-	[battery] = MAX17043, \
-	[Dallas]  = 3, \
-	[SHT40]   = -1, \
-	[BME280]  = -1, \
-	[LTR390]  = -1 \
+	[battery] = std::nullopt, \
+	[Dallas]  = std::nullopt, \
+	[SHT40]   = std::nullopt, \
+	[BME280]  = std::nullopt, \
+	[LTR390]  = std::nullopt \
 }
 
 /* LoRa */
