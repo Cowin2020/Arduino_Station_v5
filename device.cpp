@@ -164,7 +164,7 @@ namespace Setting {
 			{{0}}
 		},
 		[turbidity] = (struct SensorField const []){
-			{FIELD_FLOAT, "Turbi.", "%"},
+			{FIELD_FLOAT, "Turbi", "%"},
 			{{0}}
 		},
 		[pH] = (struct SensorField const []){
