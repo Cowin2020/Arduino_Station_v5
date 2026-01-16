@@ -26,7 +26,7 @@ for the new sensor above the line "num_of_sensors", such as:
 The identities should be in sequence, starting at 1 and "num_of_sensors" must
 be the last entry.
 
-3. In file "device.c", include necessary headers of library for the new sensor,
+3. In file "device.cpp", include necessary headers of library for the new sensor,
 declaring data types and define global variables.  Probably at the section
 labelled "Include headers of libraries and define related global variables".
 Preprocessor guard (#if/#endif) is suggested to be used around the code.
@@ -39,7 +39,7 @@ Preprocessor guard (#if/#endif) is suggested to be used around the code.
 		static XyzzyDriver xyzzy_driver;
 	#endif
 
-4. In file "device.c" -> namespace Sensor -> function initialize, add some
+4. In file "device.cpp" -> namespace Sensor -> function initialize, add some
 initialize code for the new sensor if necessary.  The function may return a
 false value if the sensor is failed to initialize.
 	#if defined(ENABLE_XYZZY)
@@ -54,7 +54,7 @@ false value if the sensor is failed to initialize.
 		}
 	#endif
 
-5. In file "device.c" -> namespace Sensor -> function measure, add code to
+5. In file "device.cpp" -> namespace Sensor -> function measure, add code to
 receive measured values from the sensor.  The memory address to store values
 can be calculated by "data->pointer" template method.
 	#if defined(ENABLE_XYZZY)
@@ -65,7 +65,7 @@ can be calculated by "data->pointer" template method.
 		}
 	#endif
 
-6. In file "device.c" -> namespace Setting -> sensor_fields, add information
+6. In file "device.cpp" -> namespace Setting -> sensor_fields, add information
 about the measured values, such as
 	constinit struct SensorField const *const sensor_fields[] = {
 		[0] = (struct SensorField const []){
@@ -101,8 +101,8 @@ label, the unit should not be more than six characters.
 A "{{0}}" must be put at the end of the array to indicates the end of the array
 because the length of the arrays are not fixed across different sensors.
 
-7. In "config_device.h.example" and "config_device.h", add names of fields of
-HTTP query string for upload the measured values.
+7. In files "config_device.h.example" and "config_device.h", add names of fields
+of HTTP query string for upload the measured values.
 	#define HTTP_UPLOAD_FIELDS { \
 		[0] = {}, \
 ...skipped
