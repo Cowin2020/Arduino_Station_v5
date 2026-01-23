@@ -91,7 +91,15 @@ namespace Setting {
 	static class String FIELD_INT_write(void const *const memory) {
 		return String(*static_cast<int const *>(memory));
 	}
-	static constexpr struct FieldAccess const FIELD_INT = {sizeof (float), FIELD_INT_read, FIELD_INT_write};
+	static class String FIELD_INT_print(void const *const memory) {
+		FIELD_INT_write(memory);
+	}
+	static constexpr struct FieldAccess const FIELD_INT = {
+		sizeof (float),
+		FIELD_INT_read,
+		FIELD_INT_write,
+		FIELD_INT_print
+	};
 
 	static bool FIELD_FLOAT_read(void *const memory, char const *const string) {
 		char *remaining = nullptr;
@@ -103,7 +111,25 @@ namespace Setting {
 	static class String FIELD_FLOAT_write(void const *const memory) {
 		return String(*static_cast<float const *>(memory));
 	}
-	static constexpr struct FieldAccess const FIELD_FLOAT = {sizeof (float), FIELD_FLOAT_read, FIELD_FLOAT_write};
+	static class String FIELD_FLOAT_print(void const *const memory) {
+		FIELD_FLOAT_write(memory);
+	}
+	static constexpr struct FieldAccess const FIELD_FLOAT = {
+		sizeof (float),
+		FIELD_FLOAT_read,
+		FIELD_FLOAT_write,
+		FIELD_FLOAT_print
+	};
+
+	static class String FIELD_FLOAT_h_print(void const *const memory) {
+		return String(*static_cast<float const *>(memory) * 0.01, 0);
+	}
+	static constexpr struct FieldAccess const FIELD_FLOAT_h = {
+		sizeof (float),
+		FIELD_FLOAT_read,
+		FIELD_FLOAT_write,
+		FIELD_FLOAT_h_print
+	};
 
 	struct SensorField const *const sensor_fields[] = {
 		[0] = (struct SensorField const []){
@@ -125,9 +151,9 @@ namespace Setting {
 			{{0}}
 		},
 		[BME280] = (struct SensorField const []){
-			{FIELD_FLOAT, "BME280", "degC"},
-			{FIELD_FLOAT, "BME280", "Pa"},
-			{FIELD_FLOAT, "BME280", "%RH"},
+			{FIELD_FLOAT,   "BME280", "degC"},
+			{FIELD_FLOAT_h, "BME280", "hPa"},
+			{FIELD_FLOAT,   "BME280", "%RH"},
 			{{0}}
 		},
 		[LTR390] = (struct SensorField const []){

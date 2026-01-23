@@ -50,6 +50,7 @@ namespace Setting {
 		size_t size;
 		bool (*read)(void *memory, char const *string);
 		class String (*write)(void const *memory);
+		class String (*print)(void const *memory);
 	};
 	extern struct SensorField {
 		struct FieldAccess access;
