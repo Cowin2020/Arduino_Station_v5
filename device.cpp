@@ -642,28 +642,31 @@ namespace Sensor {
 				float *const values = data->device_pointer<float>(Setting::battery);
 				enum Setting::battery const type =
 					static_cast<enum Setting::battery>(Setting::active_sensors[Setting::battery].value());
-				if (!type) {
-					values[0] = NAN;
-					values[1] = NAN;
-				}
 				#if defined(ENABLE_BATTERY_GAUGE_LC709203F)
-					else if (type == Setting::LC709203F) {
+					if (type == Setting::LC709203F) {
 						values[0] = lc709203f.cellVoltage();
 						values[1] = lc709203f.cellPercent();
 					}
+					else
 				#endif
 				#if defined(ENABLE_BATTERY_GAUGE_MAX17043)
-					else if (type == Setting::MAX17043) {
+					if (type == Setting::MAX17043) {
 						values[0] = max17043.readVoltage() * 0.001;
 						values[1] = max17043.readPercentage();
 					}
+					else
 				#endif
 				#if defined(ENABLE_BATTERY_GAUGE_MAX17048)
-					else if (type == Setting::MAX17048) {
+					if (type == Setting::MAX17048) {
 						values[0] = max17048.cellVoltage();
 						values[1] = max17048.cellPercent();
 					}
+					else
 				#endif
+				{
+					values[0] = NAN;
+					values[1] = NAN;
+				}
 			}
 		#endif
 
@@ -753,7 +756,7 @@ namespace Sensor {
 				else if (temperature > 28.)
 					pH += 5. * (temperature - 28.) / 14.;
 				pH = -5.887 * (pH * 0.001) + 21.677;
-				pH = pH * 0.8 - 4.2; /* correction */
+				pH = pH * 0.8 - 4.2; /* correction from simple calibration */
 				if (pH > 14.6) pH = 14.6;
 				if (pH < 0.) pH = 0.;
 				*value = pH;

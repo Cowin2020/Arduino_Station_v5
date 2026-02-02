@@ -48,7 +48,7 @@
 #define NTP_INTERVAL 1234567UL /* milliseconds */
 #define HTTP_AUTHORIZATION_TYPE "BASIC"
 #define HTTP_AUTHORIZATION_USER "username for upload"
-#define HTTP_AUTHORIZATION_PASS "password for webserver"
+#define HTTP_AUTHORIZATION_PASS "password for upload"
 #define HTTP_RESPONE_SIZE 256
 #define HTTP_UPLOAD_LENGTH 512
 #define SITE_CODE "0"
