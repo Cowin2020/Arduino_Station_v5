@@ -44,6 +44,13 @@ void setup(void) {
 	LED::initialize();
 	COM::initialize();
 	OLED::initialize();
+	#if defined(ENABLE_OLED_OUTPUT)
+		OLED::print("Device ");
+		OLED::println(Variable::device_id);
+	#endif
+	#ifdef ENABLE_COM_OUTPUT
+		Variable::dump_to_stream(&Serial);
+	#endif
 
 	if (!SDCard::initialize()) goto end;
 	Setting::save(&Variable::active_sensors);
