@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <base64.h>
 #include <HTTPClient.h>
-#include <SHA224.h>
+#include <SHA256.h>
 
 #include "variable.h"
 #include "display.h"
@@ -79,9 +79,11 @@ namespace WIFI {
 			Display::println(status_message(WiFi.status()));
 			return {.upload_success = false};
 		}
-		size_t const path = append_buffer(URL, Variable::http_upload_host);
-		size_t p = path;
-		p += append_buffer(URL + p, Variable::http_upload_path_query);
+		size_t p = append_buffer(URL, Variable::http_upload_host_path);
+		p = append_buffer(URL, Variable::http_upload_host_path);
+		URL[p++] = '?';
+		size_t const query = p;
+		p += append_buffer(URL + p, Variable::http_upload_query);
 		p += append_buffer(URL + p, Variable::http_upload_field_site);
 		URL[p++] = '=';
 		p += append_buffer(URL + p, Variable::site_code);
@@ -103,14 +105,14 @@ namespace WIFI {
 		COM::println(URL);
 		class HTTPClient HTTP_client;
 		HTTP_client.begin(URL);
-		if (Variable::http_authorization_type.length() && Variable::http_authorization_pass.length()) {
+		if (Variable::http_authorization_pass.length()) {
 			if (Variable::http_authorization_user.length()) {
-				SHA224 sha224;
-				sha224.update(Variable::http_authorization_user.c_str(), Variable::http_authorization_user.length());
-				sha224.update(URL + path, p - path);
-				sha224.update(Variable::http_authorization_user.c_str(), Variable::http_authorization_user.length());
-				char hash[sha224.hashSize()];
-				sha224.finalize(hash, sizeof hash);
+				SHA256 sha256;
+				sha256.update(Variable::http_authorization_user.c_str(), Variable::http_authorization_user.length());
+				sha256.update(URL + query, p - query);
+				sha256.update(Variable::http_authorization_user.c_str(), Variable::http_authorization_user.length());
+				char hash[sha256.hashSize()];
+				sha256.finalize(hash, sizeof hash);
 				class String pair = String(Variable::http_authorization_pass);
 				pair.concat(':');
 				pair.concat(hash, sizeof hash);

@@ -23,8 +23,8 @@ namespace Variable {
 	extern class String http_authorization_type;
 	extern class String http_authorization_user;
 	extern class String http_authorization_pass;
-	extern class String http_upload_host;
-	extern class String http_upload_path_query;
+	extern class String http_upload_host_path;
+	extern class String http_upload_query;
 	extern class String http_upload_field_site;
 	extern class String http_upload_field_device;
 	extern class String http_upload_field_serial;

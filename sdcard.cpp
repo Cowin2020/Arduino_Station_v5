@@ -105,7 +105,6 @@ namespace SDCard {
 		bool clean_up(void) {
 			if (!Variable::enable_measure) return false;
 			DEVICE_LOCK(device_lock);
-			OLED::home();
 			Display::println("Cleaning up data file");
 			OLED::display();
 			COM::flush();

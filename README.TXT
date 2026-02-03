@@ -363,22 +363,23 @@ Identifier of the measurement site
 
 Type: C++ string
 
-HTTP_UPLOAD_HOST
-----------------
+HTTP_UPLOAD_HOST_PATH
+---------------------
 
-URL of the protocol, host and port of the HTTP server for upload data
+URL of the protocol, host, port and path of the HTTP server for upload data
 
 Printf format string of URL to upload data.
 
 Type: C++ string
 
-HTTP_UPLOAD_PATH_QUERY
-----------------------
+HTTP_UPLOAD_QUERY
+-----------------
 
-The path and query string of the upload URL
+Extra query string for data upload HTTP request
 
-A question mark "?" or ampersand "&" put at the end of the string for following
-parameters.
+The starting question mark "?" should not be included.
+Ampersand "&" is used to seperate key/value pairs as URI query standard.
+It should end with ampersand "&" if not empty.
 
 Type: C++ string
 

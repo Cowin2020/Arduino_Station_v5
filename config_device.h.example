@@ -52,8 +52,8 @@
 #define HTTP_RESPONE_SIZE 256
 #define HTTP_UPLOAD_LENGTH 512
 #define SITE_CODE "0"
-#define HTTP_UPLOAD_HOST "http://www.example.com"
-#define HTTP_UPLOAD_PATH_QUERY "/path/to/upload?"
+#define HTTP_UPLOAD_HOST_PATH "http://www.example.com/path/to/upload"
+#define HTTP_UPLOAD_QUERY "some=extra&key=value&"
 #define HTTP_UPLOAD_FIELD_SITE "site"
 #define HTTP_UPLOAD_FIELD_DEVICE "device"
 #define HTTP_UPLOAD_FIELD_SERIAL "serial"

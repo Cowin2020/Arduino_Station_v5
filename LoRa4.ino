@@ -35,6 +35,17 @@ static bool setup_success;
 	inline static void set_CPU_frequency(void) {}
 #endif
 
+static void show_variables(void) {
+	#if defined(ENABLE_OLED_OUTPUT)
+		OLED::print("Dev ");
+		OLED::println(Variable::device_id);
+		OLED::display();
+	#endif
+	#ifdef ENABLE_COM_OUTPUT
+		Variable::dump_to_stream(&Serial);
+	#endif
+}
+
 void setup(void) {
 	#if !defined(NDEBUG) && defined(START_DELAY)
 		delay(START_DELAY);
@@ -44,20 +55,17 @@ void setup(void) {
 	LED::initialize();
 	COM::initialize();
 	OLED::initialize();
-	#if defined(ENABLE_OLED_OUTPUT)
-		OLED::print("Device ");
-		OLED::println(Variable::device_id);
-	#endif
-	#ifdef ENABLE_COM_OUTPUT
-		Variable::dump_to_stream(&Serial);
-	#endif
 
-	if (!SDCard::initialize()) goto end;
+	if (!SDCard::initialize()) {
+		show_variables();
+		goto end;
+	}
 	Setting::save(&Variable::active_sensors);
 	SDCard::read_config();
 	Setting::load(&Variable::active_sensors);
 	Setting::save(&Variable::active_sensors);
 	SDCard::create_new_config();
+	show_variables();
 
 	Data::initialize();
 	if (SDCard::clean_up())

@@ -42,8 +42,8 @@ namespace Variable {
 	class String http_authorization_type = HTTP_AUTHORIZATION_TYPE;
 	class String http_authorization_user = HTTP_AUTHORIZATION_USER;
 	class String http_authorization_pass = HTTP_AUTHORIZATION_PASS;
-	class String http_upload_host = HTTP_UPLOAD_HOST;
-	class String http_upload_path_query = HTTP_UPLOAD_PATH_QUERY;
+	class String http_upload_host_path = HTTP_UPLOAD_HOST_PATH;
+	class String http_upload_query = HTTP_UPLOAD_QUERY;
 	class String http_upload_field_site = HTTP_UPLOAD_FIELD_SITE;
 	class String http_upload_field_device = HTTP_UPLOAD_FIELD_DEVICE;
 	class String http_upload_field_serial = HTTP_UPLOAD_FIELD_SERIAL;
@@ -86,10 +86,10 @@ namespace Variable {
 		stream->println(wifi_ssid);
 		stream->print("WIFI_PASS=");
 		stream->println(wifi_pass);
-		stream->print("HTTP_UPLOAD_HOST=");
-		stream->println(http_upload_host);
-		stream->print("HTTP_UPLOAD_PATH_QUERY=");
-		stream->println(http_upload_path_query);
+		stream->print("HTTP_UPLOAD_HOST_PATH=");
+		stream->println(http_upload_host_path);
+		stream->print("HTTP_UPLOAD_QUERY=");
+		stream->println(http_upload_query);
 		stream->print("HTTP_AUTHORIZATION_TYPE=");
 		stream->println(http_authorization_type);
 		stream->print("HTTP_AUTHORIZATION_USER=");
@@ -153,10 +153,10 @@ namespace Variable {
 			wifi_ssid = value;
 		else if (key == "WIFI_PASS")
 			wifi_pass = value;
-		else if (key == "HTTP_UPLOAD_HOST")
-			http_upload_host = value;
-		else if (key == "HTTP_UPLOAD_PATH_QUERY")
-			http_upload_path_query = value;
+		else if (key == "HTTP_UPLOAD_HOST_PATH")
+			http_upload_host_path = value;
+		else if (key == "HTTP_UPLOAD_QUERY")
+			http_upload_query = value;
 		else if (key == "HTTP_AUTHORIZATION_TYPE")
 			http_authorization_type = value;
 		else if (key == "HTTP_AUTHORIZATION_USER")
