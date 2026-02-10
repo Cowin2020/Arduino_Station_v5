@@ -115,7 +115,7 @@ namespace Setting {
 		return String(*static_cast<float const *>(memory));
 	}
 	static class String FIELD_FLOAT_print(void const *const memory) {
-		FIELD_FLOAT_write(memory);
+		return FIELD_FLOAT_write(memory);
 	}
 	static constexpr struct FieldAccess const FIELD_FLOAT = {
 		sizeof (float),
@@ -523,7 +523,7 @@ void Data::dashboard(void) const {
 	}
 	else {
 		OLED::println(sensor_field->label);
-		OLED::print(sensor_field->access.write(pointer_offset<void const, union Data const>(this, offset)));
+		OLED::print(sensor_field->access.print(pointer_offset<void const, union Data const>(this, offset)));
 		OLED_space_or_newline();
 		OLED::println(sensor_field->unit);
 	}
