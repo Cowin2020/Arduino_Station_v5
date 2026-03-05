@@ -116,13 +116,13 @@ namespace Variable {
 		if (key == "DEVICE_ID") {
 			char const *p = value.c_str();
 			unsigned int const n = parse_uint(&p);
-			if (*p || n <= 0 || n > UCHAR_MAX) {
+			if (*p || n > UCHAR_MAX) {
 				COM::print("WARN: Incorrect device ID ");
 				COM::println(value);
 				return false;
 			}
 			device_id = n;
-			enable_gateway = !device_id;
+			enable_gateway = !n;
 			if (n) enable_measure = true;
 		}
 		else if (key == "OPERATION_MODE") {

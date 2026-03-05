@@ -151,7 +151,7 @@ namespace DAEMON {
 					}
 					if (!awake && soonest != nullptr) {
 						Millisecond duration = soonest->start + soonest->duration - now;
-						if (Variable::enable_sleep && !sleepless && duration > SLEEP_MARGIN) {
+						if (Variable::enable_sleep && !Variable::enable_gateway && !sleepless && duration > SLEEP_MARGIN) {
 							DEVICE_LOCK(device_lock);
 							Debug::print("DEBUG: sleep ");
 							Debug::print(duration);
