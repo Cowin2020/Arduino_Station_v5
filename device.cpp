@@ -367,8 +367,10 @@ namespace NTP {
 				.second = (unsigned char)time.tm_sec
 			};
 			RTC::set(&fulltime);
-			COM::print("NTP updated ");
-			COM::println(String(fulltime));
+			OLED_LOCK(oled_lock);
+			Display::print("NTP updated ");
+			Display::println(String(fulltime));
+			OLED::display();
 		}
 	}
 }
