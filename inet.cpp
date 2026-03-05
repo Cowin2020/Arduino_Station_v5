@@ -16,10 +16,16 @@ namespace WIFI {
 
 	void initialize(void) {
 		if (Variable::enable_gateway) {
+			Debug::print("DEBUG: WiFi on SSID=\"");
+			Debug::print(Variable::wifi_ssid);
+			Debug::print("\" pass=\"");
+			Debug::print(Variable::wifi_pass);
+			Debug::println('\"');
 			WiFi.mode(WIFI_STA);
 			WiFi.begin(Variable::wifi_ssid, Variable::wifi_pass);
 		}
 		else {
+			Debug::println("DEBUG: WiFi off");
 			WiFi.mode(WIFI_OFF);
 		}
 	}
