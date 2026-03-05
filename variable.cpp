@@ -98,8 +98,8 @@ namespace Variable {
 		stream->println(http_authorization_pass);
 		stream->print("SITE_CODE=");
 		stream->println(site_code);
-		stream->print("MEASURE_INTERVAL/minute=");
-		stream->println(measure_interval / (1000*60));
+		stream->print("MEASURE_INTERVAL/second=");
+		stream->println(measure_interval / 1000);
 		stream->print("ACTIVE_SENSORS=");
 		for (std::map<unsigned int, unsigned int>::value_type pair : active_sensors) {
 			stream->print(pair.first);
@@ -165,9 +165,9 @@ namespace Variable {
 			http_authorization_pass = value;
 		else if (key == "SITE_CODE")
 			site_code = value;
-		else if (key == "MEASURE_INTERVAL/minute") {
+		else if (key == "MEASURE_INTERVAL/second") {
 			char const *p = value.c_str();
-			unsigned int const n = parse_uint(&p) * (1000*60);
+			unsigned int const n = parse_uint(&p) * 1000;
 			if (*p || n <= SEND_INTERVAL || n >= 1000*60*60*24) {
 				COM::print("WARN: Incorrect measure interval ");
 				COM::println(value);
