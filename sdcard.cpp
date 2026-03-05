@@ -64,8 +64,10 @@ namespace SDCard {
 					if (!s.length()) break;
 					int const e = s.indexOf('=');
 					if (e < 0 || s.length() <= e) continue;
-					class String const k = s.substring(0, e);
-					class String const v = s.substring(e+1, s.length());
+					class String k = s.substring(0, e);
+					class String v = s.substring(e+1, s.length());
+					k.trim();
+					v.trim();
 					Debug::print("DEBUG: SDCard::read_config ");
 					Debug::print(k);
 					Debug::print('=');
