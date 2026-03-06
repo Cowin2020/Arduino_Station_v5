@@ -8,9 +8,9 @@
 #include "sdcard.h"
 
 #define CONFIG_FILE_PATH "/CONFIG.INI"
-#define DATA_FILE_PATH "/DATA.CSV"
+#define DATA_FILE_PATH "/BUFFER.CSV"
 #define CLEANUP_FILE_PATH "/CLEANUP.CSV"
-#define LOG_FILE_PATH "/LOG.CSV"
+#define LOG_FILE_PATH "/DATALOG.CSV"
 #define ERROR_FILE_PATH_LENGTH 16
 #define ERROR_FILE_PATH_PATTERN "/ERROR%03u.CSV"
 #include "config_device.h"
