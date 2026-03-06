@@ -648,6 +648,8 @@ namespace Sensor {
 					if (type == Setting::LC709203F) {
 						values[0] = lc709203f.cellVoltage();
 						values[1] = lc709203f.cellPercent();
+						if (values[1] > 100) values[1] = 100;
+						if (values[1] < 0) values[1] = 0;
 					}
 					else
 				#endif
@@ -655,6 +657,8 @@ namespace Sensor {
 					if (type == Setting::MAX17043) {
 						values[0] = max17043.readVoltage() * 0.001;
 						values[1] = max17043.readPercentage();
+						if (values[1] > 100) values[1] = 100;
+						if (values[1] < 0) values[1] = 0;
 					}
 					else
 				#endif
@@ -662,6 +666,8 @@ namespace Sensor {
 					if (type == Setting::MAX17048) {
 						values[0] = max17048.cellVoltage();
 						values[1] = max17048.cellPercent();
+						if (values[1] > 100) values[1] = 100;
+						if (values[1] < 0) values[1] = 0;
 					}
 					else
 				#endif
