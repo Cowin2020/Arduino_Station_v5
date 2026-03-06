@@ -519,9 +519,9 @@ void Data::dashboard(void) const {
 	struct Setting::SensorField const *const sensor_field = &Setting::sensor_fields[sensor][field];
 	if (!sensor) {
 		OLED::println("Every");
-		OLED::print(Variable::measure_interval / 60000., 2);
+		OLED::print(Variable::measure_interval / 1000., 2);
 		OLED_space_or_newline();
-		OLED::println("min.");
+		OLED::println("sec.");
 	}
 	else {
 		OLED::println(sensor_field->label);
