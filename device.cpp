@@ -154,8 +154,8 @@ namespace Setting {
 			{{0}}
 		},
 		[BME280] = (struct SensorField const []){
-			{FIELD_FLOAT,   "BME280", "degC"},
 			{FIELD_FLOAT_h, "BME280", "hPa"},
+			{FIELD_FLOAT,   "BME280", "degC"},
 			{FIELD_FLOAT,   "BME280", "%RH"},
 			{{0}}
 		},
@@ -700,8 +700,8 @@ namespace Sensor {
 		#if defined(ENABLE_BME280)
 			if (Setting::active_sensors[Setting::BME280].has_value()) {
 				float *const values = data->device_pointer<float>(Setting::BME280);
-				values[0] = BME.readTemperature();
-				values[1] = BME.readPressure();
+				values[0] = BME.readPressure();
+				values[1] = BME.readTemperature();
 				values[2] = BME.readHumidity();
 			}
 		#endif
