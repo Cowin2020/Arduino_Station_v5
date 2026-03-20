@@ -400,11 +400,8 @@ void Data::initialize(void) {
 void Data::writeln(class Print *const print) const {
 	/* write measure time */
 	struct FullTime const *const time = this->get_time();
-	print->printf(
-		"%04u-%02u-%02uT%02u:%02u:%02uZ,",
-		time->year, time->month, time->day,
-		time->hour, time->minute, time->second
-	);
+	print->print(time->to_UTC_string());
+	print->write(',');
 
 	/* write measured values across all fields of all active sensors */
 	void const *p = pointer_offset<void const, union Data const>(this, offset[1]);

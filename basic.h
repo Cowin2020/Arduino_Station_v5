@@ -38,7 +38,11 @@ struct [[gnu::packed]] FullTime {
 	unsigned char minute;
 	unsigned char second;
 
-	explicit operator String(void) const;
+	String to_UTC_string(void) const;
+	String to_local_string(void) const;
+	explicit operator String(void) const {
+		return this->to_UTC_string();
+	}
 	struct FullTime &operator +=(signed int timezone_hours);
 };
 

@@ -319,7 +319,7 @@ namespace DAEMON {
 				}
 				else {
 					COM::print("HTTP unable to send data: time=");
-					COM::println(String(*data->get_time()));
+					COM::println(data->get_time()->to_UTC_string());
 				}
 			}
 			else {

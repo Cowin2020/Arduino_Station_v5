@@ -104,7 +104,7 @@ namespace WIFI {
 		URL[p++] = '&';
 		p += append_buffer(URL + p, Variable::http_upload_field_time);
 		URL[p++] = '=';
-		p += append_buffer(URL + p, String(*data->get_time()));
+		p += append_buffer(URL + p, data->get_time()->to_UTC_string());
 		for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor)
 			p += build_URL_querystring(URL + p, data, static_cast<enum Setting::sensor>(sensor));
 		COM::print("Upload to ");

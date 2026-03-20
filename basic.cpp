@@ -35,13 +35,27 @@ size_t append_buffer(char *const buffer, class String const &string) {
 	return length;
 }
 
-FullTime::operator String(void) const {
+String FullTime::to_UTC_string(void) const {
 	char buffer[24];
 	snprintf(
 		buffer, sizeof buffer,
 		"%04u-%02u-%02uT%02u:%02u:%02uZ",
 		this->year, this->month, this->day,
 		this->hour, this->minute, this->second
+	);
+	return String(buffer);
+}
+
+String FullTime::to_local_string(void) const {
+	char buffer[48];
+	FullTime local = *this;
+	local += Variable::local_timezone;
+	snprintf(
+		buffer, sizeof buffer,
+		"%04u-%02u-%02u %02u:%02u:%02u (%+02d:00)",
+		local.year, local.month, local.day,
+		local.hour, local.minute, local.second,
+		Variable::local_timezone
 	);
 	return String(buffer);
 }

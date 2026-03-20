@@ -199,12 +199,8 @@ namespace SDCard {
 						}
 						struct FullTime local_time = *data->get_time();
 						local_time += Variable::local_timezone;
-						log_file.printf(
-							"%04u-%02u-%02u %02u:%02u:%02u (%+02d:00),",
-							local_time.year, local_time.month, local_time.day,
-							local_time.hour, local_time.minute, local_time.second,
-							Variable::local_timezone
-						);
+						log_file.print(data->get_time()->to_local_string());
+						log_file.write(',');
 						data->writeln(&log_file);
 					}
 					catch (...) {
