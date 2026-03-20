@@ -182,6 +182,21 @@ namespace SDCard {
 				}
 				else {
 					try {
+						if (!log_file.position()) {
+							log_file.print("Time (UTC),");
+							for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor)
+								if (Setting::active_sensors[sensor].has_value()) {
+									unsigned int field = 0;
+									for (;;) {
+										struct Setting::SensorField const *const sf = &Setting::sensor_fields[sensor][field];
+										if (!sf->access.size) break;
+										log_file.print(sf->description);
+										log_file.write(',');
+										++field;
+									}
+								}
+							log_file.println();
+						}
 						data->writeln(&log_file);
 					}
 					catch (...) {

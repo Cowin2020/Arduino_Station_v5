@@ -56,8 +56,9 @@ namespace Setting {
 	};
 	extern struct SensorField {
 		struct FieldAccess access;
-		char const *label;
 		char const *unit;
+		char const *label;
+		char const *description;
 	} const *const sensor_fields[];
 
 	extern void save(std::map<unsigned int, unsigned int> *map);

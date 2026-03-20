@@ -140,35 +140,35 @@ namespace Setting {
 			{{0}}
 		},
 		[battery] = (struct SensorField const []){
-			{FIELD_FLOAT, "Power",  "V"},
-			{FIELD_FLOAT, "Power",  "%"},
+			{FIELD_FLOAT,  "V", "Power", "Battery power (V)"},
+			{FIELD_FLOAT,  "%", "Power", "Battery power (%)"},
 			{{0}}
 		},
 		[Dallas] = (struct SensorField const []){
-			{FIELD_FLOAT, "Dallas", "degC"},
+			{FIELD_FLOAT, "degC", "Dallas", "Dallas Temperature (\u2103)"},
 			{{0}}
 		},
 		[SHT40] = (struct SensorField const []){
-			{FIELD_FLOAT, "SHT40",  "degC"},
-			{FIELD_FLOAT, "SHT40",  "%RH"},
+			{FIELD_FLOAT, "degC", "SHT40", "SHT40 Temperature (\u2103)"},
+			{FIELD_FLOAT, "%RH",  "SHT40", "SHT40 Relative humidity (%)"},
 			{{0}}
 		},
 		[BME280] = (struct SensorField const []){
-			{FIELD_FLOAT_h, "BME280", "hPa"},
-			{FIELD_FLOAT,   "BME280", "degC"},
-			{FIELD_FLOAT,   "BME280", "%RH"},
+			{FIELD_FLOAT_h, "hPa",  "BME280", "BME280 Air pressure (%)"},
+			{FIELD_FLOAT,   "degC", "BME280", "BME280 Temperature (\u2103)"},
+			{FIELD_FLOAT,   "%RH",  "BME280", "BME280 Relative humidity (%)"},
 			{{0}}
 		},
 		[LTR390] = (struct SensorField const []){
-			{FIELD_FLOAT, "LTR390", "UV"},
+			{FIELD_FLOAT, "UVI", "LTR390", "LTR390 UV index"},
 			{{0}}
 		},
 		[turbidity] = (struct SensorField const []){
-			{FIELD_FLOAT, "Turbi", "%"},
+			{FIELD_FLOAT, "%", "Turbi", "Turbidity"},
 			{{0}}
 		},
 		[pH] = (struct SensorField const []){
-			{FIELD_FLOAT, "pH", "pH"},
+			{FIELD_FLOAT, "", "pH", "pH"},
 			{{0}}
 		}
 	};
