@@ -29,6 +29,7 @@ namespace Variable {
 	extern class String http_upload_field_device;
 	extern class String http_upload_field_serial;
 	extern class String http_upload_field_time;
+	extern Hour local_timezone;
 	extern class String site_code;
 	extern Millisecond measure_interval;
 	extern bool enable_sleep;

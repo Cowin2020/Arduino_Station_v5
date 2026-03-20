@@ -183,7 +183,7 @@ namespace SDCard {
 				else {
 					try {
 						if (!log_file.position()) {
-							log_file.print("Time (UTC),");
+							log_file.print("Time (local),Time (UTC),");
 							for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor)
 								if (Setting::active_sensors[sensor].has_value()) {
 									unsigned int field = 0;
@@ -197,6 +197,14 @@ namespace SDCard {
 								}
 							log_file.println();
 						}
+						struct FullTime local_time = *data->get_time();
+						local_time += Variable::local_timezone;
+						log_file.printf(
+							"%04u-%02u-%02u %02u:%02u:%02u (%+02d:00),",
+							local_time.year, local_time.month, local_time.day,
+							local_time.hour, local_time.minute, local_time.second,
+							Variable::local_timezone
+						);
 						data->writeln(&log_file);
 					}
 					catch (...) {

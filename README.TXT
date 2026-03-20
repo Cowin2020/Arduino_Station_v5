@@ -511,12 +511,12 @@ Milliseconds to suspend dashboard refresh when OLED display is switched off
 
 Type: unsigned long int
 
-DASHBOARD_TIMEZONE
+LOCAL_TIMEZONE
 ------------------
 
-Time zone (in hours) that used on dashboard display
+Time zone (in hours) of the measurement location
 
-Type: signed int
+Type: signed int between [-23, 23]
 
 Positive number for eastern hemisphere, and negative number for western hemisphere
 

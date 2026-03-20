@@ -488,9 +488,7 @@ void Data::println(void) const {
 void Data::dashboard(void) const {
 	OLED::println(static_cast<unsigned int>(Variable::device_id));
 	struct FullTime time = *this->get_time();
-	#if defined(DASHBOARD_TIMEZONE)
-		time += DASHBOARD_TIMEZONE;
-	#endif
+	time += Variable::local_timezone;
 	#if defined(OLED_HORIZONAL)
 		OLED::print(static_cast<unsigned int>(time.day));
 		OLED::print('/');

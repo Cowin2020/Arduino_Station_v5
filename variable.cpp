@@ -48,6 +48,7 @@ namespace Variable {
 	class String http_upload_field_device = HTTP_UPLOAD_FIELD_DEVICE;
 	class String http_upload_field_serial = HTTP_UPLOAD_FIELD_SERIAL;
 	class String http_upload_field_time = HTTP_UPLOAD_FIELD_TIME;
+	Hour local_timezone = LOCAL_TIMEZONE;
 	class String site_code = SITE_CODE;
 	Millisecond measure_interval = MEASURE_INTERVAL;
 	bool enable_sleep =
@@ -98,6 +99,8 @@ namespace Variable {
 		stream->println(http_authorization_pass);
 		stream->print("SITE_CODE=");
 		stream->println(site_code);
+		stream->print("LOCAL_TIMEZONE=");
+		stream->println(static_cast<signed short int>(local_timezone));
 		stream->print("MEASURE_INTERVAL/second=");
 		stream->println(measure_interval / 1000);
 		stream->print("ACTIVE_SENSORS=");
@@ -165,6 +168,16 @@ namespace Variable {
 			http_authorization_pass = value;
 		else if (key == "SITE_CODE")
 			site_code = value;
+		else if (key == "LOCAL_TIMEZONE") {
+			char const *p = value.c_str();
+			unsigned int const n = parse_uint(&p) * 1000;
+			if (*p || n <= -24 || n >= 24) {
+				COM::print("WARN: Incorrect local timezone ");
+				COM::println(value);
+				return false;
+			}
+			local_timezone = n;
+		}
 		else if (key == "MEASURE_INTERVAL/second") {
 			char const *p = value.c_str();
 			unsigned int const n = parse_uint(&p) * 1000;

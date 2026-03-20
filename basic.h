@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 typedef unsigned long int Millisecond;
+typedef signed char Hour;
 
 typedef uint8_t Device;
 typedef uint32_t SerialNumber;
