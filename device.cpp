@@ -145,17 +145,17 @@ namespace Setting {
 			{{0}}
 		},
 		[Dallas] = (struct SensorField const []){
-			{FIELD_FLOAT, "degC", "Dallas", "Dallas Temperature (\u2103)"},
+			{FIELD_FLOAT, "degC", "Dallas", "Dallas Temperature (degree C)"},
 			{{0}}
 		},
 		[SHT40] = (struct SensorField const []){
-			{FIELD_FLOAT, "degC", "SHT40", "SHT40 Temperature (\u2103)"},
+			{FIELD_FLOAT, "degC", "SHT40", "SHT40 Temperature (degree C)"},
 			{FIELD_FLOAT, "%RH",  "SHT40", "SHT40 Relative humidity (%)"},
 			{{0}}
 		},
 		[BME280] = (struct SensorField const []){
-			{FIELD_FLOAT_h, "hPa",  "BME280", "BME280 Air pressure (%)"},
-			{FIELD_FLOAT,   "degC", "BME280", "BME280 Temperature (\u2103)"},
+			{FIELD_FLOAT_h, "hPa",  "BME280", "BME280 Air pressure (hPa)"},
+			{FIELD_FLOAT,   "degC", "BME280", "BME280 Temperature (degree C)"},
 			{FIELD_FLOAT,   "%RH",  "BME280", "BME280 Relative humidity (%)"},
 			{{0}}
 		},
