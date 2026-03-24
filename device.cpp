@@ -154,7 +154,7 @@ namespace Setting {
 			{{0}}
 		},
 		[BME280] = (struct SensorField const []){
-			{FIELD_FLOAT_h, "hPa",  "BME280", "BME280 Air pressure (hPa)"},
+			{FIELD_FLOAT_h, "hPa",  "BME280", "BME280 Air pressure (Pa)"},
 			{FIELD_FLOAT,   "degC", "BME280", "BME280 Temperature (degree C)"},
 			{FIELD_FLOAT,   "%RH",  "BME280", "BME280 Relative humidity (%)"},
 			{{0}}
