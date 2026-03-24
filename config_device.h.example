@@ -111,7 +111,7 @@
 //	#define REBOOT_TIMEOUT 3600000UL /* milliseconds */
 #define DASHBOARD_INTERVAL 5000UL /* milliseconds */
 #define DASHBOARD_SLEEP_INTERVAL MEASURE_INTERVAL
-#define LOCAL_TIMEZONE 8 /* hours */
+#define LOCAL_TIMEZONE +8 /* hours */
 
 /* Display */
 #define ENABLE_LED
