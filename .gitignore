@@ -1,5 +1,7 @@
 config_id.h
 config_device.h
+secret_key
+secret_key.exe
 *.swp
 /.vscode
 /build
