@@ -308,71 +308,71 @@ namespace LORA {
 		}
 
 		static void ACK(Device const receiver, std::vector<uint8_t> const &content) {
-			if (!Variable::enable_gateway) {
-				size_t const minimal_content_size =
-					sizeof (Device)          /* terminal */
-					+ sizeof (Device)        /* router list length >= 1 */
-					+ sizeof (SerialNumber); /* serial code */
-				size_t const content_size = content.size();
-				if (!(content_size >= minimal_content_size)) {
-					COM::print("WARN: LoRa ACK: incorrect packet size: ");
-					COM::println(content_size);
+			if (Variable::enable_gateway) return;
+
+			size_t const minimal_content_size =
+				sizeof (Device)          /* terminal */
+				+ sizeof (Device)        /* router list length >= 1 */
+				+ sizeof (SerialNumber); /* serial code */
+			size_t const content_size = content.size();
+			if (!(content_size >= minimal_content_size)) {
+				COM::print("WARN: LoRa ACK: incorrect packet size: ");
+				COM::println(content_size);
+				return;
+			}
+
+			if (Variable::device_id != receiver) return;
+
+			Device const terminal = *reinterpret_cast<Device const *>(content.data());
+			Device const router0 = *reinterpret_cast<Device const *>(content.data() + sizeof (Device));
+			if (Variable::device_id == terminal) {
+				if (Variable::device_id != router0) {
+					COM::print("WARN: LoRa ACK: dirty router list");
 					return;
 				}
 
-				if (Variable::device_id != receiver) return;
-
-				Device const terminal = *reinterpret_cast<Device const *>(content.data());
-				Device const router0 = *reinterpret_cast<Device const *>(content.data() + sizeof (Device));
-				if (Variable::device_id == terminal) {
-					if (Variable::device_id != router0) {
-						COM::print("WARN: LoRa ACK: dirty router list");
-						return;
+				SerialNumber const serial =
+					*reinterpret_cast<SerialNumber const *>(
+						content.data()
+						+ 2 * sizeof (Device)
+					);
+				{
+					DEBUG_LOCK(debug_lock);
+					Debug::print("DEBUG: LORA::Receive::ACK serial=");
+					Debug::println(serial);
+				}
+				DAEMON::Push::ack(serial);
+				#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
+					{
+						OLED_LOCK(oled_lock);
+						OLED::draw_received();
 					}
+				#endif
 
-					SerialNumber const serial =
-						*reinterpret_cast<SerialNumber const *>(
+				if (content_size >= minimal_content_size + sizeof (class Configuration)) {
+					class Configuration const configuration =
+						*reinterpret_cast<class Configuration const *>(
 							content.data()
 							+ 2 * sizeof (Device)
+							+ sizeof serial
 						);
-					{
-						DEBUG_LOCK(debug_lock);
-						Debug::print("DEBUG: LORA::Receive::ACK serial=");
-						Debug::println(serial);
-					}
-					DAEMON::Push::ack(serial);
-					#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
-						{
-							OLED_LOCK(oled_lock);
-							OLED::draw_received();
-						}
-					#endif
-
-					if (content_size >= minimal_content_size + sizeof (class Configuration)) {
-						class Configuration const configuration =
-							*reinterpret_cast<class Configuration const *>(
-								content.data()
-								+ 2 * sizeof (Device)
-								+ sizeof serial
-							);
-						configuration.apply();
-					}
+					configuration.apply();
 				}
-				else {
-					size_t const Device2 = 2 * sizeof (Device);
-					Device const router1 = *reinterpret_cast<Device const *>(content.data() + Device2);
-					{
-						DEBUG_LOCK(debug_lock);
-						Debug::print("DEBUG: LORA::Receive::ACK router=");
-						Debug::print(router1);
-						Debug::print(" terminal=");
-						Debug::println(terminal);
-					}
-					std::vector<char> bounce(content.size() - sizeof terminal);
-					std::memcpy(bounce.data(), &terminal, sizeof terminal);
-					std::memcpy(bounce.data() + sizeof terminal, content.data() + Device2, content.size() - Device2);
-					LORA::Send::packet("ACK+", PACKET_ACK, router1, bounce.data(), bounce.size());
+			}
+			else {
+				size_t const Device2 = 2 * sizeof (Device);
+				Device const router1 = *reinterpret_cast<Device const *>(content.data() + Device2);
+				{
+					DEBUG_LOCK(debug_lock);
+					Debug::print("DEBUG: LORA::Receive::ACK router=");
+					Debug::print(router1);
+					Debug::print(" terminal=");
+					Debug::println(terminal);
 				}
+				std::vector<char> bounce(content.size() - sizeof terminal);
+				std::memcpy(bounce.data(), &terminal, sizeof terminal);
+				std::memcpy(bounce.data() + sizeof terminal, content.data() + Device2, content.size() - Device2);
+				LORA::Send::packet("ACK+", PACKET_ACK, router1, bounce.data(), bounce.size());
 			}
 		}
 
