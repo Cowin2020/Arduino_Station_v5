@@ -21,15 +21,8 @@ Data type and constants
 		1 byte hour
 		1 byte minute
 		1 byte second
-	Values (7-35 bytes, binary format)
-		7 bytes time
-		4 bytes float battery voltage if ENABLE_BATTERY_GAUGE
-		4 bytes float battery percentage if ENABLE_BATTERY_GAUGE
-		4 bytes float temperature from Dallas thermometer if ENABLE_DALLAS
-		4 bytes float temperature from BME280 if ENABLE_BME280
-		4 bytes float pressure from BME280 if ENABLE_BME280
-		4 bytes float humidity from BME280 if ENABLE_BME280
-		4 bytes float ultraviolet LTR390 sensor if ENABLE_LTR390
+	Values (binary format, depends on hardward settings)
+		class Data, size = sizeof (class Data)
 
 Protocol of time synchronization
 --------------------------------
@@ -42,10 +35,11 @@ Protocol of time synchronization
 		authentication tag
 	2. Repeaters received from gateway or related repeaters:
 		type TIME
-		device ID (current device ID)
-		repeat nonce
-		repeat encrypted current time
-		repeat authentication tag
+		sender device ID (current device ID)
+		nonce
+		encrypted
+			repeated current time
+		authentication tag
 
 Protocol of call for synchronization
 ------------------------------------
@@ -61,7 +55,7 @@ Protocol of call for synchronization
 		recerver device ID (next router or gateway)
 		nonce
 		encrypted
-			repeat terminal device ID
+			repeated terminal device ID
 		authentication tag
 
 Protocol of uploading data
@@ -74,6 +68,7 @@ Protocol of uploading data
 			terminal device ID
 			router list containing only terminal device ID
 			serial code
+			time
 			values
 		authentication tag
 	2. Optional repeaters:
@@ -84,6 +79,7 @@ Protocol of uploading data
 			repeat terminal device ID
 			router list: router device ID + repeat router list
 			repeat serial code
+			repeat time
 			repeat values
 		authentication tag
 	3. Gateway:

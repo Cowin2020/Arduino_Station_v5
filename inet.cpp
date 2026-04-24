@@ -57,7 +57,7 @@ namespace WIFI {
 		return WiFi.status() == WL_CONNECTED;
 	}
 
-	size_t build_URL_querystring(char *const buffer, union Data const *const data, Setting::sensor const sensor) {
+	size_t build_URL_querystring(char *const buffer, class Data const *const data, Setting::sensor const sensor) {
 		if (!Setting::active_sensors[sensor].has_value()) return 0;
 		char const *const *name = upload_names[sensor];
 		void const *value = data->device_pointer<void const>(sensor);
@@ -76,7 +76,7 @@ namespace WIFI {
 		return p;
 	}
 
-	struct upload__result upload(Device const device, SerialNumber const serial, union Data const *const data) {
+	struct upload__result upload(Device const device, SerialNumber const serial, class Data const *const data) {
 		static char URL[HTTP_UPLOAD_LENGTH];
 		signed int const WiFi_status = WiFi.status();
 		if (WiFi_status != WL_CONNECTED) {

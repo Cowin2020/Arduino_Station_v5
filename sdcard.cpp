@@ -134,7 +134,7 @@ namespace SDCard {
 					if (!s.length()) break;
 
 					char memory[Data::total_size];
-					union Data *data = reinterpret_cast<union Data *>(memory);
+					class Data *data = reinterpret_cast<class Data *>(memory);
 					if (!(s == "0" || s == "1") || !data->readln(&cleanup_file)) {
 						COM::println("WARN: SDCard::clean_up: invalid data");
 						cleanup_file.close();
@@ -158,7 +158,7 @@ namespace SDCard {
 			return true;
 		}
 
-		void add_data(union Data const *const data) {
+		void add_data(class Data const *const data) {
 			if (!Variable::enable_measure) return;
 			DEVICE_LOCK(device_lock);
 			class File data_file = SD.open(data_file_path, "a");
@@ -212,7 +212,7 @@ namespace SDCard {
 			#endif
 		}
 
-		bool read_data(union Data *const data) {
+		bool read_data(class Data *const data) {
 			if (!Variable::enable_measure) return false;
 			DEVICE_LOCK(device_lock);
 			class File file = SD.open(DATA_FILE_PATH, "r+", true);
@@ -301,8 +301,8 @@ namespace SDCard {
 		void create_new_config(void) {}
 		void read_config(void) {}
 		bool clean_up(void) {return false;}
-		void add_data(union Data const *const data) {}
-		bool read_data(union Data *const data) {return false;}
+		void add_data(class Data const *const data) {}
+		bool read_data(class Data *const data) {return false;}
 		void next_data(void) {}
 		bool initialize(void) {return true;}
 	#endif

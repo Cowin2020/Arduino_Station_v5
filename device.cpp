@@ -404,7 +404,7 @@ void Data::writeln(class Print *const print) const {
 	print->write(',');
 
 	/* write measured values across all fields of all active sensors */
-	void const *p = pointer_offset<void const, union Data const>(this, offset[1]);
+	void const *p = pointer_offset<void const, class Data const>(this, offset[1]);
 	for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor) {
 		if (Setting::active_sensors[sensor].has_value()) {
 			size_t field = 0;
@@ -439,7 +439,7 @@ bool Data::readln(class Stream *const stream) {
 
 	{
 		/* read fields of all active sensors */
-		void *p = pointer_offset<void, union Data>(this, offset[1]);
+		void *p = pointer_offset<void, class Data>(this, offset[1]);
 		for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor) {
 			if (Setting::active_sensors[sensor].has_value()) {
 				size_t field = 0;
@@ -464,7 +464,7 @@ void Data::println(void) const {
 	Display::println(String(*this->get_time()));
 
 	/* print values across all fields of all active sensors */
-	void const *p = pointer_offset<void const, union Data const>(this, offset[1]);
+	void const *p = pointer_offset<void const, class Data const>(this, offset[1]);
 	for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor) {
 		if (Setting::active_sensors[sensor].has_value()) {
 			size_t field = 0;
@@ -520,7 +520,7 @@ void Data::dashboard(void) const {
 	}
 	else {
 		OLED::println(sensor_field->label);
-		OLED::print(sensor_field->access.print(pointer_offset<void const, union Data const>(this, offset)));
+		OLED::print(sensor_field->access.print(pointer_offset<void const, class Data const>(this, offset)));
 		OLED_space_or_newline();
 		OLED::println(sensor_field->unit);
 	}
@@ -627,7 +627,7 @@ namespace Sensor {
 		return true;
 	}
 
-	bool measure(union Data *const data) {
+	bool measure(class Data *const data) {
 		DEVICE_LOCK(device_lock);
 		if (!RTC::now(data->get_time()))
 			return false;

@@ -8,16 +8,18 @@
 /* ************************************************************************** */
 
 namespace LORA {
+	extern void confirm_receiver(void);
+	extern bool next_receiver(void);
 	extern bool initialize(void);
 	extern void sleep(void);
 	extern void wake(void);
 	namespace Send {
-		extern void TIME(struct FullTime const *fulltime);
-		extern void ASKTIME(void);
-		extern void SEND(Device receiver, SerialNumber serial, union Data const *data);
+		extern void TIME(bool repeating, struct FullTime const *fulltime);
+		extern void ASKTIME(bool repeating, Device terminal_device);
+		extern void SEND(SerialNumber serial, class Data const *data);
 	}
 	namespace Receive {
-		void packet(void);
+		extern void packet(void);
 	}
 }
 

@@ -152,11 +152,14 @@ namespace DAEMON {
 					if (!awake && soonest != nullptr) {
 						Millisecond duration = soonest->start + soonest->duration - now;
 						if (Variable::enable_sleep && !Variable::enable_gateway && !sleepless && duration > SLEEP_MARGIN) {
+							{
+								DEBUG_LOCK(debug_lock);
+								Debug::print("DEBUG: sleep ");
+								Debug::print(duration);
+								Debug::println("ms");
+								Debug::flush();
+							}
 							DEVICE_LOCK(device_lock);
-							Debug::print("DEBUG: sleep ");
-							Debug::print(duration);
-							Debug::println("ms");
-							Debug::flush();
 							LORA::sleep();
 							esp_sleep_enable_timer_wakeup(1000 * (duration - SLEEP_MARGIN));
 							esp_light_sleep_start();
@@ -206,7 +209,7 @@ namespace DAEMON {
 					struct FullTime fulltime;
 					if (NTP::now(&fulltime)) {
 						RTC::set(&fulltime);
-						LORA::Send::TIME(&fulltime);
+						LORA::Send::TIME(false, &fulltime);
 
 						OLED_LOCK(oled_lock);
 						OLED::home();
@@ -236,7 +239,7 @@ namespace DAEMON {
 			thread_delay(SYNCHONIZE_TIMEOUT);
 			for (;;)
 				try {
-					LORA::Send::ASKTIME();
+					LORA::Send::ASKTIME(false, Variable::device_id);
 					thread_delay(SYNCHONIZE_TIMEOUT);
 					Schedule::sleep(&alarm, SYNCHONIZE_INTERVAL - SYNCHONIZE_TIMEOUT + rand_int<uint8_t>());
 				}
@@ -254,13 +257,13 @@ namespace DAEMON {
 		#if !defined(ENABLE_SDCARD)
 			static std::mutex mutex;
 			static bool filled = false;
-			static union Data *last_data = nullptr;
+			static class Data *last_data = nullptr;
 		#endif
 
 		bool initialize(void) {
 			#if !defined(ENABLE_SDCARD)
 				if (last_data != nullptr) free(last_data);
-				last_data = static_cast<union Data *>(malloc(Data::total_size));
+				last_data = static_cast<class Data *>(malloc(Data::total_size));
 				if (last_data == nullptr) {
 					Display::println("No memory to store measurement data");
 					return false;
@@ -269,7 +272,7 @@ namespace DAEMON {
 			return true;
 		}
 
-		static void add_data(union Data const *const data) {
+		static void add_data(class Data const *const data) {
 			#if defined(ENABLE_SDCARD)
 				SDCard::add_data(data);
 			#else
@@ -281,7 +284,7 @@ namespace DAEMON {
 			#endif
 		}
 
-		static bool read_data(union Data *const data) {
+		static bool read_data(class Data *const data) {
 			#if defined(ENABLE_SDCARD)
 				return SDCard::read_data(data);
 			#else
@@ -301,40 +304,43 @@ namespace DAEMON {
 			#endif
 		}
 
-		static void send_data(union Data const *data) {
+		static void send_data(class Data const *data) {
 			if (Variable::enable_gateway) {
 				struct WIFI::upload__result const upload_result =
 					WIFI::upload(Variable::device_id, ++current_serial, data);
 				if (upload_result.upload_success) {
 					send_success.store(true);
-					if (Variable::enable_measure) next_data();
-					#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
-						{
-							OLED_LOCK(oled_lock);
-							OLED::draw_received();
-						}
-					#endif
+					if (Variable::enable_measure)
+						next_data();
 					if (upload_result.update_configuration)
 						upload_result.configuration.apply();
+					#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
+						OLED_LOCK(oled_lock);
+						OLED::draw_received();
+					#endif
 				}
 				else {
+					COM_LOCK(com_lock);
 					COM::print("HTTP unable to send data: time=");
 					COM::println(data->get_time()->to_UTC_string());
 				}
 			}
 			else {
-				/* TODO: add routing */
 				for (unsigned int t = 0;;) {
-					LORA::Send::SEND(Variable::device_id, ++current_serial, data);
+					LORA::Send::SEND(++current_serial, data);
 					Schedule::idle(&alarm, ACK_TIMEOUT);
 					if (acked_serial.load() == current_serial.load()) {
 						send_success.store(true);
+						LORA::confirm_receiver();
 						next_data();
 						break;
 					}
 					Debug::print("DEBUG: DAEMON::Push::send_data t=");
 					Debug::println(t);
-					if (t >= RESEND_TIMES) break;
+					if (t >= RESEND_TIMES) {
+						LORA::next_receiver();
+						break;
+					}
 					Schedule::sleep(&alarm, SEND_INTERVAL);
 					++t;
 				}
@@ -343,6 +349,8 @@ namespace DAEMON {
 
 		void ack(SerialNumber const serial) {
 			acked_serial.store(serial);
+			OLED_LOCK(oled_lock);
+			OLED::draw_received();
 		}
 
 		[[noreturn]]
@@ -352,7 +360,7 @@ namespace DAEMON {
 			for (;;)
 				try {
 					char memory[Data::total_size];
-					union Data *const data = reinterpret_cast<union Data *>(memory);
+					class Data *const data = reinterpret_cast<class Data *>(memory);
 					if (read_data(data)) {
 						send_success.store(false);
 						send_data(data);
@@ -399,7 +407,7 @@ namespace DAEMON {
 
 	namespace Dashboard {
 		static struct Alarm alarm;
-		static union Data *data = nullptr;
+		static class Data *data = nullptr;
 
 		#if defined(OLED_ROTATION) && !(OLED_ROTATION & 1)
 			#define OLED_HORIZONAL
@@ -451,7 +459,7 @@ namespace DAEMON {
 		void loop(void) {
 			#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
 				char memory[Data::total_size];
-				data = reinterpret_cast<union Data *>(memory);
+				data = reinterpret_cast<class Data *>(memory);
 				Schedule::add_timer(&alarm, "DAEMON::Dashboard");
 				Schedule::sleep(&alarm, Variable::measure_interval + DASHBOARD_INTERVAL + START_DELAY);
 				#if !defined(OLED_HORIZONAL) && defined(LARGE_FONT)
@@ -479,7 +487,7 @@ namespace DAEMON {
 	namespace Measure {
 		static struct Alarm alarm;
 
-		static void print_data(union Data const *const data) {
+		static void print_data(class Data const *const data) {
 			OLED_LOCK(oled_lock);
 			OLED::home();
 			Display::print("Device ");
@@ -491,7 +499,7 @@ namespace DAEMON {
 		[[noreturn]]
 		void loop(void) {
 			char memory[Data::total_size];
-			union Data *const data = reinterpret_cast<union Data *>(memory);
+			class Data *const data = reinterpret_cast<class Data *>(memory);
 			Schedule::add_timer(&alarm, "DAEMON::Measure");
 			Schedule::sleep(&alarm, START_DELAY);
 			for (;;)

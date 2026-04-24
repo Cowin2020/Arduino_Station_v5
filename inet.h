@@ -15,7 +15,11 @@ namespace WIFI {
 		bool update_configuration;
 		class Configuration configuration;
 	};
-	extern struct upload__result upload(Device device, SerialNumber serial, union Data const *data);
+	extern struct upload__result upload(
+		Device device,
+		SerialNumber serial,
+		class Data const *data
+	);
 	extern void loop(void);
 }
 

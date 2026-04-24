@@ -17,16 +17,28 @@ extern std::mutex device_mutex;
 
 #define DEVICE_LOCK(VARIABLE) std::lock_guard<std::mutex> VARIALBE{device_mutex}
 
+#if defined(ENABLE_COM_OUTPUT)
+	#define COM_LOCK(VARIABLE) DEVICE_LOCK(VARIABLE)
+#else
+	#define COM_LOCK(VARIABLE)
+#endif
+
 #if defined(ENABLE_OLED_OUTPUT)
 	#define OLED_LOCK(VARIABLE) DEVICE_LOCK(VARIABLE)
 #else
 	#define OLED_LOCK(VARIABLE)
 #endif
 
+#if defined(ENABLE_COM_OUTPUT) || defined(ENABLE_OLED_OUTPUT)
+	#define DISPLAY_LOCK(VARIABLE) DEVICE_LOCK(VARIABLE)
+#else
+	#define DISPLAY_LOCK(VARIABLE)
+#endif
+
 #if defined(NDEBUG)
 	#define DEBUG_LOCK(VARIABLE)
 #else
-	#define DEBUG_LOCK(VARIABLE) DEVICE_LOCK(VARIABLE)
+	#define DEBUG_LOCK(VARIABLE) COM_LOCK(VARIABLE)
 #endif
 
 namespace Setting {
@@ -77,7 +89,7 @@ namespace NTP {
 	extern void synchronize(void);
 }
 
-union Data {
+class Data {
 private:
 	struct FullTime time;
 
@@ -89,11 +101,11 @@ public:
 
 	template <typename T>
 	inline T const *device_pointer(unsigned int const sensor) const {
-		return pointer_offset<T const, union Data const>(this, offset[sensor]);
+		return pointer_offset<T const, class Data const>(this, offset[sensor]);
 	}
 	template <typename T>
 	inline T *device_pointer(unsigned int const sensor) {
-		return pointer_offset<T, union Data>(this, offset[sensor]);
+		return pointer_offset<T, class Data>(this, offset[sensor]);
 	}
 	inline struct FullTime const *get_time(void) const {
 		return &this->time;
@@ -109,7 +121,7 @@ public:
 
 namespace Sensor {
 	extern bool initialize(void);
-	extern bool measure(union Data *data);
+	extern bool measure(class Data *data);
 }
 
 /* ************************************************************************** */
