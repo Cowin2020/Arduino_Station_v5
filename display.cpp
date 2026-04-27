@@ -46,14 +46,14 @@ namespace OLED {
 	Adafruit_SSD1306 SSD1306(OLED_WIDTH, OLED_HEIGHT);
 
 	void turn_on(void) {
-		DEVICE_LOCK(device_lock);
+		OLED_LOCK(oled_lock);
 		SSD1306.ssd1306_command(SSD1306_CHARGEPUMP);
 		SSD1306.ssd1306_command(0x14);
 		SSD1306.ssd1306_command(SSD1306_DISPLAYON);
 	}
 
 	void turn_off(void) {
-		DEVICE_LOCK(device_lock);
+		OLED_LOCK(oled_lock);
 		SSD1306.ssd1306_command(SSD1306_CHARGEPUMP);
 		SSD1306.ssd1306_command(0x10);
 		SSD1306.ssd1306_command(SSD1306_DISPLAYOFF);
@@ -61,7 +61,7 @@ namespace OLED {
 
 	#if defined(ENABLE_OLED_OUTPUT)
 		void initialize(void) {
-			DEVICE_LOCK(device_lock);
+			OLED_LOCK(oled_lock);
 			SSD1306.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR);
 			SSD1306.setRotation(OLED_ROTATION);
 			SSD1306.invertDisplay(false);
@@ -73,8 +73,34 @@ namespace OLED {
 		}
 
 		void large_font(void) {
-			DEVICE_LOCK(device_lock);
+			OLED_LOCK(oled_lock);
 			SSD1306.setFont(&FreeMono9pt7b);
+		}
+
+		bool check_switch(void) {
+			#if !defined(ENABLE_OLED_OUTPUT)
+				return false;
+			#elif !defined(ENABLE_OLED_SWITCH)
+				return true;
+			#else
+				static bool switched_off = false;
+				if (digitalRead(ENABLE_OLED_SWITCH) == LOW) {
+					if (!switched_off) {
+						Debug::println("DEBUG: OLED switch off");
+						OLED::turn_off();
+						switched_off = true;
+					}
+					return false;
+				}
+				else {
+					if (switched_off) {
+						Debug::println("DEBUG: OLED switch on");
+						OLED::turn_on();
+						switched_off = false;
+					}
+					return true;
+				}
+			#endif
 		}
 	#endif
 }

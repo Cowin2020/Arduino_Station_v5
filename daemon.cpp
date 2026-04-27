@@ -430,32 +430,6 @@ namespace DAEMON {
 			OLED::display();
 		}
 
-		static bool check_switch(void) {
-			#if !defined(ENABLE_OLED_OUTPUT)
-				return false;
-			#elif defined(ENABLE_OLED_SWITCH)
-				static bool switched_off = false;
-				if (digitalRead(ENABLE_OLED_SWITCH) == LOW) {
-					if (!switched_off) {
-						Debug::println("DEBUG: OLED switch off");
-						OLED::turn_off();
-						switched_off = true;
-					}
-					return false;
-				}
-				else {
-					if (switched_off) {
-						Debug::println("DEBUG: OLED switch on");
-						OLED::turn_on();
-						switched_off = false;
-					}
-					return true;
-				}
-			#else
-				return true;
-			#endif
-		}
-
 		void loop(void) {
 			#if defined(DASHBOARD_INTERVAL) && DASHBOARD_INTERVAL > 0
 				char memory[Data::total_size];
@@ -467,7 +441,7 @@ namespace DAEMON {
 				#endif
 				for (;;)
 					try {
-						if (check_switch()) {
+						if (OLED::check_switch()) {
 							show();
 							Schedule::sleep(&alarm, DASHBOARD_INTERVAL);
 						}
@@ -476,9 +450,11 @@ namespace DAEMON {
 						}
 					}
 					catch (...) {
+						COM_LOCK(com_lock);
 						COM::println("ERROR: DAEMON::Dashboard::loop exception thrown");
 					}
 			#else
+				COM_LOCK(com_lock);
 				Display::println("ERROR: DAEMON::Dashboard::loop is executed");
 			#endif
 		}
@@ -488,12 +464,14 @@ namespace DAEMON {
 		static struct Alarm alarm;
 
 		static void print_data(class Data const *const data) {
-			OLED_LOCK(oled_lock);
-			OLED::home();
-			Display::print("Device ");
-			Display::println(Variable::device_id);
-			data->println();
-			OLED::display();
+			if (OLED::check_switch()) {
+				OLED_LOCK(oled_lock);
+				OLED::home();
+				Display::print("Device ");
+				Display::println(Variable::device_id);
+				data->println();
+				OLED::display();
+			}
 		}
 
 		[[noreturn]]

@@ -300,8 +300,8 @@ namespace LORA {
 					Display::print(device);
 					Display::print(" #");
 					Display::println(serial);
-					OLED::display();
 					data->println();
+					OLED::display();
 				}
 
 				class WIFI::upload__result const upload_result = WIFI::upload(device, serial, data);

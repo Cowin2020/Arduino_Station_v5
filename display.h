@@ -106,6 +106,7 @@ namespace OLED {
 	#if defined(ENABLE_OLED_OUTPUT)
 		extern void initialize(void);
 		extern void large_font(void);
+		extern bool check_switch(void);
 
 		inline static void home(int16_t const x = 0, int16_t const y = 0) {
 			SSD1306.clearDisplay();
@@ -149,11 +150,13 @@ namespace OLED {
 		}
 	#else
 		inline static void initialize(void) {
+			OLED_LOCK(oled_lock);
 			std::lock_guard<std::mutex> lock(mutex);
 			SSD1306.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR);
 			turn_off();
 		}
 		inline static void large_font(void) {}
+		inline static bool check_switch(void) {return true;}
 		inline static void home([[maybe_unused]] int16_t const x = 0, [[maybe_unused]] int16_t const y = 0) {}
 		inline static void println(void) {}
 		template <typename TYPE> inline void print([[maybe_unused]] TYPE const x) {}
