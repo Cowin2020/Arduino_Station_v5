@@ -72,13 +72,13 @@
 	[Setting::SHT40] = \
 		(char const *[]){ \
 			"SHT40_temperature", \
-			"SHT40_humitidy" \
+			"SHT40_humidity" \
 		}, \
 	[Setting::BME280] = \
 		(char const *[]) { \
 			"BME280_pressure", \
 			"BME280_temperature", \
-			"BME280_humitidy" \
+			"BME280_humidity" \
 		}, \
 	[Setting::LTR390] = \
 		(char const *[]) { \
