@@ -1,6 +1,12 @@
 #ifndef INCLUDE_DAEMON_H
 #define INCLUDE_DAEMON_H
 
+/*
+This module contains a group of processes (daemons) that execute in intervals
+of time.  There is a system to trace the sleep time of the processes and puts
+the CPU into sleep mode.
+*/
+
 /* ************************************************************************** */
 
 #include <atomic>
@@ -22,7 +28,6 @@ namespace DAEMON {
 		void notify(void);
 	};
 	namespace Schedule {
-		extern void loop(void);
 		extern void add_timer(struct Alarm *timer_alarm, char const *name);
 		extern void remove_timer(struct Alarm *timer_alarm);
 	}

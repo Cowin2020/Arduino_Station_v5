@@ -24,6 +24,9 @@
 	#define SEND_INTERVAL (ACK_TIMEOUT * (RESEND_TIMES + 2))
 #endif
 
+/*
+Random number in integer type TYPE.
+*/
 template <typename TYPE>
 static TYPE rand_int(void) {
 	TYPE x;
@@ -36,6 +39,9 @@ static TYPE rand_int(void) {
 namespace DAEMON {
 	static esp_pthread_cfg_t esp_pthread_cfg;
 
+	/*
+	Delay milliseconds using thread library.
+	*/
 	void thread_delay(Millisecond const ms) {
 		//	TickType_t const ticks = ms / portTICK_PERIOD_MS;
 		TickType_t const ticks = pdMS_TO_TICKS(ms);
@@ -43,6 +49,9 @@ namespace DAEMON {
 		//	std::this_thread::sleep_for(std::chrono::duration<Millisecond, std::milli>(ms));
 	}
 
+	/*
+	Let other threads to run.
+	*/
 	static void yield(void) {
 		vTaskDelay(1);
 		//	taskYIELD();
@@ -55,8 +64,15 @@ namespace DAEMON {
 		condition_variable.notify_all();
 	}
 
+	/*
+	Scheduler traces sleep/wake statues of every "daemon"s.
+	*/
 	namespace Schedule {
+		/*
+		Data structure to trace sleep/wake timing.
+		*/
 		struct Timer {
+			/* Notify the alarm when to wake up the daemon.  */
 			struct Alarm *alarm;
 			Millisecond start, duration;
 			#if !defined(NDEBUG)
@@ -64,8 +80,11 @@ namespace DAEMON {
 			#endif
 		};
 
+		/* This alarm is for the scheduler */
 		static struct Alarm alarm;
+		/* Timer list of daemons */
 		static std::vector<struct Timer> timer_list;
+		/* MutEx of the scheduler */
 		static std::mutex timer_mutex;
 
 		void add_timer(struct Alarm *const timer_alarm, char const *const name) {
@@ -94,6 +113,9 @@ namespace DAEMON {
 			alarm.notify();
 		}
 
+		/*
+		Put the thread to sleep, and then woken up by an alarm after a duration.
+		*/
 		static void sleep(struct Alarm *const timer_alarm, Millisecond const duration) {
 			{
 				Millisecond now = millis();
@@ -114,13 +136,16 @@ namespace DAEMON {
 			timer_alarm->condition_variable.wait(lock, [timer_alarm] {return timer_alarm->wake.load();});
 		}
 
+		/*
+		Put the thread to sleep, but prevent the CPU to go into sleep mode.
+		*/
 		static void idle(struct Alarm *const timer_alarm, Millisecond const duration) {
 			timer_alarm->sleepless.store(true);
 			sleep(timer_alarm, duration);
 			timer_alarm->sleepless.store(false);
 		}
 
-		void loop(void) {
+		static void loop(void) {
 			thread_delay(START_DELAY + IDLE_INTERVAL);
 			for (;;)
 				try {
@@ -179,6 +204,9 @@ namespace DAEMON {
 		}
 	}
 
+	/*
+	Check LoRa device.  It runs as long as the device is not sleeping.
+	*/
 	namespace LoRa {
 		[[noreturn]]
 		void loop(void) {
@@ -193,6 +221,10 @@ namespace DAEMON {
 		}
 	}
 
+	/*
+	Send current time through LoRa for synchronization of real-time-clock.
+	Only run on gateway.
+	*/
 	namespace Time {
 		static struct Alarm alarm;
 
@@ -225,6 +257,10 @@ namespace DAEMON {
 		}
 	}
 
+	/*
+	Ask for synchonization of real-time-clock.
+	Not run on gateway.
+	*/
 	namespace AskTime {
 		static std::atomic<Millisecond> last_synchronization(0);
 		static struct Alarm alarm;
@@ -249,6 +285,9 @@ namespace DAEMON {
 		}
 	}
 
+	/*
+	Upload data to gateway through LoRa.
+	*/
 	namespace Push {
 		static struct Alarm alarm;
 		static std::atomic<SerialNumber> current_serial(0);
@@ -272,6 +311,10 @@ namespace DAEMON {
 			return true;
 		}
 
+		/*
+		Add a data record to be sent.
+		The data is stored in SD card if possible, or in a single variable.
+		*/
 		static void add_data(class Data const *const data) {
 			#if defined(ENABLE_SDCARD)
 				SDCard::add_data(data);
@@ -284,6 +327,9 @@ namespace DAEMON {
 			#endif
 		}
 
+		/*
+		Read a data record stored by add_data().
+		*/
 		static bool read_data(class Data *const data) {
 			#if defined(ENABLE_SDCARD)
 				return SDCard::read_data(data);
@@ -295,6 +341,9 @@ namespace DAEMON {
 			#endif
 		}
 
+		/*
+		Make the next read_data() to read the next data record.
+		*/
 		static void next_data(void) {
 			#if defined(ENABLE_SDCARD)
 				SDCard::next_data();
@@ -304,6 +353,12 @@ namespace DAEMON {
 			#endif
 		}
 
+		/*
+		Send a data record to upper stream.
+		For gateway, the data is directly uploaded to the data server through
+		Wi-Fi and internet.
+		For non-gateway, the data is sent to gateway through LoRa.
+		*/
 		static void send_data(class Data const *data) {
 			if (Variable::enable_gateway) {
 				struct WIFI::upload__result const upload_result =
@@ -347,6 +402,9 @@ namespace DAEMON {
 			}
 		}
 
+		/*
+		Called when the data sevrer confirmed a data record is received.
+		*/
 		void ack(SerialNumber const serial) {
 			acked_serial.store(serial);
 			OLED_LOCK(oled_lock);
@@ -387,6 +445,9 @@ namespace DAEMON {
 		}
 	}
 
+	/*
+	Clean up old data from the SD card.
+	*/
 	namespace CleanLog {
 		static struct Alarm alarm;
 
@@ -405,6 +466,9 @@ namespace DAEMON {
 		}
 	}
 
+	/*
+	Update the OLED display.
+	*/
 	namespace Dashboard {
 		static struct Alarm alarm;
 		static class Data *data = nullptr;
@@ -460,6 +524,9 @@ namespace DAEMON {
 		}
 	}
 
+	/*
+	Measure data from sensor.
+	*/
 	namespace Measure {
 		static struct Alarm alarm;
 
@@ -501,6 +568,9 @@ namespace DAEMON {
 		}
 	}
 
+	/*
+	Run all daemons in system threads.
+	*/
 	void run(void) {
 		esp_pthread_cfg = esp_pthread_get_default_config();
 		esp_pthread_cfg.stack_size = 4096;
@@ -533,10 +603,14 @@ namespace DAEMON {
 			#endif
 		}
 
+		/* Run scheduler */
 		esp_pthread_set_cfg(&esp_pthread_cfg);
 		std::thread(Schedule::loop).detach();
 	}
 
+	/*
+	Initialize all daemons.
+	*/
 	bool initialize(void) {
 		if (!Push::initialize()) return false;
 		return true;
