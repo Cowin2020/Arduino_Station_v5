@@ -1,3 +1,16 @@
+device_id.h
+===========
+
+DEVICE_ID
+---------
+
+Device identity.
+
+Always 0 for gateway, and 1-255 for non-gateways.
+
+device_device.h
+===============
+
 ENABLE_GATEWAY, ENABLE_MEASURE
 ------------------------------
 
@@ -443,3 +456,83 @@ OLED_WIDTH and OLED_HEIGHT
 The dimension of OLED display
 
 Type: positive numbers
+
+CONFIG.INI on SD card
+=====================
+
+DEVICE_ID
+---------
+
+Same as in file "config_id.h".
+
+Always 0 for gateway, and 1-255 for non-gateways.
+
+OPERATION_MODE
+--------------
+
+Select operation as the functions of "ENABLE_GATEWAY" and "ENABLE_MEASURE" in
+file "config_device.h".
+
+"GATEWAY" for gateway.
+"MEASURE" for measurement devices.
+"BOTH" for working as both gateway and measurement.
+
+Device ID is set to 0 if in gateway mode.
+
+SECRET_KEY
+----------
+
+Secret key for encryption of LoRa communication as in file "config_device.h".
+
+Need to be same for both gateway and terminal sides.
+
+The string set here will be compressed into a 16-byte key.
+
+The key saved by the device may look different from that in "config_device.h",
+but it will be the same after read back and compress into 16-byte key.
+
+WIFI_SSID, WIFI_PASS
+--------------------
+
+WiFi access point and password as in file "config_device.h".
+
+HTTP_UPLOAD_HOST_PATH, HTTP_UPLOAD_QUERY
+----------------------------------------
+
+Same as those in file "config_device.h".
+
+HTTP_AUTHORIZATION_TYPE, HTTP_AUTHORIZATION_USER, HTTP_AUTHORIZATION_PASS
+-------------------------------------------------------------------------
+
+Same as those in file "config_device.h".
+
+SITE_CODE
+---------
+
+Identifier of the measurement site as in file "config_device.h".
+
+LOCAL_TIMEZONE
+--------------
+
+Time zone (in hours) of the measurement location as in file "config_device.h".
+
+MEASURE_INTERVAL/second
+-----------------------
+
+Period in seconds to measure data.
+It is different from that in file "config_device.h" which is in milliseconds.
+
+ACTIVE_SENSORS
+--------------
+
+List of sensors in use.
+A parameter can be send to device procedures by putting ":" and value after the
+sensor number.
+
+For example,
+ACTIVE_SENSORS=1:3,3,4
+Sensor 1 is battery-meter. ":3" means MAX17048 for battery-meter.
+Sensor 3 is SHT40.
+Sensor 4 is BME280.
+
+The list of sensors can be found in file "device.h".
