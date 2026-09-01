@@ -52,3 +52,36 @@ Create "config_device.h" in the root directory of repository.
 The file "config_device.h.example" is an example of "config_device.h".
 
 Please check "doc/CONFIG.TXT" for the options in config files.
+
+Program files
+=============
+
+Main Arduino program
+--------------------
+
+Arduino_Station_v5.ino
+	main program
+config_id.h.example, config_device.h.example
+	example of config files
+daemon.h, daemon.cpp
+	procedures that run in every period of time
+device.h, device.cpp
+	sensors, real-time clock, NTP and data record
+comm.h, comm.cpp
+	LoRa communication
+inet.h, inet.cpp
+	internet and Wi-Fi
+sdcard.h, sdcard.cpp
+	SD card
+display.h, device.cpp
+	serial port, OLED display
+basic.h, basic.cpp
+	general data type and utility procedures
+variable.h, variable.cpp
+	global variables of configuration
+
+Utility
+-------
+
+secret_key.rs
+	encode/decode secret_key stored in CONFIG.INI in SD card
