@@ -540,11 +540,6 @@ namespace LORA {
 		void packet(void) {
 			signed int const parse_size = locked_parse_packet();
 			if (parse_size < 1) return;
-			{
-				DEBUG_LOCK(debug_lock);
-				Debug::print("DEBUG: LORA::Receive::packet packet_size = ");
-				Debug::println(parse_size);
-			}
 			size_t const packet_size = static_cast<size_t>(LoRa.available());
 			if (packet_size != static_cast<size_t>(parse_size)) {
 				DISPLAY_LOCK(display_lock);
@@ -557,8 +552,11 @@ namespace LORA {
 				Display::println("ERROR: LORA::Receive::packet unable read data from LoRa");
 				return;
 			}
-			RNG.stir(buffer.data(), buffer.size(), buffer.size() << 2);
+			RNG.stir(buffer.data(), buffer.size(), buffer.size() << 1);
 			std::thread(decode_thread, buffer).detach();
+			DEBUG_LOCK(debug_lock);
+			Debug::print("DEBUG: LORA::Receive::packet packet_size = ");
+			Debug::println(parse_size);
 		}
 	}
 }
