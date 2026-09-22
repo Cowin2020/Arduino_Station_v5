@@ -47,15 +47,11 @@ namespace OLED {
 
 	void turn_on(void) {
 		OLED_LOCK(oled_lock);
-		SSD1306.ssd1306_command(SSD1306_CHARGEPUMP);
-		SSD1306.ssd1306_command(0x14);
 		SSD1306.ssd1306_command(SSD1306_DISPLAYON);
 	}
 
 	void turn_off(void) {
 		OLED_LOCK(oled_lock);
-		SSD1306.ssd1306_command(SSD1306_CHARGEPUMP);
-		SSD1306.ssd1306_command(0x10);
 		SSD1306.ssd1306_command(SSD1306_DISPLAYOFF);
 	}
 
@@ -86,17 +82,19 @@ namespace OLED {
 				static bool switched_off = false;
 				if (digitalRead(ENABLE_OLED_SWITCH) == LOW) {
 					if (!switched_off) {
-						Debug::println("DEBUG: OLED switch off");
-						OLED::turn_off();
 						switched_off = true;
+						OLED::turn_off();
+						DEBUG_LOCK(debug_lock);
+						Debug::println("DEBUG: OLED switch off");
 					}
 					return false;
 				}
 				else {
 					if (switched_off) {
-						Debug::println("DEBUG: OLED switch on");
-						OLED::turn_on();
 						switched_off = false;
+						OLED::turn_on();
+						DEBUG_LOCK(debug_lock);
+						Debug::println("DEBUG: OLED switch on");
 					}
 					return true;
 				}
