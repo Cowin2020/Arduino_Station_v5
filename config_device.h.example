@@ -110,12 +110,12 @@
 #define START_DELAY 1000UL /* milliseconds */
 #define IDLE_INTERVAL 123UL /* milliseconds */
 #define ACK_TIMEOUT 1000UL /* milliseconds */
-#define RESEND_TIMES 3
-#define SEND_INTERVAL 6000UL /* milliseconds */ /* MUST: > ACK_TIMEOUT * (RESEND_TIMES + 1) */
-#define MEASURE_INTERVAL 60000UL /* milliseconds */ /* MUST: > SEND_INTERVAL */
+#define RESEND_TIMES 2
+#define SEND_INTERVAL 3000UL /* milliseconds */ /* SHOULD: > ACK_TIMEOUT * 2 */
+#define MEASURE_INTERVAL 60000UL /* milliseconds */ /* MUST: > SEND_INTERVAL + ACK_TIMEOUT */
 //	#define SEND_IDLE_INTERVAL (MEASURE_INTERVAL * 10)
 #define SEND_IDLE_INTERVAL MEASURE_INTERVAL
-//	#define SEND_IDLE_INTERVAL SEND_INTERVAL
+//	#define SEND_IDLE_INTERVAL (SEND_INTERVAL * 2)
 #define SYNCHONIZE_INTERVAL 12345678UL /* milliseconds */
 #define SYNCHONIZE_TIMEOUT 1234UL /* milliseconds */ /* MUST: > SYNCHONIZE_INTERVAL */
 #define CLEANLOG_INTERVAL 21600000UL /* milliseconds */

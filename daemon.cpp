@@ -21,7 +21,7 @@
 /* ************************************************************************** */
 
 #if !defined(SEND_INTERVAL)
-	#define SEND_INTERVAL (ACK_TIMEOUT * (RESEND_TIMES + 2))
+	#define SEND_INTERVAL (ACK_TIMEOUT * 2)
 #endif
 
 /*
@@ -276,8 +276,9 @@ namespace DAEMON {
 			for (;;)
 				try {
 					LORA::Send::ASKTIME(false, Variable::device_id);
-					thread_delay(SYNCHONIZE_TIMEOUT);
-					Schedule::sleep(&alarm, SYNCHONIZE_INTERVAL - SYNCHONIZE_TIMEOUT + rand_int<uint8_t>());
+					Schedule::idle(&alarm, SYNCHONIZE_TIMEOUT);
+					uint16_t const variation = rand_int<uint16_t>();
+					Schedule::sleep(&alarm, SYNCHONIZE_INTERVAL - SYNCHONIZE_TIMEOUT + variation);
 				}
 				catch (...) {
 					COM::println("ERROR: DAEMON::AskTime::loop exception thrown");
@@ -396,7 +397,8 @@ namespace DAEMON {
 						LORA::next_receiver();
 						break;
 					}
-					Schedule::sleep(&alarm, SEND_INTERVAL);
+					Millisecond const variation = rand_int<Millisecond>() % ACK_TIMEOUT;
+					Schedule::sleep(&alarm, SEND_INTERVAL + variation);
 					++t;
 				}
 			}
@@ -422,8 +424,11 @@ namespace DAEMON {
 					if (read_data(data)) {
 						send_success.store(false);
 						send_data(data);
-						Debug::print("DEBUG: DAEMON::Push::loop send_success=");
-						Debug::println((int)send_success.load());
+						{
+							DEBUG_LOCK(debug_lock);
+							Debug::print("DEBUG: DAEMON::Push::loop send_success=");
+							Debug::println((int)send_success.load());
+						}
 						#if SEND_IDLE_INTERVAL > SEND_INTERVAL
 							if (!send_success.load())
 								Schedule::sleep(&alarm, SEND_IDLE_INTERVAL);

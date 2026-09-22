@@ -404,7 +404,11 @@ namespace LORA {
 		}
 
 		static void decode(std::vector<uint8_t> const packet) {
-			static size_t const overhead_size = sizeof (PacketType) + sizeof (Device) + CIPHER_IV_LENGTH + CIPHER_TAG_SIZE;
+			static size_t const overhead_size =
+				sizeof (PacketType)
+				+ sizeof (Device)
+				+ CIPHER_IV_LENGTH
+				+ CIPHER_TAG_SIZE;
 			if (packet.size() < overhead_size) {
 				DEBUG_LOCK(debug_lock);
 				Debug::print("DEBUG: LORA::Receive::decode packet too short ");

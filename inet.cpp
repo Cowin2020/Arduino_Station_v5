@@ -129,7 +129,8 @@ namespace WIFI {
 					);
 				HTTP_client.setAuthorizationType(Variable::http_authorization_type.c_str());
 				HTTP_client.setAuthorization(credential.c_str());
-			} else {
+			}
+			else {
 				HTTP_client.setAuthorizationType(Variable::http_authorization_type.c_str());
 				HTTP_client.setAuthorization(Variable::http_authorization_pass.c_str());
 			}
