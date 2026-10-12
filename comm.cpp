@@ -295,7 +295,7 @@ namespace LORA {
 				std::memcpy(memory, content.data() + overhead_size, Data::total_size);
 				{
 					DISPLAY_LOCK(display_lock);
-					OLED::home();
+					OLED::clear();
 					Display::print("Receive ");
 					Display::print(device);
 					Display::print(" #");

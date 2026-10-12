@@ -24,6 +24,10 @@
 	#define SEND_INTERVAL (ACK_TIMEOUT * 2)
 #endif
 
+#if !defined(OLED_ROTATION) || !(OLED_ROTATION & 1)
+	#define OLED_HORIZONAL
+#endif
+
 /*
 Random number in integer type TYPE.
 */
@@ -244,7 +248,7 @@ namespace DAEMON {
 						LORA::Send::TIME(false, &fulltime);
 
 						OLED_LOCK(oled_lock);
-						OLED::home();
+						OLED::clear();
 						Display::print("Synchronize: ");
 						Display::println(String(fulltime));
 						OLED::display();
@@ -478,20 +482,13 @@ namespace DAEMON {
 		static struct Alarm alarm;
 		static class Data *data = nullptr;
 
-		#if defined(OLED_ROTATION) && !(OLED_ROTATION & 1)
-			#define OLED_HORIZONAL
-		#endif
-
 		static void show(void) {
 			OLED_LOCK(oled_lock);
-			#if defined(OLED_HORIZONAL)
-				OLED::home(0, 0);
-			#else
-				OLED::home(0, 10);
-			#endif
+			OLED::clear();
 			OLED::print("Dev");
-			#if defined(OLED_HORIZONAL)
+			#if !defined(LARGE_FONT)
 				OLED::print(' ');
+			#elif defined(OLED_HORIZONAL)
 			#endif
 			data->dashboard();
 			if (Push::send_success.load())
@@ -505,7 +502,7 @@ namespace DAEMON {
 				data = reinterpret_cast<class Data *>(memory);
 				Schedule::add_timer(&alarm, "DAEMON::Dashboard");
 				Schedule::sleep(&alarm, Variable::measure_interval + DASHBOARD_INTERVAL + START_DELAY);
-				#if !defined(OLED_HORIZONAL) && defined(LARGE_FONT)
+				#if defined(LARGE_FONT)
 					OLED::large_font();
 				#endif
 				for (;;)
@@ -538,7 +535,7 @@ namespace DAEMON {
 		static void print_data(class Data const *const data) {
 			if (OLED::check_switch()) {
 				OLED_LOCK(oled_lock);
-				OLED::home();
+				OLED::clear();
 				Display::print("Device ");
 				Display::println(Variable::device_id);
 				data->println();

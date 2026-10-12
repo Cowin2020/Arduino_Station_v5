@@ -107,10 +107,27 @@ namespace OLED {
 		extern void initialize(void);
 		extern void large_font(void);
 		extern bool check_switch(void);
+		extern void copy_half(void);
 
-		inline static void home(int16_t const x = 0, int16_t const y = 0) {
+		inline static void home(void) {
+			#if defined(LARGE_FONT)
+				SSD1306.setCursor(0, 10);
+			#else
+				SSD1306.setCursor(0, 0);
+			#endif
+		}
+
+		inline static void home1(void) {
+			#if defined(LARGE_FONT)
+				SSD1306.setCursor(0, 27);
+			#else
+				SSD1306.setCursor(0, 8);
+			#endif
+		}
+
+		inline static void clear(void) {
 			SSD1306.clearDisplay();
-			SSD1306.setCursor(x, y);
+			home();
 		}
 
 		inline static void println(void) {
@@ -156,8 +173,11 @@ namespace OLED {
 			turn_off();
 		}
 		inline static void large_font(void) {}
-		inline static bool check_switch(void) {return true;}
-		inline static void home([[maybe_unused]] int16_t const x = 0, [[maybe_unused]] int16_t const y = 0) {}
+		inline static bool check_switch(void) {return false;}
+		inline static void copy_half(void) {}
+		inline static void home(void) {}
+		inline static void home1(void) {}
+		inline static void clear(void) {}
 		inline static void println(void) {}
 		template <typename TYPE> inline void print([[maybe_unused]] TYPE const x) {}
 		template <typename TYPE> inline void println([[maybe_unused]] TYPE const x) {}

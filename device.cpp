@@ -8,13 +8,8 @@
 
 /* ************************************************************************** */
 
-#if defined(ENABLE_SHT40)
-	inline static float correct_SHT_temperature(float measured_value) {
-		float slope = 1.000;
-		float intercept = 0.000;
-		float corrected_value = slope * measured_value + intercept;
-		return corrected_value;
-	}
+#if !defined(OLED_ROTATION) || !(OLED_ROTATION & 1)
+	#define OLED_HORIZONAL
 #endif
 
 #define PH_SAMPLE_SIZE 12
@@ -72,7 +67,7 @@
 std::mutex device_mutex;
 
 inline static void OLED_space_or_newline(void) {
-	#if defined(OLED_HORIZONAL)
+	#if defined(OLED_HORIZONAL) && !defined(LARGE_FONT)
 		OLED::print(' ');
 	#else
 		OLED::println();
@@ -486,13 +481,16 @@ void Data::dashboard(void) const {
 	OLED::println(static_cast<unsigned int>(Variable::device_id));
 	struct FullTime time = *this->get_time();
 	time += Variable::local_timezone;
-	#if defined(OLED_HORIZONAL)
+	#if !defined(LARGE_FONT)
 		OLED::print(static_cast<unsigned int>(time.day));
 		OLED::print('/');
 		OLED::print(static_cast<unsigned int>(time.month));
 		OLED::print('/');
 		OLED::println(time.year);
 	#else
+		#if defined(OLED_HORIZONAL)
+			OLED::home1();
+		#endif
 		OLED::println(time.year);
 		OLED::print(static_cast<unsigned int>(time.day));
 		OLED::print('/');
@@ -503,8 +501,11 @@ void Data::dashboard(void) const {
 	OLED::print(':');
 	if (time.minute < 10) OLED::print('0');
 	OLED::println(static_cast<unsigned int>(time.minute));
-	#if defined(OLED_HORIZONAL)
+	#if !defined(OLED_HORIZONAL) && !defined(LARGE_FONT)
 		OLED::println();
+	#elif defined(OLED_HORIZONAL) && defined(LARGE_FONT)
+		OLED::copy_half();
+		OLED::home();
 	#endif
 
 	static unsigned int sensor = 0;
@@ -540,6 +541,15 @@ void Data::dashboard(void) const {
 /* ************************************************************************** */
 
 namespace Sensor {
+	#if defined(ENABLE_SHT40)
+		inline static float correct_SHT_temperature(float measured_value) {
+			float slope = 1.000;
+			float intercept = 0.000;
+			float corrected_value = slope * measured_value + intercept;
+			return corrected_value;
+		}
+	#endif
+
 	bool initialize(void) {
 		if (!RTC::initialize()) return false;
 		if (!Variable::enable_measure) return true;

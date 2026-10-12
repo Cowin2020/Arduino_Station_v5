@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include <Fonts/FreeMono9pt7b.h>
 
 #include "display.h"
@@ -99,6 +101,31 @@ namespace OLED {
 					return true;
 				}
 			#endif
+		}
+
+		void copy_half(void) {
+			uint8_t *const m = SSD1306.getBuffer();
+			size_t const W2 = OLED_WIDTH >> 1;
+			size_t const H8 = OLED_HEIGHT >> 3;
+			switch (SSD1306.getRotation()) {
+			case 0:
+			case 1:
+				for (size_t y = 0; y < H8; ++y) {
+					uint8_t *const p = m + y * OLED_WIDTH;
+					uint8_t *const p2 = p + W2;
+					std::memcpy(p2, p, W2);
+					std::memset(p, 0, W2);
+				}
+				break;
+			case 2:
+			case 3:
+				for (size_t y = 0; y < H8; ++y) {
+					uint8_t *const p = m + y * OLED_WIDTH;
+					uint8_t *const p2 = p + W2;
+					std::memcpy(p, p2, W2);
+					std::memset(p2, 0, W2);
+				}
+			}
 		}
 	#endif
 }
