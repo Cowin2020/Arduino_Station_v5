@@ -58,8 +58,9 @@ namespace Setting {
 		MAX17048  = 3
 	};
 	enum LTR390 : unsigned int {
-		ALS = 1,
-		UVS = 2
+		ALS     = 1,
+		UVS     = 2,
+		ALS_UVS = 3
 	};
 
 	extern class std::optional<unsigned int> active_sensors[static_cast<unsigned int>(sensor::num_of_sensors)];

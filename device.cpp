@@ -1,5 +1,6 @@
 #include <climits>
 #include <stdexcept>
+#include <cmath>
 
 #include "variable.h"
 #include "display.h"
@@ -11,8 +12,6 @@
 #if !defined(OLED_ROTATION) || !(OLED_ROTATION & 1)
 	#define OLED_HORIZONAL
 #endif
-
-#define PH_SAMPLE_SIZE 12
 
 /* ************************************************************************** */
 /* Include headers of libraries and define related global variables */
@@ -93,7 +92,7 @@ namespace Setting {
 	static class String FIELD_INT_print(void const *const memory) {
 		FIELD_INT_write(memory);
 	}
-	static constexpr struct FieldAccess const FIELD_INT = {
+	static constexpr struct FieldAccess FIELD_INT = {
 		sizeof (float),
 		FIELD_INT_read,
 		FIELD_INT_write,
@@ -113,7 +112,7 @@ namespace Setting {
 	static class String FIELD_FLOAT_print(void const *const memory) {
 		return FIELD_FLOAT_write(memory);
 	}
-	static constexpr struct FieldAccess const FIELD_FLOAT = {
+	static constexpr struct FieldAccess FIELD_FLOAT = {
 		sizeof (float),
 		FIELD_FLOAT_read,
 		FIELD_FLOAT_write,
@@ -123,7 +122,7 @@ namespace Setting {
 	static class String FIELD_FLOAT_h_print(void const *const memory) {
 		return String(*static_cast<float const *>(memory) * 0.01, 0);
 	}
-	static constexpr struct FieldAccess const FIELD_FLOAT_h = {
+	static constexpr struct FieldAccess FIELD_FLOAT_h = {
 		sizeof (float),
 		FIELD_FLOAT_read,
 		FIELD_FLOAT_write,
@@ -546,12 +545,77 @@ void Data::dashboard(void) const {
 
 namespace Sensor {
 	#if defined(ENABLE_SHT40)
-		inline static float correct_SHT_temperature(float measured_value) {
+		inline static float SHT40_correct_temperature(float measured_value) {
 			float slope = 1.000;
 			float intercept = 0.000;
 			float corrected_value = slope * measured_value + intercept;
 			return corrected_value;
 		}
+	#endif
+
+	#if defined(ENABLE_LTR390)
+		constexpr float LTR390_ambient_window = 1.0;
+		constexpr float LTR390_ultraviolet_window = 1.0;
+
+		inline static float LTR390_get_gain(class Adafruit_LTR390 *const LTR) {
+			switch (LTR->getGain()) {
+			case LTR390_GAIN_1:
+				return 1.0;
+			case LTR390_GAIN_3:
+				return 3.0;
+			case LTR390_GAIN_6:
+				return 6.0;
+			case LTR390_GAIN_9:
+				return 9.0;
+			case LTR390_GAIN_18:
+				return 18.0;
+			default:
+				return NAN;
+			}
+		}
+
+		inline static unsigned int LTR390_get_resolution(class Adafruit_LTR390 *const LTR) {
+			switch (LTR->getResolution()) {
+			case LTR390_RESOLUTION_20BIT:
+				return 20;
+			case LTR390_RESOLUTION_19BIT:
+				return 19;
+			case LTR390_RESOLUTION_18BIT:
+				return 18;
+			case LTR390_RESOLUTION_17BIT:
+				return 17;
+			case LTR390_RESOLUTION_16BIT:
+				return 16;
+			case LTR390_RESOLUTION_13BIT:
+				return 13;
+			default:
+				return 0;
+			}
+		}
+
+		inline static float LTR390_get_integration(class Adafruit_LTR390 *const LTR) {
+			int const resolution = LTR390_get_resolution(LTR);
+			if (!resolution) return NAN;
+			return ldexpf(1.0, resolution - 18);
+		}
+
+		inline static float LTR390_get_lux(class Adafruit_LTR390 *const LTR) {
+			constexpr float LTR390_ambient_factor = 0.6 * LTR390_ambient_window;
+			uint32_t const data = LTR->readALS();
+			float const gain = LTR390_get_gain(LTR);
+			float const integration = LTR390_get_integration(LTR);
+			return (LTR390_ambient_factor * data) / (gain * integration);
+		}
+
+		inline static float LTR390_get_UVI(class Adafruit_LTR390 *const LTR) {
+			constexpr float LTR390_ultraviolet_sensitivity = 2.3E3;
+			constexpr float LTR390_ultraviolet_factor = LTR390_ultraviolet_window / LTR390_ultraviolet_sensitivity;
+			return LTR390_ultraviolet_factor * LTR->readUVS();
+		}
+	#endif
+
+	#if defined(ENABLE_PH)
+		constexpr size_t PH_sample_size = 12;
 	#endif
 
 	bool initialize(void) {
@@ -623,6 +687,8 @@ namespace Sensor {
 						break;
 					case Setting::LTR390::UVS:
 						LTR.setMode(LTR390_MODE_UVS);
+						break;
+					case Setting::LTR390::ALS_UVS:
 						break;
 					default:
 						Display::println("LTR390 setting invalid");
@@ -711,7 +777,7 @@ namespace Sensor {
 				float *const values = data->device_pointer<float>(Setting::sensor::SHT40);
 				sensors_event_t temperature_event, humidity_event;
 				SHT.getEvent(&humidity_event, &temperature_event);
-				values[0] = correct_SHT_temperature(temperature_event.temperature);
+				values[0] = SHT40_correct_temperature(temperature_event.temperature);
 				values[1] = humidity_event.relative_humidity;
 			}
 		#endif
@@ -735,6 +801,20 @@ namespace Sensor {
 					value[0] = LTR.readALS();
 				else if (type == Setting::LTR390::UVS)
 					value[1] = LTR.readUVS();
+				else if (type == Setting::LTR390::ALS_UVS) {
+					if (LTR.getMode() == LTR390_MODE_ALS) {
+						value[0] = LTR390_get_lux(&LTR);
+						LTR.setMode(LTR390_MODE_UVS);
+						delay(500);
+						value[1] = LTR390_get_UVI(&LTR);
+					}
+					else {
+						value[1] = LTR390_get_UVI(&LTR);
+						LTR.setMode(LTR390_MODE_ALS);
+						delay(500);
+						value[0] = LTR390_get_lux(&LTR);
+					}
+				}
 			}
 		#endif
 
@@ -755,20 +835,20 @@ namespace Sensor {
 			if (Setting::active_sensors[Setting::sensor::pH].has_value()) {
 				unsigned int const pin = Setting::active_sensors[Setting::sensor::pH].value();
 				float *const value = data->device_pointer<float>(Setting::sensor::pH);
-				int values[PH_SAMPLE_SIZE];
-				for (size_t i = 0; i < PH_SAMPLE_SIZE; ++i) {
+				int values[PH_sample_size];
+				for (size_t i = 0; i < PH_sample_size; ++i) {
 					values[i] = analogRead(pin);
 					delay(1);
 				}
 
-				for (size_t i = 1; i < PH_SAMPLE_SIZE; ++i)
+				for (size_t i = 1; i < PH_sample_size; ++i)
 					for (size_t j = i - 1; j < i; ++j)
 						if (values[i] < values[j]) {
 							int const x = values[i];
 							values[i] = values[j];
 							values[j] = x;
 						}
-				float pH = values[PH_SAMPLE_SIZE >> 1];
+				float pH = values[PH_sample_size >> 1];
 
 				float const temperature =
 					#if defined(ENABLE_DALLAS)
