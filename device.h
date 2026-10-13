@@ -42,7 +42,7 @@ extern std::mutex device_mutex;
 #endif
 
 namespace Setting {
-	enum sensor {
+	enum sensor : unsigned int {
 		battery   = 1,
 		Dallas    = 2,
 		SHT40     = 3,
@@ -52,13 +52,17 @@ namespace Setting {
 		pH        = 7,
 		num_of_sensors
 	};
-	enum battery {
+	enum battery : unsigned int {
 		LC709203F = 1,
 		MAX17043  = 2,
 		MAX17048  = 3
 	};
+	enum LTR390 : unsigned int {
+		ALS = 1,
+		UVS = 2
+	};
 
-	extern class std::optional<unsigned int> active_sensors[num_of_sensors];
+	extern class std::optional<unsigned int> active_sensors[static_cast<unsigned int>(sensor::num_of_sensors)];
 	extern char const *const *const upload_names[];
 	struct FieldAccess {
 		size_t size;
@@ -95,7 +99,7 @@ private:
 
 public:
 	static size_t total_size;
-	static size_t offset[Setting::num_of_sensors];
+	static size_t offset[static_cast<unsigned int>(Setting::sensor::num_of_sensors)];
 
 	static void initialize(void);
 

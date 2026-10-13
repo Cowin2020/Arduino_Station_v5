@@ -184,7 +184,7 @@ namespace SDCard {
 					try {
 						if (!log_file.position()) {
 							log_file.print("Time (local),Time (UTC),");
-							for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor)
+							for (unsigned int sensor = 1; sensor < Setting::sensor::num_of_sensors; ++sensor)
 								if (Setting::active_sensors[sensor].has_value()) {
 									unsigned int field = 0;
 									for (;;) {

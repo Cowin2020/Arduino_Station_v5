@@ -26,14 +26,14 @@
 #define ENABLE_TURBIDITY
 #define ENABLE_PH
 #define DEFAULT_ACTIVE_SENSORS { \
-	[0]         = std::nullopt, \
-	[battery]   = std::nullopt, \
-	[Dallas]    = std::nullopt, \
-	[SHT40]     = std::nullopt, \
-	[BME280]    = std::nullopt, \
-	[LTR390]    = std::nullopt, \
-	[turbidity] = std::nullopt, \
-	[pH]        = std::nullopt  \
+	[0]                 = std::nullopt, \
+	[sensor::battery]   = std::optional(battery::MAX17043), \
+	[sensor::Dallas]    = std::nullopt, \
+	[sensor::SHT40]     = std::nullopt, \
+	[sensor::BME280]    = std::nullopt, \
+	[sensor::LTR390]    = std::nullopt, \
+	[sensor::turbidity] = std::nullopt, \
+	[sensor::pH]        = std::nullopt  \
 }
 
 /* LoRa */
@@ -60,35 +60,36 @@
 #define HTTP_UPLOAD_FIELD_TIME "time"
 #define HTTP_UPLOAD_FIELDS { \
 	[0] = {}, \
-	[Setting::battery] = \
+	[Setting::sensor::battery] = \
 		(char const *[]){ \
 			"battery_voltage", \
 			"battery_percentage" \
 		}, \
-	[Setting::Dallas] = \
+	[Setting::sensor::Dallas] = \
 		(char const *[]){ \
 			"Dallas_temperature" \
 		}, \
-	[Setting::SHT40] = \
+	[Setting::sensor::SHT40] = \
 		(char const *[]){ \
 			"SHT40_temperature", \
 			"SHT40_humidity" \
 		}, \
-	[Setting::BME280] = \
+	[Setting::sensor::BME280] = \
 		(char const *[]) { \
 			"BME280_pressure", \
 			"BME280_temperature", \
 			"BME280_humidity" \
 		}, \
-	[Setting::LTR390] = \
+	[Setting::sensor::LTR390] = \
 		(char const *[]) { \
+			"LTR390_ambient", \
 			"LTR390_ultraviolet" \
 		}, \
-	[Setting::turbidity] = \
+	[Setting::sensor::turbidity] = \
 		(char const *[]) { \
 			"turbidity" \
 		}, \
-	[Setting::pH] = \
+	[Setting::sensor::pH] = \
 		(char const *[]) { \
 			"pH" \
 		} \
