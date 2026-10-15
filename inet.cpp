@@ -51,11 +51,11 @@ namespace WIFI {
 		return WiFi.status() == WL_CONNECTED;
 	}
 
-	size_t build_URL_querystring(char *const buffer, class Data const *const data, Setting::sensor const sensor) {
-		if (!Setting::active_sensors[sensor].has_value()) return 0;
-		char const *const *name = upload_names[sensor];
+	size_t build_URL_querystring(char *const buffer, class Data const *const data, enum Setting::sensor const sensor) {
+		if (!Setting::active_sensor(sensor).has_value()) return 0;
+		char const *const *name = upload_names[static_cast<size_t>(sensor)];
 		void const *value = data->device_pointer<void const>(sensor);
-		Setting::SensorField const *field = Setting::sensor_fields[sensor];
+		Setting::SensorField const *field = Setting::sensor_fields[static_cast<size_t>(sensor)];
 		size_t p = 0;
 		while (field->access.size) {
 			buffer[p++] = '&';
@@ -99,7 +99,8 @@ namespace WIFI {
 		p += append_buffer(URL + p, Variable::http_upload_field_time);
 		URL[p++] = '=';
 		p += append_buffer(URL + p, data->get_time()->to_UTC_string());
-		for (unsigned int sensor = 1; sensor < Setting::num_of_sensors; ++sensor)
+		unsigned int const num_of_sensors = static_cast<unsigned int>(Setting::sensor::num_of_sensors);
+		for (unsigned int sensor = 1; sensor < num_of_sensors; ++sensor)
 			p += build_URL_querystring(URL + p, data, static_cast<enum Setting::sensor>(sensor));
 		COM::print("Upload to ");
 		COM::println(URL);

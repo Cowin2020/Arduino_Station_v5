@@ -42,7 +42,7 @@ extern std::mutex device_mutex;
 #endif
 
 namespace Setting {
-	enum sensor : unsigned int {
+	enum sensor {
 		battery   = 1,
 		Dallas    = 2,
 		SHT40     = 3,
@@ -52,31 +52,37 @@ namespace Setting {
 		pH        = 7,
 		num_of_sensors
 	};
-	enum battery : unsigned int {
+	enum battery {
 		LC709203F = 1,
 		MAX17043  = 2,
 		MAX17048  = 3
 	};
-	enum LTR390 : unsigned int {
+	enum LTR390 {
 		ALS     = 1,
 		UVS     = 2,
 		ALS_UVS = 3
 	};
 
 	extern class std::optional<unsigned int> active_sensors[static_cast<unsigned int>(sensor::num_of_sensors)];
-	extern char const *const *const upload_names[];
+	inline class std::optional<unsigned int> active_sensor(enum sensor const sensor) {
+		return active_sensors[static_cast<unsigned int>(sensor)];
+	}
+
 	struct FieldAccess {
 		size_t size;
 		bool (*read)(void *memory, char const *string);
 		class String (*write)(void const *memory);
 		class String (*print)(void const *memory);
 	};
-	extern struct SensorField {
+
+	struct SensorField {
 		struct FieldAccess access;
 		char const *unit;
 		char const *label;
 		char const *description;
-	} const *const sensor_fields[];
+	};
+
+	extern struct SensorField const *const sensor_fields[];
 
 	extern void save(std::map<unsigned int, unsigned int> *map);
 	extern void load(std::map<unsigned int, unsigned int> const *map);
@@ -105,19 +111,21 @@ public:
 	static void initialize(void);
 
 	template <typename T>
-	inline T const *device_pointer(unsigned int const sensor) const {
-		return pointer_offset<T const, class Data const>(this, offset[sensor]);
+	inline T const *device_pointer(enum Setting::sensor const sensor) const {
+		return pointer_offset<T const, class Data const>(this, offset[static_cast<size_t>(sensor)]);
 	}
 	template <typename T>
-	inline T *device_pointer(unsigned int const sensor) {
-		return pointer_offset<T, class Data>(this, offset[sensor]);
+	inline T *device_pointer(enum Setting::sensor const sensor) {
+		return pointer_offset<T, class Data>(this, offset[static_cast<size_t>(sensor)]);
 	}
+
 	inline struct FullTime const *get_time(void) const {
 		return &this->time;
 	}
 	inline struct FullTime *get_time(void) {
 		return &this->time;
 	}
+
 	void writeln(class Print *print) const;
 	bool readln(class Stream *stream);
 	void println(void) const;

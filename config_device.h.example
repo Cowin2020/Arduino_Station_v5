@@ -1,7 +1,7 @@
 #ifndef INCLUDE_CONFIG_DEVICE_H
 #define INCLUDE_CONFIG_DEVICE_H
 
-#define ENABLE_GATEWAY
+//	#define ENABLE_GATEWAY
 #define ENABLE_MEASURE
 
 /* Debug */
@@ -27,13 +27,13 @@
 #define ENABLE_PH
 #define DEFAULT_ACTIVE_SENSORS { \
 	[0]                 = std::nullopt, \
-	[sensor::battery]   = std::optional(battery::MAX17043), \
-	[sensor::Dallas]    = std::nullopt, \
-	[sensor::SHT40]     = std::nullopt, \
-	[sensor::BME280]    = std::nullopt, \
-	[sensor::LTR390]    = std::nullopt, \
-	[sensor::turbidity] = std::nullopt, \
-	[sensor::pH]        = std::nullopt  \
+	[(size_t)sensor::battery]   = std::optional((unsigned)battery::MAX17043), \
+	[(size_t)sensor::Dallas]    = std::nullopt, \
+	[(size_t)sensor::SHT40]     = std::nullopt, \
+	[(size_t)sensor::BME280]    = std::nullopt, \
+	[(size_t)sensor::LTR390]    = std::nullopt, \
+	[(size_t)sensor::turbidity] = std::nullopt, \
+	[(size_t)sensor::pH]        = std::nullopt  \
 }
 
 /* LoRa */
@@ -60,36 +60,36 @@
 #define HTTP_UPLOAD_FIELD_TIME "time"
 #define HTTP_UPLOAD_FIELDS { \
 	[0] = {}, \
-	[Setting::sensor::battery] = \
+	[(size_t)Setting::sensor::battery] = \
 		(char const *[]){ \
 			"battery_voltage", \
 			"battery_percentage" \
 		}, \
-	[Setting::sensor::Dallas] = \
+	[(size_t)Setting::sensor::Dallas] = \
 		(char const *[]){ \
 			"Dallas_temperature" \
 		}, \
-	[Setting::sensor::SHT40] = \
+	[(size_t)Setting::sensor::SHT40] = \
 		(char const *[]){ \
 			"SHT40_temperature", \
 			"SHT40_humidity" \
 		}, \
-	[Setting::sensor::BME280] = \
+	[(size_t)Setting::sensor::BME280] = \
 		(char const *[]) { \
 			"BME280_pressure", \
 			"BME280_temperature", \
 			"BME280_humidity" \
 		}, \
-	[Setting::sensor::LTR390] = \
+	[(size_t)Setting::sensor::LTR390] = \
 		(char const *[]) { \
 			"LTR390_ambient", \
 			"LTR390_ultraviolet" \
 		}, \
-	[Setting::sensor::turbidity] = \
+	[(size_t)Setting::sensor::turbidity] = \
 		(char const *[]) { \
 			"turbidity" \
 		}, \
-	[Setting::sensor::pH] = \
+	[(size_t)Setting::sensor::pH] = \
 		(char const *[]) { \
 			"pH" \
 		} \
@@ -115,6 +115,7 @@
 #define SEND_INTERVAL 3000UL /* milliseconds */ /* SHOULD: > ACK_TIMEOUT * 2 */
 #define MEASURE_INTERVAL 60000UL /* milliseconds */ /* MUST: > SEND_INTERVAL + ACK_TIMEOUT */
 //	#define SEND_IDLE_INTERVAL (MEASURE_INTERVAL * 10)
+//	#define SEND_IDLE_INTERVAL (MEASURE_INTERVAL * 2)
 #define SEND_IDLE_INTERVAL MEASURE_INTERVAL
 //	#define SEND_IDLE_INTERVAL (SEND_INTERVAL * 2)
 #define SYNCHONIZE_INTERVAL 12345678UL /* milliseconds */

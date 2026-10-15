@@ -76,7 +76,7 @@ inline static void OLED_space_or_newline(void) {
 /* ************************************************************************** */
 
 namespace Setting {
-	class std::optional<unsigned int> active_sensors[sensor::num_of_sensors] =
+	class std::optional<unsigned int> active_sensors[static_cast<size_t>(sensor::num_of_sensors)] =
 		DEFAULT_ACTIVE_SENSORS;
 
 	static bool FIELD_INT_read(void *const memory, char const *const string) {
@@ -134,36 +134,36 @@ namespace Setting {
 			{{sizeof (struct FullTime)}},
 			{{0}}
 		},
-		[sensor::battery] = (struct SensorField const []){
+		[static_cast<size_t>(sensor::battery)] = (struct SensorField const []){
 			{FIELD_FLOAT,  "V", "Power", "Battery power (V)"},
 			{FIELD_FLOAT,  "%", "Power", "Battery power (%)"},
 			{{0}}
 		},
-		[sensor::Dallas] = (struct SensorField const []){
+		[static_cast<size_t>(sensor::Dallas)] = (struct SensorField const []){
 			{FIELD_FLOAT, "degC", "Dallas", "Dallas Temperature (degree C)"},
 			{{0}}
 		},
-		[sensor::SHT40] = (struct SensorField const []){
+		[static_cast<size_t>(sensor::SHT40)] = (struct SensorField const []){
 			{FIELD_FLOAT, "degC", "SHT40", "SHT40 Temperature (degree C)"},
 			{FIELD_FLOAT, "%RH",  "SHT40", "SHT40 Relative humidity (%)"},
 			{{0}}
 		},
-		[sensor::BME280] = (struct SensorField const []){
+		[static_cast<size_t>(sensor::BME280)] = (struct SensorField const []){
 			{FIELD_FLOAT_h, "hPa",  "BME280", "BME280 Air pressure (Pa)"},
 			{FIELD_FLOAT,   "degC", "BME280", "BME280 Temperature (degree C)"},
 			{FIELD_FLOAT,   "%RH",  "BME280", "BME280 Relative humidity (%)"},
 			{{0}}
 		},
-		[sensor::LTR390] = (struct SensorField const []){
+		[static_cast<size_t>(sensor::LTR390)] = (struct SensorField const []){
 			{FIELD_FLOAT, "lx",  "LTR390", "LTR390 ambient light (lux)"},
 			{FIELD_FLOAT, "UVI", "LTR390", "LTR390 UV index"},
 			{{0}}
 		},
-		[sensor::turbidity] = (struct SensorField const []){
+		[static_cast<size_t>(sensor::turbidity)] = (struct SensorField const []){
 			{FIELD_FLOAT, "%", "Turbi", "Turbidity"},
 			{{0}}
 		},
-		[sensor::pH] = (struct SensorField const []){
+		[static_cast<size_t>(sensor::pH)] = (struct SensorField const []){
 			{FIELD_FLOAT, "", "pH", "pH"},
 			{{0}}
 		}
@@ -171,7 +171,7 @@ namespace Setting {
 
 	void save(std::map<unsigned int, unsigned int> *const map) {
 		map->clear();
-		unsigned int const num_of_sensors = sensor::num_of_sensors;
+		unsigned int const num_of_sensors = static_cast<unsigned int>(sensor::num_of_sensors);
 		for (unsigned int i = 1; i < num_of_sensors; ++i)
 			if (active_sensors[i].has_value())
 				(*map)[i] = active_sensors[i].value();
@@ -179,7 +179,7 @@ namespace Setting {
 
 	void load(std::map<unsigned int, unsigned int> const *const map) {
 		active_sensors[0] = std::optional(UINT_MAX);
-		unsigned int const num_of_sensors = sensor::num_of_sensors;
+		unsigned int const num_of_sensors = static_cast<unsigned int>(sensor::num_of_sensors);
 		for (unsigned int i = 1; i < num_of_sensors; ++i) {
 			std::map<unsigned int, unsigned int>::const_iterator found = map->find(i);
 			if (found == map->end())
@@ -376,11 +376,12 @@ namespace NTP {
 /* ************************************************************************** */
 
 size_t Data::total_size;
-size_t Data::offset[Setting::sensor::num_of_sensors];
+size_t Data::offset[static_cast<size_t>(Setting::sensor::num_of_sensors)];
 
 void Data::initialize(void) {
 	total_size = 0;
-	for (unsigned int sensor = 0; sensor < Setting::sensor::num_of_sensors; ++sensor) {
+	unsigned int const num_of_sensors = static_cast<unsigned int>(Setting::sensor::num_of_sensors);
+	for (unsigned int sensor = 0; sensor < num_of_sensors; ++sensor) {
 		size_t device_size = 0;
 		size_t field = 0;
 		for (;;) {
@@ -403,7 +404,8 @@ void Data::writeln(class Print *const print) const {
 
 	/* write measured values across all fields of all active sensors */
 	void const *p = pointer_offset<void const, class Data const>(this, offset[1]);
-	for (unsigned int sensor = 1; sensor < Setting::sensor::num_of_sensors; ++sensor) {
+	unsigned int const num_of_sensors = static_cast<unsigned int>(Setting::sensor::num_of_sensors);
+	for (unsigned int sensor = 1; sensor < num_of_sensors; ++sensor) {
 		if (Setting::active_sensors[sensor].has_value()) {
 			size_t field = 0;
 			for (;;) {
@@ -438,7 +440,8 @@ bool Data::readln(class Stream *const stream) {
 	/* read fields of all active sensors */
 	{
 		void *p = pointer_offset<void, class Data>(this, offset[1]);
-		for (unsigned int sensor = 1; sensor < Setting::sensor::num_of_sensors; ++sensor) {
+		unsigned int const num_of_sensors = static_cast<unsigned int>(Setting::sensor::num_of_sensors);
+		for (unsigned int sensor = 1; sensor < num_of_sensors; ++sensor) {
 			if (Setting::active_sensors[sensor].has_value()) {
 				size_t field = 0;
 				for (;;) {
@@ -463,7 +466,8 @@ void Data::println(void) const {
 
 	/* print values across all fields of all active sensors */
 	void const *p = pointer_offset<void const, class Data const>(this, offset[1]);
-	for (unsigned int sensor = 1; sensor < Setting::sensor::num_of_sensors; ++sensor) {
+	unsigned int const num_of_sensors = static_cast<unsigned int>(Setting::sensor::num_of_sensors);
+	for (unsigned int sensor = 1; sensor < num_of_sensors; ++sensor) {
 		if (Setting::active_sensors[sensor].has_value()) {
 			size_t field = 0;
 			for (;;) {
@@ -533,7 +537,7 @@ void Data::dashboard(void) const {
 	while (!Setting::active_sensors[sensor].has_value() || !Setting::sensor_fields[sensor][field].access.size) {
 		field = 0;
 		++sensor;
-		if (sensor >= Setting::sensor::num_of_sensors) {
+		if (sensor >= static_cast<unsigned int>(Setting::sensor::num_of_sensors)) {
 			sensor = 0;
 			offset = 0;
 			break;
@@ -545,77 +549,83 @@ void Data::dashboard(void) const {
 
 namespace Sensor {
 	#if defined(ENABLE_SHT40)
-		inline static float SHT40_correct_temperature(float measured_value) {
-			float slope = 1.000;
-			float intercept = 0.000;
-			float corrected_value = slope * measured_value + intercept;
-			return corrected_value;
+		namespace SHT40 {
+			inline static float correct_temperature(float const measured_value) {
+				float slope = 1.000;
+				float intercept = 0.000;
+				float corrected_value = slope * measured_value + intercept;
+				return corrected_value;
+			}
 		}
 	#endif
 
 	#if defined(ENABLE_LTR390)
-		constexpr float LTR390_ambient_window = 1.0;
-		constexpr float LTR390_ultraviolet_window = 1.0;
+		namespace LTR390 {
+			static constexpr float ambient_window = 1.0;
+			static constexpr float ultraviolet_window = 1.0;
 
-		inline static float LTR390_get_gain(class Adafruit_LTR390 *const LTR) {
-			switch (LTR->getGain()) {
-			case LTR390_GAIN_1:
-				return 1.0;
-			case LTR390_GAIN_3:
-				return 3.0;
-			case LTR390_GAIN_6:
-				return 6.0;
-			case LTR390_GAIN_9:
-				return 9.0;
-			case LTR390_GAIN_18:
-				return 18.0;
-			default:
-				return NAN;
+			inline static float get_gain(class Adafruit_LTR390 *const LTR) {
+				switch (LTR->getGain()) {
+				case LTR390_GAIN_1:
+					return 1.0;
+				case LTR390_GAIN_3:
+					return 3.0;
+				case LTR390_GAIN_6:
+					return 6.0;
+				case LTR390_GAIN_9:
+					return 9.0;
+				case LTR390_GAIN_18:
+					return 18.0;
+				default:
+					return NAN;
+				}
 			}
-		}
 
-		inline static unsigned int LTR390_get_resolution(class Adafruit_LTR390 *const LTR) {
-			switch (LTR->getResolution()) {
-			case LTR390_RESOLUTION_20BIT:
-				return 20;
-			case LTR390_RESOLUTION_19BIT:
-				return 19;
-			case LTR390_RESOLUTION_18BIT:
-				return 18;
-			case LTR390_RESOLUTION_17BIT:
-				return 17;
-			case LTR390_RESOLUTION_16BIT:
-				return 16;
-			case LTR390_RESOLUTION_13BIT:
-				return 13;
-			default:
-				return 0;
+			inline static unsigned int get_resolution(class Adafruit_LTR390 *const LTR) {
+				switch (LTR->getResolution()) {
+				case LTR390_RESOLUTION_20BIT:
+					return 20;
+				case LTR390_RESOLUTION_19BIT:
+					return 19;
+				case LTR390_RESOLUTION_18BIT:
+					return 18;
+				case LTR390_RESOLUTION_17BIT:
+					return 17;
+				case LTR390_RESOLUTION_16BIT:
+					return 16;
+				case LTR390_RESOLUTION_13BIT:
+					return 13;
+				default:
+					return 0;
+				}
 			}
-		}
 
-		inline static float LTR390_get_integration(class Adafruit_LTR390 *const LTR) {
-			int const resolution = LTR390_get_resolution(LTR);
-			if (!resolution) return NAN;
-			return ldexpf(1.0, resolution - 18);
-		}
+			inline static float get_integration(class Adafruit_LTR390 *const LTR) {
+				int const resolution = get_resolution(LTR);
+				if (!resolution) return NAN;
+				return ldexpf(1.0, resolution - 18);
+			}
 
-		inline static float LTR390_get_lux(class Adafruit_LTR390 *const LTR) {
-			constexpr float LTR390_ambient_factor = 0.6 * LTR390_ambient_window;
-			uint32_t const data = LTR->readALS();
-			float const gain = LTR390_get_gain(LTR);
-			float const integration = LTR390_get_integration(LTR);
-			return (LTR390_ambient_factor * data) / (gain * integration);
-		}
+			inline static float get_lux(class Adafruit_LTR390 *const LTR) {
+				constexpr float LTR390_ambient_factor = 0.6 * ambient_window;
+				uint32_t const data = LTR->readALS();
+				float const gain = get_gain(LTR);
+				float const integration = get_integration(LTR);
+				return (LTR390_ambient_factor * data) / (gain * integration);
+			}
 
-		inline static float LTR390_get_UVI(class Adafruit_LTR390 *const LTR) {
-			constexpr float LTR390_ultraviolet_sensitivity = 2.3E3;
-			constexpr float LTR390_ultraviolet_factor = LTR390_ultraviolet_window / LTR390_ultraviolet_sensitivity;
-			return LTR390_ultraviolet_factor * LTR->readUVS();
+			inline static float get_UVI(class Adafruit_LTR390 *const LTR) {
+				constexpr float LTR390_ultraviolet_sensitivity = 2.3E3;
+				constexpr float LTR390_ultraviolet_factor = ultraviolet_window / LTR390_ultraviolet_sensitivity;
+				return LTR390_ultraviolet_factor * LTR->readUVS();
+			}
 		}
 	#endif
 
 	#if defined(ENABLE_PH)
-		constexpr size_t PH_sample_size = 12;
+		namespace PH {
+			static constexpr size_t sample_size = 12;
+		}
 	#endif
 
 	bool initialize(void) {
@@ -623,7 +633,10 @@ namespace Sensor {
 		if (!Variable::enable_measure) return true;
 		DEVICE_LOCK(device_lock);
 
-		unsigned int const type = Setting::active_sensors[Setting::battery].value();
+		enum Setting::battery const type =
+			static_cast<enum Setting::battery>(
+				Setting::active_sensor(Setting::sensor::battery).value()
+			);
 		#if defined(ENABLE_BATTERY_GAUGE_LC709203F)
 			if (type == Setting::battery::LC709203F)
 				lc709203f.begin();
@@ -638,8 +651,8 @@ namespace Sensor {
 		#endif
 
 		#if defined(ENABLE_DALLAS)
-			if (Setting::active_sensors[Setting::Dallas].has_value()) {
-				onewire_thermometer.begin(Setting::active_sensors[Setting::Dallas].value());
+			if (Setting::active_sensor(Setting::sensor::Dallas).has_value()) {
+				onewire_thermometer.begin(Setting::active_sensor(Setting::sensor::Dallas).value());
 				dallas.begin();
 				DeviceAddress thermometer_address;
 				if (dallas.getAddress(thermometer_address, 0)) {
@@ -653,7 +666,7 @@ namespace Sensor {
 		#endif
 
 		#if defined(ENABLE_SHT40)
-			if (Setting::active_sensors[Setting::sensor::SHT40].has_value()) {
+			if (Setting::active_sensor(Setting::sensor::SHT40).has_value()) {
 				if (SHT.begin()) {
 					Display::println("SHT40 sensor found");
 				}
@@ -667,7 +680,7 @@ namespace Sensor {
 		#endif
 
 		#if defined(ENABLE_BME280)
-			if (Setting::active_sensors[Setting::sensor::BME280].has_value()) {
+			if (Setting::active_sensor(Setting::sensor::BME280).has_value()) {
 				if (BME.begin()) {
 					Display::println("BME280 sensor found");
 				}
@@ -679,9 +692,13 @@ namespace Sensor {
 		#endif
 
 		#if defined(ENABLE_LTR390)
-			if (Setting::active_sensors[Setting::sensor::LTR390].has_value()) {
+			if (Setting::active_sensor(Setting::sensor::LTR390).has_value()) {
 				if (LTR.begin()) {
-					switch (Setting::active_sensors[Setting::sensor::LTR390].value()) {
+					enum Setting::LTR390 const type =
+						static_cast<enum Setting::LTR390>(
+							Setting::active_sensor(Setting::sensor::LTR390).value()
+						);
+					switch (type) {
 					case Setting::LTR390::ALS:
 						LTR.setMode(LTR390_MODE_ALS);
 						break;
@@ -704,14 +721,14 @@ namespace Sensor {
 		#endif
 
 		#if defined(ENABLE_TURBIDITY)
-			if (Setting::active_sensors[Setting::sensor::turbidity].has_value()) {
-				pinMode(Setting::active_sensors[Setting::turbidity].value(), INPUT);
+			if (Setting::active_sensor(Setting::sensor::turbidity).has_value()) {
+				pinMode(Setting::active_sensor(Setting::sensor::turbidity).value(), INPUT);
 			}
 		#endif
 
 		#if defined(ENABLE_PH)
-			if (Setting::active_sensors[Setting::sensor::pH].has_value()) {
-				pinMode(Setting::active_sensors[Setting::pH].value(), INPUT);
+			if (Setting::active_sensor(Setting::sensor::pH).has_value()) {
+				pinMode(Setting::active_sensor(Setting::sensor::pH).value(), INPUT);
 			}
 		#endif
 
@@ -726,9 +743,12 @@ namespace Sensor {
 		#if defined(ENABLE_BATTERY_GAUGE_LC709203F) \
 			|| defined(ENABLE_BATTERY_GAUGE_MAX17043) \
 			|| defined(ENABLE_BATTERY_GAUGE_MAX17048)
-			if (Setting::active_sensors[Setting::sensor::battery].has_value()) {
+			if (Setting::active_sensor(Setting::sensor::battery).has_value()) {
 				float *const values = data->device_pointer<float>(Setting::sensor::battery);
-				unsigned int const type = Setting::active_sensors[Setting::sensor::battery].value();
+				enum Setting::battery const type =
+					static_cast<enum Setting::battery>(
+						Setting::active_sensor(Setting::sensor::battery).value()
+					);
 				#if defined(ENABLE_BATTERY_GAUGE_LC709203F)
 					if (type == Setting::battery::LC709203F) {
 						values[0] = lc709203f.cellVoltage();
@@ -764,7 +784,7 @@ namespace Sensor {
 		#endif
 
 		#if defined(ENABLE_DALLAS)
-			if (Setting::active_sensors[Setting::sensor::Dallas].has_value()) {
+			if (Setting::active_sensor(Setting::sensor::Dallas).has_value()) {
 				float *const value = data->device_pointer<float>(Setting::sensor::Dallas);
 				dallas.requestTemperatures();
 				delay(750);
@@ -773,17 +793,17 @@ namespace Sensor {
 		#endif
 
 		#if defined(ENABLE_SHT40)
-			if (Setting::active_sensors[Setting::sensor::SHT40].has_value()) {
+			if (Setting::active_sensor(Setting::sensor::SHT40).has_value()) {
 				float *const values = data->device_pointer<float>(Setting::sensor::SHT40);
 				sensors_event_t temperature_event, humidity_event;
 				SHT.getEvent(&humidity_event, &temperature_event);
-				values[0] = SHT40_correct_temperature(temperature_event.temperature);
+				values[0] = SHT40::correct_temperature(temperature_event.temperature);
 				values[1] = humidity_event.relative_humidity;
 			}
 		#endif
 
 		#if defined(ENABLE_BME280)
-			if (Setting::active_sensors[Setting::sensor::BME280].has_value()) {
+			if (Setting::active_sensor(Setting::sensor::BME280).has_value()) {
 				float *const values = data->device_pointer<float>(Setting::sensor::BME280);
 				values[0] = BME.readPressure();
 				values[1] = BME.readTemperature();
@@ -792,9 +812,12 @@ namespace Sensor {
 		#endif
 
 		#if defined(ENABLE_LTR390)
-			if (Setting::active_sensors[Setting::sensor::LTR390].has_value()) {
+			if (Setting::active_sensor(Setting::sensor::LTR390).has_value()) {
 				float *const value = data->device_pointer<float>(Setting::sensor::LTR390);
-				unsigned int const type = Setting::active_sensors[Setting::sensor::LTR390].value();
+				enum Setting::LTR390 const type =
+					static_cast<enum Setting::LTR390>(
+						Setting::active_sensor(Setting::sensor::LTR390).value()
+					);
 				value[0] = NAN;
 				value[1] = NAN;
 				if (type == Setting::LTR390::ALS)
@@ -803,25 +826,25 @@ namespace Sensor {
 					value[1] = LTR.readUVS();
 				else if (type == Setting::LTR390::ALS_UVS) {
 					if (LTR.getMode() == LTR390_MODE_ALS) {
-						value[0] = LTR390_get_lux(&LTR);
+						value[0] = LTR390::get_lux(&LTR);
 						LTR.setMode(LTR390_MODE_UVS);
 						delay(500);
-						value[1] = LTR390_get_UVI(&LTR);
+						value[1] = LTR390::get_UVI(&LTR);
 					}
 					else {
-						value[1] = LTR390_get_UVI(&LTR);
+						value[1] = LTR390::get_UVI(&LTR);
 						LTR.setMode(LTR390_MODE_ALS);
 						delay(500);
-						value[0] = LTR390_get_lux(&LTR);
+						value[0] = LTR390::get_lux(&LTR);
 					}
 				}
 			}
 		#endif
 
 		#if defined(ENABLE_TURBIDITY)
-			if (Setting::active_sensors[Setting::sensor::turbidity].has_value()) {
+			if (Setting::active_sensor(Setting::sensor::turbidity).has_value()) {
 				float *const value = data->device_pointer<float>(Setting::sensor::turbidity);
-				int const raw_turbidity = analogRead(Setting::active_sensors[Setting::sensor::turbidity].value());
+				int const raw_turbidity = analogRead(Setting::active_sensor(Setting::sensor::turbidity).value());
 				float const minimum = 3200; /* raw value at lowest turbidity (transparent) */
 				float const maximum = 50; /* raw value at highest turbidity (opacity) */
 				float turbidity = ((static_cast<float>(raw_turbidity) - minimum) / (maximum - minimum)) * 100;
@@ -832,35 +855,35 @@ namespace Sensor {
 		#endif
 
 		#if defined(ENABLE_PH)
-			if (Setting::active_sensors[Setting::sensor::pH].has_value()) {
-				unsigned int const pin = Setting::active_sensors[Setting::sensor::pH].value();
+			if (Setting::active_sensor(Setting::sensor::pH).has_value()) {
+				unsigned int const pin = Setting::active_sensor(Setting::sensor::pH).value();
 				float *const value = data->device_pointer<float>(Setting::sensor::pH);
-				int values[PH_sample_size];
-				for (size_t i = 0; i < PH_sample_size; ++i) {
+				int values[PH::sample_size];
+				for (size_t i = 0; i < PH::sample_size; ++i) {
 					values[i] = analogRead(pin);
 					delay(1);
 				}
 
-				for (size_t i = 1; i < PH_sample_size; ++i)
+				for (size_t i = 1; i < PH::sample_size; ++i)
 					for (size_t j = i - 1; j < i; ++j)
 						if (values[i] < values[j]) {
 							int const x = values[i];
 							values[i] = values[j];
 							values[j] = x;
 						}
-				float pH = values[PH_sample_size >> 1];
+				float pH = values[PH::sample_size >> 1];
 
 				float const temperature =
 					#if defined(ENABLE_DALLAS)
-						Setting::active_sensors[Setting::sensor::Dallas].has_value() ?
+						Setting::active_sensor(Setting::sensor::Dallas).has_value() ?
 							*data->device_pointer<float>(Setting::sensor::Dallas) :
 					#endif
 					#if defined(ENABLE_SHT40)
-						Setting::active_sensors[Setting::sensor::SHT40].has_value() ?
+						Setting::active_sensor(Setting::sensor::SHT40).has_value() ?
 							*data->device_pointer<float>(Setting::sensor::SHT40) :
 					#endif
 					#if defined(ENABLE_BME280)
-						Setting::active_sensors[Setting::sensor::BME280].has_value() ?
+						Setting::active_sensor(Setting::sensor::BME280).has_value() ?
 							*data->device_pointer<float>(Setting::sensor::BME280) :
 					#endif
 						0.;
