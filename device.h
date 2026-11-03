@@ -63,9 +63,9 @@ namespace Setting {
 		ALS_UVS = 3
 	};
 
-	extern class std::optional<unsigned int> active_sensors[static_cast<unsigned int>(sensor::num_of_sensors)];
+	extern class std::optional<unsigned int> active_sensors[static_cast<size_t>(sensor::num_of_sensors)];
 	inline class std::optional<unsigned int> active_sensor(enum sensor const sensor) {
-		return active_sensors[static_cast<unsigned int>(sensor)];
+		return active_sensors[static_cast<size_t>(sensor)];
 	}
 
 	struct FieldAccess {

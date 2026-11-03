@@ -171,7 +171,7 @@ namespace Setting {
 
 	void save(std::map<unsigned int, unsigned int> *const map) {
 		map->clear();
-		unsigned int const num_of_sensors = static_cast<unsigned int>(sensor::num_of_sensors);
+		size_t const num_of_sensors = static_cast<size_t>(sensor::num_of_sensors);
 		for (unsigned int i = 1; i < num_of_sensors; ++i)
 			if (active_sensors[i].has_value())
 				(*map)[i] = active_sensors[i].value();
@@ -179,7 +179,7 @@ namespace Setting {
 
 	void load(std::map<unsigned int, unsigned int> const *const map) {
 		active_sensors[0] = std::optional(UINT_MAX);
-		unsigned int const num_of_sensors = static_cast<unsigned int>(sensor::num_of_sensors);
+		size_t const num_of_sensors = static_cast<size_t>(sensor::num_of_sensors);
 		for (unsigned int i = 1; i < num_of_sensors; ++i) {
 			std::map<unsigned int, unsigned int>::const_iterator found = map->find(i);
 			if (found == map->end())
@@ -380,8 +380,8 @@ size_t Data::offset[static_cast<size_t>(Setting::sensor::num_of_sensors)];
 
 void Data::initialize(void) {
 	total_size = 0;
-	unsigned int const num_of_sensors = static_cast<unsigned int>(Setting::sensor::num_of_sensors);
-	for (unsigned int sensor = 0; sensor < num_of_sensors; ++sensor) {
+	size_t const num_of_sensors = static_cast<size_t>(Setting::sensor::num_of_sensors);
+	for (size_t sensor = 0; sensor < num_of_sensors; ++sensor) {
 		size_t device_size = 0;
 		size_t field = 0;
 		for (;;) {
@@ -404,8 +404,8 @@ void Data::writeln(class Print *const print) const {
 
 	/* write measured values across all fields of all active sensors */
 	void const *p = pointer_offset<void const, class Data const>(this, offset[1]);
-	unsigned int const num_of_sensors = static_cast<unsigned int>(Setting::sensor::num_of_sensors);
-	for (unsigned int sensor = 1; sensor < num_of_sensors; ++sensor) {
+	size_t const num_of_sensors = static_cast<size_t>(Setting::sensor::num_of_sensors);
+	for (size_t sensor = 1; sensor < num_of_sensors; ++sensor) {
 		if (Setting::active_sensors[sensor].has_value()) {
 			size_t field = 0;
 			for (;;) {
@@ -440,8 +440,8 @@ bool Data::readln(class Stream *const stream) {
 	/* read fields of all active sensors */
 	{
 		void *p = pointer_offset<void, class Data>(this, offset[1]);
-		unsigned int const num_of_sensors = static_cast<unsigned int>(Setting::sensor::num_of_sensors);
-		for (unsigned int sensor = 1; sensor < num_of_sensors; ++sensor) {
+		size_t const num_of_sensors = static_cast<size_t>(Setting::sensor::num_of_sensors);
+		for (size_t sensor = 1; sensor < num_of_sensors; ++sensor) {
 			if (Setting::active_sensors[sensor].has_value()) {
 				size_t field = 0;
 				for (;;) {
@@ -466,8 +466,8 @@ void Data::println(void) const {
 
 	/* print values across all fields of all active sensors */
 	void const *p = pointer_offset<void const, class Data const>(this, offset[1]);
-	unsigned int const num_of_sensors = static_cast<unsigned int>(Setting::sensor::num_of_sensors);
-	for (unsigned int sensor = 1; sensor < num_of_sensors; ++sensor) {
+	size_t const num_of_sensors = static_cast<size_t>(Setting::sensor::num_of_sensors);
+	for (size_t sensor = 1; sensor < num_of_sensors; ++sensor) {
 		if (Setting::active_sensors[sensor].has_value()) {
 			size_t field = 0;
 			for (;;) {
@@ -515,8 +515,8 @@ void Data::dashboard(void) const {
 		OLED::home();
 	#endif
 
-	static unsigned int sensor = 0;
-	static unsigned int field = 0;
+	static size_t sensor = 0;
+	static size_t field = 0;
 	static size_t offset = 0;
 
 	struct Setting::SensorField const *const sensor_field = &Setting::sensor_fields[sensor][field];
@@ -537,7 +537,7 @@ void Data::dashboard(void) const {
 	while (!Setting::active_sensors[sensor].has_value() || !Setting::sensor_fields[sensor][field].access.size) {
 		field = 0;
 		++sensor;
-		if (sensor >= static_cast<unsigned int>(Setting::sensor::num_of_sensors)) {
+		if (sensor >= static_cast<size_t>(Setting::sensor::num_of_sensors)) {
 			sensor = 0;
 			offset = 0;
 			break;
