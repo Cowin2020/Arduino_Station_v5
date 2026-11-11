@@ -78,7 +78,7 @@ void setup(void) {
 	if (!LORA::initialize()) goto end;
 	if (!DAEMON::initialize()) goto end;
 	#if defined(ENABLE_OLED_SWITCH)
-		pinMode(ENABLE_OLED_SWITCH, INPUT_PULLDOWN);
+		pinMode(ENABLE_OLED_SWITCH, INPUT);
 	#endif
 
 	DAEMON::run();
