@@ -180,6 +180,15 @@ namespace DAEMON {
 					}
 					if (!awake && soonest != nullptr) {
 						Millisecond duration = soonest->start + soonest->duration - now;
+						if (duration > Variable::measure_interval + DASHBOARD_INTERVAL + SEND_INTERVAL) {
+							#if !defined(NDEBUG)
+								DEBUG_LOCK(debug_lock);
+								Debug::print("DEBUG: great sleep ");
+								Debug::print(duration);
+								Debug::println("ms");
+							#endif
+							duration = Variable::measure_interval;
+						}
 						if (Variable::enable_sleep && !Variable::enable_gateway && !sleepless && duration > SLEEP_MARGIN) {
 							{
 								DEBUG_LOCK(debug_lock);
@@ -188,11 +197,13 @@ namespace DAEMON {
 								Debug::println("ms");
 								Debug::flush();
 							}
-							DEVICE_LOCK(device_lock);
-							LORA::sleep();
-							esp_sleep_enable_timer_wakeup(1000 * (duration - SLEEP_MARGIN));
-							esp_light_sleep_start();
-							LORA::wake();
+							{
+								DEVICE_LOCK(device_lock);
+								LORA::sleep();
+								esp_sleep_enable_timer_wakeup(1000 * (duration - SLEEP_MARGIN));
+								esp_light_sleep_start();
+								LORA::wake();
+							}
 							yield();
 						}
 						else
@@ -395,8 +406,11 @@ namespace DAEMON {
 						next_data();
 						break;
 					}
-					Debug::print("DEBUG: DAEMON::Push::send_data t=");
-					Debug::println(t);
+					{
+						DEBUG_LOCK(debug_lock);
+						Debug::print("DEBUG: DAEMON::Push::send_data t=");
+						Debug::println(t);
+					}
 					if (t >= RESEND_TIMES) {
 						LORA::next_receiver();
 						break;

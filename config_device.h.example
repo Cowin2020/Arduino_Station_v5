@@ -111,7 +111,7 @@
 #define START_DELAY 1000UL /* milliseconds */
 #define IDLE_INTERVAL 123UL /* milliseconds */
 #define ACK_TIMEOUT 1000UL /* milliseconds */
-#define RESEND_TIMES 2
+#define RESEND_TIMES 3
 #define SEND_INTERVAL 3000UL /* milliseconds */ /* SHOULD: > ACK_TIMEOUT * 2 */
 #define MEASURE_INTERVAL 60000UL /* milliseconds */ /* MUST: > SEND_INTERVAL + ACK_TIMEOUT */
 //	#define SEND_IDLE_INTERVAL (MEASURE_INTERVAL * 10)

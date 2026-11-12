@@ -39,7 +39,7 @@ namespace SDCard {
 				Variable::dump_to_stream(&file);
 			}
 			catch (...) {
-				OLED::println("Cannot write config file");
+				Display::println("Cannot write config file");
 			}
 		}
 
@@ -170,15 +170,16 @@ namespace SDCard {
 					data->writeln(&data_file);
 				}
 				catch (...) {
-					Display::println("Cannot append data file");
+					OLED::println("failed to open data file for append");
+					COM::println("ERROR: SDCard::add_data failed to open data file");
 				}
 				data_file.close();
 			}
 			#if defined(ENABLE_LOG_FILE)
 				class File log_file = SD.open(log_file_path, "a");
 				if (!log_file) {
-					OLED_LOCK(oled_lock);
-					Display::println("Cannot open log file");
+					OLED::println("Cannot open log file for append");
+					COM::println("ERROR: SDCard::add_data failed to open log file");
 				}
 				else {
 					try {
@@ -205,7 +206,6 @@ namespace SDCard {
 						data->writeln(&log_file);
 					}
 					catch (...) {
-						OLED_LOCK(oled_lock);
 						Display::println("Cannot append log file");
 					}
 					log_file.close();
@@ -283,15 +283,11 @@ namespace SDCard {
 			pinMode(SD_MISO, INPUT_PULLUP);
 			SPI_1.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
 			if (SD.begin(SD_CS, SPI_1)) {
-				{
-					OLED_LOCK(oled_lock);
-					Display::println("SD card initialized");
-					COM::println(String("SD Card type: ") + String(SD.cardType()));
-				}
+				Display::println("SD card initialized");
+				COM::println(String("SD Card type: ") + String(SD.cardType()));
 				return true;
 			}
 			else {
-				OLED_LOCK(oled_lock);
 				Display::println("SD card uninitialized");
 				OLED::display();
 				return false;

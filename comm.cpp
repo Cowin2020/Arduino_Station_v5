@@ -87,7 +87,7 @@ namespace LORA {
 		}
 
 		if (!LoRa.begin(LORA_BAND)) {
-			OLED_LOCK(oled_lock);
+			DISPLAY_LOCK(display_lock);
 			Display::println("LoRa uninitialized");
 			return false;
 		}
@@ -561,6 +561,7 @@ namespace LORA {
 			DEBUG_LOCK(debug_lock);
 			Debug::print("DEBUG: LORA::Receive::packet packet_size = ");
 			Debug::println(parse_size);
+			//	Debug::dump("DEBUG: LORA::Receive::packet buffer", buffer.data(), buffer.size());
 		}
 	}
 }

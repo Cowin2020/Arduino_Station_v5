@@ -28,6 +28,8 @@ namespace WIFI {
 		switch (WiFi_status) {
 		case WL_NO_SHIELD:
 			return String("WiFi no shield");
+		case WL_STOPPED:
+			return String("WiFi stopped");
 		case WL_IDLE_STATUS:
 			return String("WiFi idle");
 		case WL_NO_SSID_AVAIL:
@@ -35,7 +37,7 @@ namespace WIFI {
 		case WL_SCAN_COMPLETED:
 			return String("WiFi scan completed");
 		case WL_CONNECTED:
-			return String("WiFi connected");
+			return String("WiFi connected [") + WiFi.localIP().toString() + "]";
 		case WL_CONNECT_FAILED:
 			return String("WiFi connect failed");
 		case WL_CONNECTION_LOST:
@@ -43,7 +45,7 @@ namespace WIFI {
 		case WL_DISCONNECTED:
 			return String("WiFi disconnected");
 		default:
-			return String("WiFi Status: ") + String(WiFi_status);
+			return String("WiFi status: ") + String(WiFi_status);
 		}
 	}
 
@@ -74,7 +76,7 @@ namespace WIFI {
 		static char URL[HTTP_UPLOAD_LENGTH];
 		signed int const WiFi_status = WiFi.status();
 		if (WiFi_status != WL_CONNECTED) {
-			OLED_LOCK(oled_lock);
+			DISPLAY_LOCK(display_lock);
 			Display::print("No WiFi: ");
 			Display::println(status_message(WiFi.status()));
 			return {.upload_success = false};
@@ -102,8 +104,11 @@ namespace WIFI {
 		unsigned int const num_of_sensors = static_cast<unsigned int>(Setting::sensor::num_of_sensors);
 		for (unsigned int sensor = 1; sensor < num_of_sensors; ++sensor)
 			p += build_URL_querystring(URL + p, data, static_cast<enum Setting::sensor>(sensor));
-		COM::print("Upload to ");
-		COM::println(URL);
+		{
+			OLED_LOCK(oled_lock);
+			COM::print("Upload to ");
+			COM::println(URL);
+		}
 		class HTTPClient HTTP_client;
 		HTTP_client.begin(URL);
 		if (Variable::http_authorization_pass.length()) {
@@ -117,11 +122,7 @@ namespace WIFI {
 				class String pair = String(Variable::http_authorization_pass);
 				pair.concat(':');
 				pair.concat(hash, sizeof hash);
-				class String const credential =
-					base64::encode(
-						reinterpret_cast<uint8_t const *>(pair.c_str()),
-						pair.length()
-					);
+				class String const credential = base64::encode(pair);
 				HTTP_client.setAuthorizationType(Variable::http_authorization_type.c_str());
 				HTTP_client.setAuthorization(credential.c_str());
 			}
@@ -132,7 +133,7 @@ namespace WIFI {
 		}
 		signed int const HTTP_status = HTTP_client.GET();
 		{
-			OLED_LOCK(oled_lock);
+			DISPLAY_LOCK(display_lock);
 			Display::print("HTTP status: ");
 			Display::println(HTTP_status);
 		}
